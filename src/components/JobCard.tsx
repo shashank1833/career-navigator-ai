@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink } from "lucide-react";
+import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink, Bookmark, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { JobListing } from "@/types/jobs";
@@ -7,6 +7,8 @@ import type { JobListing } from "@/types/jobs";
 interface JobCardProps {
   job: JobListing;
   onOptimize: (job: JobListing) => void;
+  onSave?: (job: JobListing) => void;
+  onTrack?: (job: JobListing) => void;
   delay?: number;
 }
 
