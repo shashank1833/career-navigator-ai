@@ -35,7 +35,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [navigationState] = useState<NavigationState | null>(() => location.state as NavigationState | null);
-  const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
+  const { saveOriginalResume } = useResumeVersions();
 
   // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
