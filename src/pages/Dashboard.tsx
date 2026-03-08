@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
-import ParticleBackground from "@/components/3d/ParticleBackground";
-import TiltCard from "@/components/3d/TiltCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -78,7 +76,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <ParticleBackground />
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
+      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -123,15 +122,13 @@ const Dashboard = () => {
             { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent" },
             { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500" },
           ].map((s) => (
-            <TiltCard key={s.label} tiltAmount={8}>
-              <div className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border">
-                <div className="flex items-center gap-3 mb-2">
-                  <s.icon className={`w-5 h-5 ${s.color}`} />
-                  <span className="text-sm text-muted-foreground">{s.label}</span>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{s.value}</p>
+            <div key={s.label} className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border">
+              <div className="flex items-center gap-3 mb-2">
+                <s.icon className={`w-5 h-5 ${s.color}`} />
+                <span className="text-sm text-muted-foreground">{s.label}</span>
               </div>
-            </TiltCard>
+              <p className="text-3xl font-bold text-foreground">{s.value}</p>
+            </div>
           ))}
         </motion.div>
 

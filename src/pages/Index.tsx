@@ -4,9 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import ParticleBackground from "@/components/3d/ParticleBackground";
-import HeroBrain from "@/components/3d/HeroBrain";
-import TiltCard from "@/components/3d/TiltCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
@@ -66,7 +63,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <ParticleBackground />
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
+      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
+      <div className="floating-orb w-64 h-64 bg-accent bottom-20 right-1/4 animate-pulse-glow" style={{ animationDelay: "2s" }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.header
@@ -87,7 +86,6 @@ const Index = () => {
             </div>
             <ThemeToggle />
           </div>
-          <HeroBrain size="sm" />
           <div className="flex items-center justify-center gap-3 mb-4">
             <Brain className="w-10 h-10 glow-text-primary" />
             <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
@@ -152,10 +150,10 @@ const Index = () => {
                 <TabsContent value="profile">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <TiltCard><ProfileCard data={data.profile} /></TiltCard>
-                      <TiltCard><JobMatchScore data={data.jobMatch} /></TiltCard>
-                      <TiltCard><SkillGapChart data={data.skillGap} /></TiltCard>
-                      <TiltCard tiltAmount={6}><SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} /></TiltCard>
+                      <div><ProfileCard data={data.profile} /></div>
+                      <div><JobMatchScore data={data.jobMatch} /></div>
+                      <div><SkillGapChart data={data.skillGap} /></div>
+                      <SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} />
                     </div>
                   </motion.div>
                 </TabsContent>
