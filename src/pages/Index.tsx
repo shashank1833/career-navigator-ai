@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -26,6 +26,7 @@ import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
 
@@ -59,9 +60,14 @@ const Index = () => {
           className="text-center mb-12"
         >
           <div className="flex items-center justify-between mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-              <Zap className="w-3.5 h-3.5 glow-text-primary" />
-              <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+              </Button>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                <Zap className="w-3.5 h-3.5 glow-text-primary" />
+                <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+              </div>
             </div>
             <ThemeToggle />
           </div>
