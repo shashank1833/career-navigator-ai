@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.analyze-career-role]
 verify_jwt = false
+
+[functions.evaluate-interview-answer]
+verify_jwt = false
+
+[functions.generate-career-strategy]
+verify_jwt = false

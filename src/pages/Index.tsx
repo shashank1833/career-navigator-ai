@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
 import SkillGapChart from "@/components/SkillGapChart";
+import SkillMatchVisualization from "@/components/SkillMatchVisualization";
 import JobMatchScore from "@/components/JobMatchScore";
 import InterviewQuestions from "@/components/InterviewQuestions";
 import CareerTrajectory from "@/components/CareerTrajectory";
@@ -17,6 +18,7 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
 import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
+import CareerStrategyEngine from "@/components/CareerStrategyEngine";
 import ResumeVersions from "@/components/ResumeVersions";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
@@ -130,6 +132,7 @@ const Index = () => {
                       <div><ProfileCard data={data.profile} /></div>
                       <div><JobMatchScore data={data.jobMatch} /></div>
                       <div><SkillGapChart data={data.skillGap} /></div>
+                      <SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} />
                     </div>
                   </motion.div>
                 </TabsContent>
@@ -165,6 +168,15 @@ const Index = () => {
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <CareerRoleAnalyzer profile={data.profile} />
+                    <div className="mt-5">
+                      <CareerStrategyEngine
+                        targetRole={data.profile.tagline || "Software Engineer"}
+                        currentSkills={data.profile.skills}
+                        missingSkills={data.skillGap.missing}
+                        experience={data.profile.experience}
+                        education={data.profile.education}
+                      />
+                    </div>
                   </motion.div>
                 </TabsContent>
 

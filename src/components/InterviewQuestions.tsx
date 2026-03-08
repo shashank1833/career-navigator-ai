@@ -1,4 +1,5 @@
 import DashboardCard from "./DashboardCard";
+import MockInterviewSimulator from "./MockInterviewSimulator";
 import { MessageSquare, Briefcase, Send, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -39,6 +40,7 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
   const [customJD, setCustomJD] = useState(jobDescription || "");
   const [questions, setQuestions] = useState<AnalysisInterviewQuestions | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<{ question: string; difficulty: string } | null>(null);
 
   const displayedQuestions = (questions?.[activeCategory] || []).map(normalizeQuestion);
 
@@ -132,12 +134,22 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
                 <span className="text-muted-foreground font-mono text-xs mr-2">Q{i + 1}</span>
                 {q.question}
               </div>
-              <Badge
-                variant="outline"
-                className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 ${difficultyStyles[q.difficulty] || difficultyStyles.Medium}`}
-              >
-                {q.difficulty}
-              </Badge>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-semibold px-2 py-0.5 ${difficultyStyles[q.difficulty] || difficultyStyles.Medium}`}
+                >
+                  {q.difficulty}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => setSelectedQuestion(q)}
+                >
+                  Practice
+                </Button>
+              </div>
             </motion.div>
           ))}
           {displayedQuestions.length === 0 && (
@@ -147,6 +159,15 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
           )}
         </div>
       </DashboardCard>
+
+      {/* Mock Interview Simulator */}
+      {selectedQuestion && (
+        <MockInterviewSimulator
+          question={selectedQuestion.question}
+          category={activeCategory}
+          difficulty={selectedQuestion.difficulty}
+        />
+      )}
     </div>
   );
 };
