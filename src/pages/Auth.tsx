@@ -13,23 +13,34 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 
 const Auth = () => {
+  const { user, loading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true });
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
   }, [user, navigate]);
+
+  // Show loading while auth state is being restored
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       if (isForgot) {
@@ -59,7 +70,7 @@ const Auth = () => {
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -165,8 +176,8 @@ const Auth = () => {
               </button>
             )}
 
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            <Button type="submit" className="w-full h-11" disabled={submitting}>
+              {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isForgot ? "Send Reset Link" : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
