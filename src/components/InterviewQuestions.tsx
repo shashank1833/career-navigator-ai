@@ -40,6 +40,7 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
   const [customJD, setCustomJD] = useState(jobDescription || "");
   const [questions, setQuestions] = useState<AnalysisInterviewQuestions | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<{ question: string; difficulty: string } | null>(null);
 
   const displayedQuestions = (questions?.[activeCategory] || []).map(normalizeQuestion);
 
