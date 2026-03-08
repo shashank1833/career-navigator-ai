@@ -66,9 +66,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
-      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
-      <div className="floating-orb w-64 h-64 bg-accent bottom-20 right-1/4 animate-pulse-glow" style={{ animationDelay: "2s" }} />
+      <ParticleBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.header
