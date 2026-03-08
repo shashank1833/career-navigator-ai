@@ -18,7 +18,7 @@ const ProfileCard = ({ data }: { data: AnalysisProfile }) => {
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-1.5 mt-1">
             <GraduationCap className="w-3.5 h-3.5" /> {data.education}
           </p>
-          <p className="text-sm text-primary font-medium mt-1.5">{displayTagline}</p>
+          
         </div>
 
         {/* Skills — conceptual expertise */}
