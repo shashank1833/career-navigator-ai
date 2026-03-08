@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -22,8 +23,19 @@ import { useResumeVersions } from "@/hooks/useResumeVersions";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
+  const location = useLocation();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const { versions, loading: versionsLoading, deleteVersion } = useResumeVersions();
+
+  // Load analysis data from navigation state (from Resume History)
+  useEffect(() => {
+    const state = location.state as { analysisData?: AnalysisResult } | null;
+    if (state?.analysisData) {
+      setData(state.analysisData);
+      // Clear the state so refresh doesn't re-load
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
