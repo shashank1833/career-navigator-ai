@@ -60,7 +60,6 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
       }
 
       const data: AnalysisResult = await res.json();
-      data._jobDescription = jobDescription.trim() || undefined;
       onAnalyze(data);
     } catch (e) {
       toast({

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
 import SkillGapChart from "@/components/SkillGapChart";
@@ -14,25 +15,6 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import type { AnalysisResult } from "@/types/analysis";
-import type { LucideIcon } from "lucide-react";
-
-const SectionHeader = ({ icon: Icon, title, subtitle, delay = 0 }: {icon: LucideIcon;title: string;subtitle: string;delay?: number;}) =>
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5, delay }}
-  className="flex items-center gap-3 mb-5 mt-12 first:mt-0">
-  
-    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-      <Icon className="w-5 h-5 glow-text-primary" />
-    </div>
-    <div>
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
-      <p className="text-xs text-muted-foreground">{subtitle}</p>
-    </div>
-    <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent ml-4" />
-  </motion.div>;
-
 
 const Index = () => {
   const [data, setData] = useState<AnalysisResult | null>(null);
@@ -48,8 +30,8 @@ const Index = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12">
-          
+          className="text-center mb-12"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Zap className="w-3.5 h-3.5 glow-text-primary" />
             <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
@@ -64,54 +46,94 @@ const Index = () => {
         </motion.header>
 
         <AnimatePresence mode="wait">
-          {!data ?
-          <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
+          {!data ? (
+            <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
               <ResumeUpload onAnalyze={(result) => setData(result)} />
-            </motion.div> :
-
-          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+            </motion.div>
+          ) : (
+            <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
               <div className="mb-6">
-                <Button variant="ghost" onClick={() => setData(null)} className="text-muted-foreground hover:text-foreground text-center">
+                <Button variant="ghost" onClick={() => setData(null)} className="text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="w-4 h-4 mr-2" /> New Analysis
                 </Button>
               </div>
 
-              {/* Section 1: Profile & Match Overview */}
-              <SectionHeader icon={User} title="Profile Overview" subtitle="Your extracted professional profile and job compatibility" delay={0.05} />
-              <div className="flex gap-5 overflow-x-auto pb-2">
-                <div className="min-w-[300px] flex-1"><ProfileCard data={data.profile} /></div>
-                <div className="min-w-[300px] flex-1"><JobMatchScore data={data.jobMatch} /></div>
-                <div className="min-w-[300px] flex-1"><SkillGapChart data={data.skillGap} /></div>
-              </div>
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="w-full flex justify-start gap-1 bg-muted/50 border border-border rounded-xl p-1 mb-8 overflow-x-auto">
+                  <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">Profile Overview</span>
+                    <span className="sm:hidden">Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Projects</span>
+                    <span className="sm:hidden">Projects</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <FileText className="w-4 h-4" />
+                    <span className="hidden sm:inline">Resume Improvements</span>
+                    <span className="sm:hidden">Resume</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden sm:inline">Interview Prep</span>
+                    <span className="sm:hidden">Interview</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="career" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="hidden sm:inline">Career Growth</span>
+                    <span className="sm:hidden">Career</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Section 2: Resume & Project Analysis */}
-              <SectionHeader icon={Sparkles} title="Resume & Project Analysis" subtitle="AI suggestions to strengthen your resume and project impact" delay={0.2} />
-              <div className="flex gap-5 overflow-x-auto pb-2">
-                <div className="min-w-[300px] flex-1"><ResumeImprovements data={data.improvements} /></div>
-                <div className="min-w-[300px] flex-1"><ProjectImpact data={data.projectImpact} /></div>
-                <div className="min-w-[300px] flex-1"><WeaknessDetector data={data.weaknesses} /></div>
-              </div>
+                <TabsContent value="profile">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="space-y-5">
+                      <div><ProfileCard data={data.profile} /></div>
+                      <div><JobMatchScore data={data.jobMatch} /></div>
+                      <div><SkillGapChart data={data.skillGap} /></div>
+                    </div>
+                  </motion.div>
+                </TabsContent>
 
-              {/* Section 3: Interview Prep */}
-              <SectionHeader icon={MessageSquare} title="Interview Preparation" subtitle="AI-generated questions tailored to your profile and target role" delay={0.35} />
-              <div className="grid grid-cols-1 gap-5">
-                <InterviewQuestions data={data.interviewQuestions} />
-              </div>
+                <TabsContent value="resume">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="space-y-5">
+                      <div><ProjectImpact data={data.projectImpact} /></div>
+                      <div><WeaknessDetector data={data.weaknesses} /></div>
+                    </div>
+                  </motion.div>
+                </TabsContent>
 
-              {/* Section 4: Career Growth */}
-              <SectionHeader icon={TrendingUp} title="Career Growth" subtitle="Career trajectory predictions and personalized learning path" delay={0.5} />
-              <div className="flex gap-5 overflow-x-auto pb-2">
-                <div className="min-w-[300px] flex-1"><CareerTrajectory data={data.careerTrajectory} /></div>
-                {data.github && data.github.username !== "N/A" && <div className="min-w-[300px] flex-1"><GitHubAnalyzer data={data.github} /></div>}
-                <div className="min-w-[300px] flex-1"><LearningRoadmap data={data.roadmap} /></div>
-              </div>
+                <TabsContent value="improvements">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <ResumeImprovements data={data.improvements} />
+                  </motion.div>
+                </TabsContent>
 
+                <TabsContent value="interview">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <InterviewQuestions data={data.interviewQuestions} />
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="career">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="space-y-5">
+                      <div><CareerTrajectory data={data.careerTrajectory} /></div>
+                      {data.github && data.github.username !== "N/A" && <div><GitHubAnalyzer data={data.github} /></div>}
+                      <div><LearningRoadmap data={data.roadmap} /></div>
+                    </div>
+                  </motion.div>
+                </TabsContent>
+              </Tabs>
             </motion.div>
-          }
+          )}
         </AnimatePresence>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default Index;

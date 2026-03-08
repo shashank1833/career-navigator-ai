@@ -2,12 +2,3 @@ project_id = "breefkkzbsirdetphwud"
 
 [functions.analyze-resume]
 verify_jwt = false
-
-[functions.match-jobs]
-verify_jwt = false
-
-[functions.optimize-resume]
-verify_jwt = false
-
-[functions.search-jobs]
-verify_jwt = false

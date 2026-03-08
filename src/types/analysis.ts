@@ -82,5 +82,4 @@ export interface AnalysisResult {
   projectImpact: AnalysisProjectImpact[];
   roadmap: AnalysisRoadmap;
   github: AnalysisGitHub;
-  _jobDescription?: string;
 }
