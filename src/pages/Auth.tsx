@@ -75,10 +75,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
-      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
+      <ParticleBackground />
 
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
@@ -87,9 +86,9 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md mx-4"
       >
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
+          <HeroBrain size="sm" />
           <div className="flex items-center justify-center gap-3 mb-3">
-            <Brain className="w-10 h-10 glow-text-primary" />
             <h1 className="text-3xl font-extrabold gradient-text">Career Intelligence</h1>
           </div>
           <p className="text-muted-foreground text-sm">
@@ -97,6 +96,7 @@ const Auth = () => {
           </p>
         </div>
 
+        <TiltCard tiltAmount={5}>
         <div className="p-6 rounded-2xl bg-card/80 backdrop-blur border border-border shadow-xl">
           {!isForgot && (
             <Button
