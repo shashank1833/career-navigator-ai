@@ -90,6 +90,11 @@ const Index = () => {
                     <span className="hidden sm:inline">Career Growth</span>
                     <span className="sm:hidden">Career</span>
                   </TabsTrigger>
+                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Briefcase className="w-4 h-4" />
+                    <span className="hidden sm:inline">Job Matching</span>
+                    <span className="sm:hidden">Jobs</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile">
