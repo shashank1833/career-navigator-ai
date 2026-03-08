@@ -83,7 +83,7 @@ const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-4">
+          <div className="flex items-center gap-2 mt-4 flex-wrap">
             <Button
               size="sm"
               onClick={() => onOptimize(job)}
@@ -93,6 +93,28 @@ const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) 
               <Sparkles className="w-3 h-3 mr-1" />
               Optimize Resume
             </Button>
+            {onSave && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => onSave(job)}
+              >
+                <Bookmark className="w-3 h-3 mr-1" />
+                Save
+              </Button>
+            )}
+            {onTrack && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => onTrack(job)}
+              >
+                <ClipboardList className="w-3 h-3 mr-1" />
+                Track
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"

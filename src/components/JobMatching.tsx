@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Briefcase, Search, Bookmark, ClipboardList, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import DashboardCard from "./DashboardCard";
 import JobCard from "./JobCard";
 import ResumeOptimizer from "./ResumeOptimizer";
+import ApplicationTracker, { type TrackedApplication, type ApplicationStatus } from "./ApplicationTracker";
 import type { AnalysisProfile } from "@/types/analysis";
 import type { JobListing, ResumeOptimization } from "@/types/jobs";
 
@@ -18,6 +19,7 @@ interface JobMatchingProps {
 const JobMatching = ({ profile }: JobMatchingProps) => {
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [savedJobs, setSavedJobs] = useState<JobListing[]>([]);
+  const [trackedApps, setTrackedApps] = useState<TrackedApplication[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,7 +48,6 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
           }),
         }
       );
-
       if (!res.ok) throw new Error("Failed to fetch jobs");
       const data = await res.json();
       setJobs(Array.isArray(data) ? data : []);
@@ -62,7 +63,6 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
     setSelectedJob(job);
     setOptimizing(true);
     setOptimization(null);
-
     try {
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/optimize-resume`,
@@ -75,7 +75,6 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
           body: JSON.stringify({ profile, job }),
         }
       );
-
       if (!res.ok) throw new Error("Failed to optimize resume");
       const data = await res.json();
       setOptimization(data);
@@ -94,6 +93,31 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
     }
   };
 
+  const handleTrackApplication = (job: JobListing) => {
+    if (trackedApps.find((a) => a.job.id === job.id)) {
+      toast({ title: "Already Tracked", description: "This application is already being tracked" });
+      return;
+    }
+    const app: TrackedApplication = {
+      id: crypto.randomUUID(),
+      job,
+      status: "applied",
+      appliedDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      notes: "",
+    };
+    setTrackedApps((prev) => [...prev, app]);
+    toast({ title: "Application Tracked", description: `${job.title} at ${job.company} added to tracker` });
+  };
+
+  const handleUpdateStatus = (id: string, status: ApplicationStatus) => {
+    setTrackedApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+  };
+
+  const handleRemoveApp = (id: string) => {
+    setTrackedApps((prev) => prev.filter((a) => a.id !== id));
+    toast({ title: "Removed", description: "Application removed from tracker" });
+  };
+
   if (selectedJob && (optimizing || optimization)) {
     return (
       <ResumeOptimizer
@@ -101,6 +125,7 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
         optimization={optimization}
         loading={optimizing}
         onBack={() => { setSelectedJob(null); setOptimization(null); }}
+        profile={profile}
       />
     );
   }
@@ -124,26 +149,19 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
         <Tabs defaultValue="recommended" className="w-full">
           <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
             <TabsTrigger value="recommended" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Briefcase className="w-3.5 h-3.5" />
-              Recommended
+              <Briefcase className="w-3.5 h-3.5" /> Recommended
             </TabsTrigger>
             <TabsTrigger value="saved" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Bookmark className="w-3.5 h-3.5" />
-              Saved ({savedJobs.length})
+              <Bookmark className="w-3.5 h-3.5" /> Saved ({savedJobs.length})
             </TabsTrigger>
             <TabsTrigger value="tracker" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <ClipboardList className="w-3.5 h-3.5" />
-              Tracker
+              <ClipboardList className="w-3.5 h-3.5" /> Tracker ({trackedApps.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="recommended">
             {!searched && !loading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
                 <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
                 <p className="text-muted-foreground text-sm mb-3">Find jobs that match your skills</p>
                 <Button onClick={fetchJobs} disabled={loading}>
@@ -165,7 +183,14 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
                   </Button>
                 </div>
                 {jobs.map((job, i) => (
-                  <JobCard key={job.id} job={job} onOptimize={handleOptimize} delay={i * 0.08} />
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onOptimize={handleOptimize}
+                    onSave={handleSaveJob}
+                    onTrack={handleTrackApplication}
+                    delay={i * 0.08}
+                  />
                 ))}
               </div>
             )}
@@ -180,18 +205,18 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
             ) : (
               <div className="space-y-3">
                 {savedJobs.map((job, i) => (
-                  <JobCard key={job.id} job={job} onOptimize={handleOptimize} delay={i * 0.08} />
+                  <JobCard key={job.id} job={job} onOptimize={handleOptimize} onSave={handleSaveJob} onTrack={handleTrackApplication} delay={i * 0.08} />
                 ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="tracker">
-            <div className="text-center py-12">
-              <ClipboardList className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-sm">Application tracking coming soon</p>
-              <p className="text-muted-foreground/60 text-xs mt-1">Track your job applications and their status</p>
-            </div>
+            <ApplicationTracker
+              applications={trackedApps}
+              onUpdateStatus={handleUpdateStatus}
+              onRemove={handleRemoveApp}
+            />
           </TabsContent>
         </Tabs>
       </DashboardCard>
