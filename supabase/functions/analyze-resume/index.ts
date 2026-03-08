@@ -72,8 +72,9 @@ Return ONLY valid JSON with this structure:
     "overall": 0-100
   },
   "improvements": [
-    { "original": "weak bullet point from resume", "improved": "rewritten version that sounds natural and human — use simple, direct language with real action verbs and specific metrics. Avoid corporate jargon, buzzwords, or AI-sounding phrases like 'leveraged', 'utilized', 'spearheaded'. Write like a real person would describe their work to a friend." }
+    { "original": "weak bullet point from resume", "improved": "best rewritten version", "alternatives": ["second alternative rewrite with different angle or emphasis", "third alternative rewrite with different metrics or framing"] }
   ],
+  NOTE: For each improvement, provide exactly 1 main 'improved' version plus 2 'alternatives' — all should sound natural and human, use simple direct language with real action verbs and specific metrics. Avoid corporate jargon, buzzwords, or AI-sounding phrases like 'leveraged', 'utilized', 'spearheaded'. Write like a real person would describe their work to a friend. Each alternative should take a different angle (e.g. different metric, different framing, different emphasis).
   "interviewQuestions": {
     "technical": ["5 most commonly asked technical interview questions for this specific role/job description — focus on real questions that top companies actually ask, relevant to the required skills and technologies"],
     "conceptual": ["3 most frequently asked conceptual/system design questions for this role — the kind interviewers love to ask to test deep understanding"],
