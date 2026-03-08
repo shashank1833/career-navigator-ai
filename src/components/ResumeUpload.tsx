@@ -211,10 +211,10 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
 function PipelineStepIndicator({ label, status }: { label: string; status: "pending" | "active" | "done" }) {
   return (
     <div className="flex items-center gap-3">
-      {status === "done" && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />}
+      {status === "done" && <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />}
       {status === "active" && <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />}
       {status === "pending" && <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
-      <span className={`text-sm ${status === "done" ? "text-green-500" : status === "active" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+      <span className={`text-sm ${status === "done" ? "text-accent" : status === "active" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
         {label}
       </span>
     </div>
