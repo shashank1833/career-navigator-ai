@@ -48,9 +48,14 @@ export const useResumeVersions = () => {
       .eq("session_id", sessionId)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setVersions(data.map(mapRow));
-    }
+      // Deduplicate by id
+      const seen = new Set<string>();
+      const deduped = data.map(mapRow).filter((v) => {
+        if (seen.has(v.id)) return false;
+        seen.add(v.id);
+        return true;
+      });
+      setVersions(deduped);
     setLoading(false);
   }, [sessionId]);
 
@@ -68,18 +73,24 @@ export const useResumeVersions = () => {
       .maybeSingle();
 
     if (existing) {
-      // If analysis_data wasn't stored before, update it now
-      if (!existing.analysis_data && analysisResult) {
+      // Update with latest analysis data
+      const updates: any = {};
+      if (analysisResult) {
+        updates.analysis_data = JSON.parse(JSON.stringify(analysisResult));
+        updates.profile_data = JSON.parse(JSON.stringify(profile));
+        updates.optimized_skills = profile.skills;
+      }
+      if (Object.keys(updates).length > 0) {
         await supabase
           .from("resume_versions")
-          .update({ analysis_data: JSON.parse(JSON.stringify(analysisResult)) as unknown as Json } as any)
+          .update(updates)
           .eq("id", existing.id);
-        existing.analysis_data = JSON.parse(JSON.stringify(analysisResult));
+        Object.assign(existing, updates);
       }
       const mapped = mapRow(existing);
       setVersions((prev) => {
-        if (prev.some((v) => v.id === mapped.id)) return prev;
-        return [mapped, ...prev];
+        const filtered = prev.filter((v) => v.id !== mapped.id);
+        return [mapped, ...filtered];
       });
       return mapped;
     }
