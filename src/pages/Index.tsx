@@ -131,6 +131,7 @@ const Index = () => {
                       <div><ProfileCard data={data.profile} /></div>
                       <div><JobMatchScore data={data.jobMatch} /></div>
                       <div><SkillGapChart data={data.skillGap} /></div>
+                      <SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} />
                     </div>
                   </motion.div>
                 </TabsContent>
