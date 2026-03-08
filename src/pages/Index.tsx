@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import GitHubAnalyzer from "@/components/GitHubAnalyzer";
 import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
+import JobMatching from "@/components/JobMatching";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
@@ -89,6 +90,11 @@ const Index = () => {
                     <span className="hidden sm:inline">Career Growth</span>
                     <span className="sm:hidden">Career</span>
                   </TabsTrigger>
+                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Briefcase className="w-4 h-4" />
+                    <span className="hidden sm:inline">Job Matching</span>
+                    <span className="sm:hidden">Jobs</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile">
@@ -129,6 +135,12 @@ const Index = () => {
                       {data.github && data.github.username !== "N/A" && <div><GitHubAnalyzer data={data.github} /></div>}
                       <div><LearningRoadmap data={data.roadmap} /></div>
                     </div>
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="jobs">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <JobMatching profile={data.profile} />
                   </motion.div>
                 </TabsContent>
               </Tabs>
