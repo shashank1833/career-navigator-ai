@@ -1,22 +1,22 @@
 import { motion } from "framer-motion";
-import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { AnalysisResult } from "@/types/analysis";
 
 interface ResumeUploadProps {
-  onAnalyze: (data: AnalysisResult) => void;
+  onAnalyze: (data: AnalysisResult, rawText?: string, parsedResume?: any) => void;
 }
+
+type PipelineStep = "idle" | "extracting" | "extracted" | "analyzing" | "done" | "error";
 
 const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
-  const [githubUsername, setGithubUsername] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<PipelineStep>("idle");
   const { toast } = useToast();
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -35,16 +35,16 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
 
   const handleAnalyze = async () => {
     if (!file) return;
-    setLoading(true);
 
     try {
+      // ===== STEP 1: Parse resume (text extraction + NLP) =====
+      setStep("extracting");
+
       const formData = new FormData();
       formData.append("resume", file);
-      if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
-      if (githubUsername.trim()) formData.append("githubUsername", githubUsername);
 
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-resume`,
+      const parseRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-resume`,
         {
           method: "POST",
           headers: {
@@ -54,24 +54,65 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         }
       );
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Analysis failed" }));
-        throw new Error(err.error || `Error ${res.status}`);
+      if (!parseRes.ok) {
+        const err = await parseRes.json().catch(() => ({ error: "Text extraction failed" }));
+        throw new Error(err.error || `Extraction error ${parseRes.status}`);
       }
 
-      const data: AnalysisResult = await res.json();
-      data._jobDescription = jobDescription.trim() || undefined;
-      onAnalyze(data);
+      const parseData = await parseRes.json();
+      setStep("extracted");
+
+      // ===== STEP 2: AI Analysis on structured data =====
+      setStep("analyzing");
+
+      const analyzeRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-resume`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rawText: parseData.rawText,
+            parsedResume: parseData.parsed,
+            jobDescription: jobDescription.trim() || undefined,
+          }),
+        }
+      );
+
+      if (!analyzeRes.ok) {
+        const err = await analyzeRes.json().catch(() => ({ error: "AI analysis failed" }));
+        throw new Error(err.error || `Analysis error ${analyzeRes.status}`);
+      }
+
+      const analysisData: AnalysisResult = await analyzeRes.json();
+      analysisData._jobDescription = jobDescription.trim() || undefined;
+
+      setStep("done");
+      onAnalyze(analysisData, parseData.rawText, parseData.parsed);
     } catch (e) {
+      setStep("error");
       toast({
         title: "Analysis Failed",
         description: e instanceof Error ? e.message : "Something went wrong",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+      // Reset to allow retry
+      setTimeout(() => setStep("idle"), 2000);
     }
   };
+
+  const isLoading = step === "extracting" || step === "extracted" || step === "analyzing";
+
+  const stepLabel = {
+    idle: "Analyze with AI",
+    extracting: "Extracting text from resume...",
+    extracted: "Text extracted! Starting AI analysis...",
+    analyzing: "Analyzing with AI...",
+    done: "Analysis complete!",
+    error: "Analysis failed",
+  }[step];
 
   return (
     <motion.div
@@ -129,26 +170,55 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         />
       </div>
 
+      {/* Pipeline Progress */}
+      {isLoading && (
+        <div className="mb-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="space-y-2">
+            <PipelineStepIndicator
+              label="Text Extraction & NLP Parsing"
+              status={step === "extracting" ? "active" : step === "extracted" || step === "analyzing" ? "done" : "pending"}
+            />
+            <PipelineStepIndicator
+              label="AI Career Analysis"
+              status={step === "analyzing" ? "active" : "pending"}
+            />
+          </div>
+        </div>
+      )}
 
       <Button
         onClick={handleAnalyze}
-        disabled={!file || loading}
+        disabled={!file || isLoading}
         className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 disabled:opacity-30"
       >
-        {loading ? (
+        {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Analyzing with AI...
+            {stepLabel}
           </>
         ) : (
           <>
             <Sparkles className="w-4 h-4 mr-2" />
-            Analyze with AI
+            {stepLabel}
           </>
         )}
       </Button>
     </motion.div>
   );
 };
+
+// Pipeline step visual indicator
+function PipelineStepIndicator({ label, status }: { label: string; status: "pending" | "active" | "done" }) {
+  return (
+    <div className="flex items-center gap-3">
+      {status === "done" && <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />}
+      {status === "active" && <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />}
+      {status === "pending" && <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
+      <span className={`text-sm ${status === "done" ? "text-accent" : status === "active" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
 
 export default ResumeUpload;
