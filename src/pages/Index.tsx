@@ -15,6 +15,7 @@ import GitHubAnalyzer from "@/components/GitHubAnalyzer";
 import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
+import JobMatching from "@/components/JobMatching";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
