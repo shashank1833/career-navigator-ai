@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
+import { Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table, TrendingUp } from "lucide-react";
 import careerLogo from "@/assets/career-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardCharts from "@/components/DashboardCharts";
 import KanbanBoard from "@/components/KanbanBoard";
+import MarketInsights from "@/components/MarketInsights";
 import { useJobApplications } from "@/hooks/useJobApplications";
 import type { ApplicationStatus } from "@/hooks/useJobApplications";
 
@@ -154,10 +155,23 @@ const Dashboard = () => {
           ))}
         </motion.div>
 
-        {/* Charts */}
+        {/* Insights Tabs */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Insights</h3>
-          <DashboardCharts applications={applications} />
+          <Tabs defaultValue="overview">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Insights</h3>
+              <TabsList className="bg-card/80">
+                <TabsTrigger value="overview" className="text-xs gap-1"><LayoutGrid className="w-3 h-3" /> Overview</TabsTrigger>
+                <TabsTrigger value="market" className="text-xs gap-1"><TrendingUp className="w-3 h-3" /> Market Insights</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="overview">
+              <DashboardCharts applications={applications} />
+            </TabsContent>
+            <TabsContent value="market">
+              <MarketInsights userSkills={[]} />
+            </TabsContent>
+          </Tabs>
         </motion.div>
 
         {/* Application Tracker */}
