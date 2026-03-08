@@ -75,7 +75,7 @@ const Index = () => {
         <AnimatePresence mode="wait">
           {!data ? (
             <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
-              <ResumeUpload onAnalyze={(result) => setData(result)} />
+              <ResumeUpload onAnalyze={handleAnalyze} />
             </motion.div>
           ) : (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
