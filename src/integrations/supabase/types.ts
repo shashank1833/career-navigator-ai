@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      interview_attempts: {
+        Row: {
+          category: string
+          clarity_score: number
+          communication_score: number
+          created_at: string | null
+          difficulty: string
+          feedback: string
+          id: string
+          question: string
+          session_id: string
+          technical_depth_score: number
+          user_answer: string
+        }
+        Insert: {
+          category: string
+          clarity_score?: number
+          communication_score?: number
+          created_at?: string | null
+          difficulty?: string
+          feedback?: string
+          id?: string
+          question: string
+          session_id: string
+          technical_depth_score?: number
+          user_answer: string
+        }
+        Update: {
+          category?: string
+          clarity_score?: number
+          communication_score?: number
+          created_at?: string | null
+          difficulty?: string
+          feedback?: string
+          id?: string
+          question?: string
+          session_id?: string
+          technical_depth_score?: number
+          user_answer?: string
+        }
+        Relationships: []
+      }
       job_applications: {
         Row: {
           applied_date: string | null
