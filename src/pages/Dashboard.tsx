@@ -188,7 +188,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
               onClick={() => navigate("/analyze")}
-              className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all text-left group"
+              className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all text-left group shadow-[0_6px_0_0_hsl(var(--primary)/0.3)] hover:shadow-[0_3px_0_0_hsl(var(--primary)/0.3)] hover:translate-y-[3px] active:shadow-none active:translate-y-[6px]"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-primary/10">
@@ -201,7 +201,7 @@ const Dashboard = () => {
 
             <button
               onClick={() => navigate("/resumes")}
-              className="p-6 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:border-secondary/40 transition-all text-left group"
+              className="p-6 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:border-secondary/40 transition-all text-left group shadow-[0_6px_0_0_hsl(var(--secondary)/0.3)] hover:shadow-[0_3px_0_0_hsl(var(--secondary)/0.3)] hover:translate-y-[3px] active:shadow-none active:translate-y-[6px]"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-secondary/10">
@@ -214,7 +214,7 @@ const Dashboard = () => {
 
             <button
               onClick={() => navigate("/analyze")}
-              className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all text-left group"
+              className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all text-left group shadow-[0_6px_0_0_hsl(var(--accent)/0.3)] hover:shadow-[0_3px_0_0_hsl(var(--accent)/0.3)] hover:translate-y-[3px] active:shadow-none active:translate-y-[6px]"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-accent/10">
@@ -227,7 +227,7 @@ const Dashboard = () => {
 
             <button
               onClick={() => navigate("/analyze")}
-              className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 hover:border-green-500/40 transition-all text-left group"
+              className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 hover:border-green-500/40 transition-all text-left group shadow-[0_6px_0_0_rgba(34,197,94,0.3)] hover:shadow-[0_3px_0_0_rgba(34,197,94,0.3)] hover:translate-y-[3px] active:shadow-none active:translate-y-[6px]"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-green-500/10">
