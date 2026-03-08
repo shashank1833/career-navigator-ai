@@ -201,7 +201,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
                 </div>
               </DashboardCard>
 
-              <DashboardCard title="Missing Skills" icon={Target} delay={0.3} accentColor="destructive">
+              <DashboardCard title="Missing Skills" icon={Target} delay={0.3} accentColor="primary">
                 <div className="flex flex-wrap gap-2">
                   {result.missingSkills.map((skill) => (
                     <Badge key={skill} variant="secondary" className="bg-red-500/10 text-red-400 border-red-500/20">
