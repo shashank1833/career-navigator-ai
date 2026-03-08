@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
@@ -14,6 +15,7 @@ import GitHubAnalyzer from "@/components/GitHubAnalyzer";
 import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
+import JobMatching from "@/components/JobMatching";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
@@ -32,9 +34,12 @@ const Index = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Zap className="w-3.5 h-3.5 glow-text-primary" />
-            <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+          <div className="flex items-center justify-between mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Zap className="w-3.5 h-3.5 glow-text-primary" />
+              <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+            </div>
+            <ThemeToggle />
           </div>
           <div className="flex items-center justify-center gap-3 mb-4">
             <Brain className="w-10 h-10 glow-text-primary" />
@@ -85,6 +90,11 @@ const Index = () => {
                     <span className="hidden sm:inline">Career Growth</span>
                     <span className="sm:hidden">Career</span>
                   </TabsTrigger>
+                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Briefcase className="w-4 h-4" />
+                    <span className="hidden sm:inline">Job Matching</span>
+                    <span className="sm:hidden">Jobs</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile">
@@ -114,7 +124,7 @@ const Index = () => {
 
                 <TabsContent value="interview">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <InterviewQuestions data={data.interviewQuestions} />
+                    <InterviewQuestions data={data.interviewQuestions} jobDescription={data._jobDescription} />
                   </motion.div>
                 </TabsContent>
 
@@ -125,6 +135,12 @@ const Index = () => {
                       {data.github && data.github.username !== "N/A" && <div><GitHubAnalyzer data={data.github} /></div>}
                       <div><LearningRoadmap data={data.roadmap} /></div>
                     </div>
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="jobs">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <JobMatching profile={data.profile} />
                   </motion.div>
                 </TabsContent>
               </Tabs>
