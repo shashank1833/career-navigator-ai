@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
 import SkillGapChart from "@/components/SkillGapChart";
@@ -14,25 +15,6 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import type { AnalysisResult } from "@/types/analysis";
-import type { LucideIcon } from "lucide-react";
-
-const SectionHeader = ({ icon: Icon, title, subtitle, delay = 0 }: { icon: LucideIcon; title: string; subtitle: string; delay?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
-    className="flex items-center gap-3 mb-5 mt-12 first:mt-0"
-  >
-    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-      <Icon className="w-5 h-5 glow-text-primary" />
-    </div>
-    <div>
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
-      <p className="text-xs text-muted-foreground">{subtitle}</p>
-    </div>
-    <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent ml-4" />
-  </motion.div>
-);
 
 const Index = () => {
   const [data, setData] = useState<AnalysisResult | null>(null);
@@ -76,38 +58,68 @@ const Index = () => {
                 </Button>
               </div>
 
-              {/* Section 1: Profile & Match Overview */}
-              <SectionHeader icon={User} title="Profile Overview" subtitle="Your extracted professional profile and job compatibility" delay={0.05} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ProfileCard data={data.profile} />
-                <JobMatchScore data={data.jobMatch} />
-                <SkillGapChart data={data.skillGap} />
-              </div>
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="w-full flex justify-start gap-1 bg-muted/50 border border-border rounded-xl p-1 mb-8 overflow-x-auto">
+                  <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">Profile Overview</span>
+                    <span className="sm:hidden">Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Resume & Projects</span>
+                    <span className="sm:hidden">Resume</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden sm:inline">Interview Prep</span>
+                    <span className="sm:hidden">Interview</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="career" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="hidden sm:inline">Career Growth</span>
+                    <span className="sm:hidden">Career</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Section 2: Resume & Project Analysis */}
-              <SectionHeader icon={Sparkles} title="Resume & Project Analysis" subtitle="AI suggestions to strengthen your resume and project impact" delay={0.2} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ResumeImprovements data={data.improvements} />
-                <ProjectImpact data={data.projectImpact} />
-                <WeaknessDetector data={data.weaknesses} />
-              </div>
+                <TabsContent value="profile">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <ProfileCard data={data.profile} />
+                      <JobMatchScore data={data.jobMatch} />
+                      <SkillGapChart data={data.skillGap} />
+                    </div>
+                  </motion.div>
+                </TabsContent>
 
-              {/* Section 3: Interview Prep */}
-              <SectionHeader icon={MessageSquare} title="Interview Preparation" subtitle="AI-generated questions tailored to your profile and target role" delay={0.35} />
-              <div className="grid grid-cols-1 gap-5">
-                <InterviewQuestions data={data.interviewQuestions} />
-              </div>
+                <TabsContent value="resume">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <ResumeImprovements data={data.improvements} />
+                      <ProjectImpact data={data.projectImpact} />
+                      <WeaknessDetector data={data.weaknesses} />
+                    </div>
+                  </motion.div>
+                </TabsContent>
 
-              {/* Section 4: Career Growth */}
-              <SectionHeader icon={TrendingUp} title="Career Growth" subtitle="Career trajectory predictions and personalized learning path" delay={0.5} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <CareerTrajectory data={data.careerTrajectory} />
-                {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
-              </div>
-              <div className="grid grid-cols-1 gap-5 mt-5">
-                <LearningRoadmap data={data.roadmap} />
-              </div>
+                <TabsContent value="interview">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <InterviewQuestions data={data.interviewQuestions} />
+                  </motion.div>
+                </TabsContent>
 
+                <TabsContent value="career">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <CareerTrajectory data={data.careerTrajectory} />
+                      {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
+                    </div>
+                    <div className="mt-5">
+                      <LearningRoadmap data={data.roadmap} />
+                    </div>
+                  </motion.div>
+                </TabsContent>
+              </Tabs>
             </motion.div>
           )}
         </AnimatePresence>
