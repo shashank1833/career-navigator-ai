@@ -88,7 +88,7 @@ const Dashboard = () => {
         >
           <div className="flex items-center gap-3">
             <Brain className="w-8 h-8 glow-text-primary" />
-            <h1 className="text-2xl font-extrabold gradient-text">Dashboard</h1>
+            <h1 className="text-2xl font-extrabold gradient-text">Career Intelligence</h1>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
