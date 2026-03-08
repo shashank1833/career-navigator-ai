@@ -49,11 +49,13 @@ const Dashboard = () => {
         supabase.from("resume_versions").select("id", { count: "exact", head: true }).eq("session_id", sessionId),
         supabase.from("saved_jobs").select("id", { count: "exact", head: true }).eq("session_id", sessionId),
         supabase.from("job_applications").select("id", { count: "exact", head: true }).eq("session_id", sessionId),
-      ]).then(([rv, sj, ja]) => {
+        supabase.from("roadmap_progress").select("id", { count: "exact", head: true }).eq("session_id", sessionId).eq("completed", true),
+      ]).then(([rv, sj, ja, rp]) => {
         setStats({
           resumeVersions: rv.count || 0,
           savedJobs: sj.count || 0,
           applications: ja.count || 0,
+          roadmapCompleted: rp.count || 0,
         });
       });
     }
