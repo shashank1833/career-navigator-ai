@@ -78,10 +78,10 @@ const Index = () => {
 
               {/* Section 1: Profile & Match Overview */}
               <SectionHeader icon={User} title="Profile Overview" subtitle="Your extracted professional profile and job compatibility" delay={0.05} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ProfileCard data={data.profile} />
-                <JobMatchScore data={data.jobMatch} />
-                <SkillGapChart data={data.skillGap} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><ProfileCard data={data.profile} /></div>
+                <div className="min-w-[300px] flex-1"><JobMatchScore data={data.jobMatch} /></div>
+                <div className="min-w-[300px] flex-1"><SkillGapChart data={data.skillGap} /></div>
               </div>
 
               {/* Section 2: Resume & Project Analysis */}
