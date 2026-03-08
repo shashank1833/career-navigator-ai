@@ -30,6 +30,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({ resumeVersions: 0, savedJobs: 0, applications: 0, roadmapCompleted: 0 });
+  const { applications, updateStatus, removeApplication } = useJobApplications();
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
