@@ -48,9 +48,14 @@ export const useResumeVersions = () => {
       .eq("session_id", sessionId)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setVersions(data.map(mapRow));
-    }
+      // Deduplicate by id
+      const seen = new Set<string>();
+      const deduped = data.map(mapRow).filter((v) => {
+        if (seen.has(v.id)) return false;
+        seen.add(v.id);
+        return true;
+      });
+      setVersions(deduped);
     setLoading(false);
   }, [sessionId]);
 
