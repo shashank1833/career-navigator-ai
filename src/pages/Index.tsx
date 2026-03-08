@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -16,10 +16,14 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
+import ResumeVersions from "@/components/ResumeVersions";
+import CareerReportExport from "@/components/CareerReportExport";
+import { useResumeVersions } from "@/hooks/useResumeVersions";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
   const [data, setData] = useState<AnalysisResult | null>(null);
+  const { versions, loading: versionsLoading, deleteVersion } = useResumeVersions();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -77,7 +81,7 @@ const Index = () => {
                   </TabsTrigger>
                   <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                     <FileText className="w-4 h-4" />
-                    <span className="hidden sm:inline">Resume Improvements</span>
+                    <span className="hidden sm:inline">Resume</span>
                     <span className="sm:hidden">Resume</span>
                   </TabsTrigger>
                   <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -94,6 +98,11 @@ const Index = () => {
                     <Briefcase className="w-4 h-4" />
                     <span className="hidden sm:inline">Job Matching</span>
                     <span className="sm:hidden">Jobs</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="export" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export Report</span>
+                    <span className="sm:hidden">Export</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -118,7 +127,14 @@ const Index = () => {
 
                 <TabsContent value="improvements">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <ResumeImprovements data={data.improvements} />
+                    <div className="space-y-5">
+                      <ResumeImprovements data={data.improvements} />
+                      <ResumeVersions
+                        versions={versions}
+                        loading={versionsLoading}
+                        onDelete={deleteVersion}
+                      />
+                    </div>
                   </motion.div>
                 </TabsContent>
 
@@ -141,6 +157,12 @@ const Index = () => {
                 <TabsContent value="jobs">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <JobMatching profile={data.profile} />
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="export">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <CareerReportExport analysis={data} />
                   </motion.div>
                 </TabsContent>
               </Tabs>
