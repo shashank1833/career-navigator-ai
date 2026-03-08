@@ -86,10 +86,10 @@ const Index = () => {
 
               {/* Section 2: Resume & Project Analysis */}
               <SectionHeader icon={Sparkles} title="Resume & Project Analysis" subtitle="AI suggestions to strengthen your resume and project impact" delay={0.2} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ResumeImprovements data={data.improvements} />
-                <ProjectImpact data={data.projectImpact} />
-                <WeaknessDetector data={data.weaknesses} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><ResumeImprovements data={data.improvements} /></div>
+                <div className="min-w-[300px] flex-1"><ProjectImpact data={data.projectImpact} /></div>
+                <div className="min-w-[300px] flex-1"><WeaknessDetector data={data.weaknesses} /></div>
               </div>
 
               {/* Section 3: Interview Prep */}
