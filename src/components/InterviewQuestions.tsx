@@ -1,7 +1,11 @@
 import DashboardCard from "./DashboardCard";
-import { MessageSquare, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, Briefcase, ChevronDown, ChevronUp, Send, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { AnalysisInterviewQuestions } from "@/types/analysis";
 
 type Category = "technical" | "conceptual" | "behavioral";
@@ -15,35 +19,80 @@ const categoryColors: Record<Category, string> = {
 interface Props {
   data: AnalysisInterviewQuestions;
   jobDescription?: string;
+  skills?: string[];
 }
 
-const InterviewQuestions = ({ data, jobDescription }: Props) => {
+const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
   const [activeCategory, setActiveCategory] = useState<Category>("technical");
   const [showJD, setShowJD] = useState(false);
-  const questions = data[activeCategory] || [];
+  const [customJD, setCustomJD] = useState(jobDescription || "");
+  const [questions, setQuestions] = useState<AnalysisInterviewQuestions>(data);
+  const [generating, setGenerating] = useState(false);
+
+  const displayedQuestions = questions[activeCategory] || [];
+
+  const handleGenerate = async () => {
+    if (!customJD.trim()) {
+      toast.error("Please enter a job description");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke(
+        "generate-interview-questions",
+        { body: { jobDescription: customJD, skills: skills || [] } }
+      );
+
+      if (error) throw error;
+      if (result?.error) throw new Error(result.error);
+
+      setQuestions(result);
+      setActiveCategory("technical");
+      toast.success("Interview questions generated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate questions. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
-      {jobDescription && (
-        <DashboardCard title="Target Job Description" icon={Briefcase} delay={0.1} accentColor="secondary">
-          <button
-            onClick={() => setShowJD(!showJD)}
-            className="w-full flex items-center justify-between text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className="text-left line-clamp-2">{showJD ? "Hide job description" : jobDescription.slice(0, 150) + (jobDescription.length > 150 ? "..." : "")}</span>
-            {showJD ? <ChevronUp className="w-4 h-4 shrink-0 ml-2" /> : <ChevronDown className="w-4 h-4 shrink-0 ml-2" />}
-          </button>
-          {showJD && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mt-3 p-3 rounded-lg bg-muted/20 border border-border/50 text-sm text-foreground/80 whitespace-pre-wrap max-h-60 overflow-y-auto"
+      <DashboardCard title="Job Description" icon={Briefcase} delay={0.1} accentColor="secondary">
+        <div className="space-y-3">
+          <Textarea
+            placeholder="Paste a job description here to generate tailored interview questions..."
+            value={customJD}
+            onChange={(e) => setCustomJD(e.target.value)}
+            className="min-h-[120px] bg-muted/20 border-border/50 text-sm resize-y"
+          />
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {customJD.length > 0 ? `${customJD.length} characters` : "Enter a job description to get started"}
+            </p>
+            <Button
+              onClick={handleGenerate}
+              disabled={generating || !customJD.trim()}
+              size="sm"
+              className="gap-2"
             >
-              {jobDescription}
-            </motion.div>
-          )}
-        </DashboardCard>
-      )}
+              {generating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Generate Questions
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DashboardCard>
 
       <DashboardCard title="Interview Questions" icon={MessageSquare} delay={0.4} accentColor="accent" className="col-span-full lg:col-span-2">
         <div className="flex gap-2 mb-4">
@@ -55,14 +104,14 @@ const InterviewQuestions = ({ data, jobDescription }: Props) => {
                 activeCategory === cat ? categoryColors[cat] : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
               }`}
             >
-              {cat} ({(data[cat] || []).length})
+              {cat} ({(questions[cat] || []).length})
             </button>
           ))}
         </div>
         <div className="space-y-2">
-          {questions.map((q, i) => (
+          {displayedQuestions.map((q, i) => (
             <motion.div
-              key={`${activeCategory}-${i}`}
+              key={`${activeCategory}-${i}-${q.slice(0, 20)}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
@@ -72,6 +121,11 @@ const InterviewQuestions = ({ data, jobDescription }: Props) => {
               {q}
             </motion.div>
           ))}
+          {displayedQuestions.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No questions yet. Paste a job description above and click "Generate Questions".
+            </p>
+          )}
         </div>
       </DashboardCard>
     </div>
