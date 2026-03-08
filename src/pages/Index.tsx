@@ -115,7 +115,7 @@ const Index = () => {
                 </Button>
               </div>
 
-              <Tabs defaultValue="profile" className="w-full">
+              <Tabs defaultValue={navigationState?.initialTab ?? "profile"} className="w-full">
                 <TabsList className="w-full flex flex-wrap justify-start gap-2 bg-muted/50 border border-border rounded-xl p-2 mb-8 h-auto min-h-[56px]">
                   <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                     <User className="w-4 h-4" />
