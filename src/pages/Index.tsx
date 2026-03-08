@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
 import SkillGapChart from "@/components/SkillGapChart";
+import SkillMatchVisualization from "@/components/SkillMatchVisualization";
 import JobMatchScore from "@/components/JobMatchScore";
 import InterviewQuestions from "@/components/InterviewQuestions";
 import CareerTrajectory from "@/components/CareerTrajectory";
