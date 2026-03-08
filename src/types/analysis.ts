@@ -25,10 +25,15 @@ export interface AnalysisImprovement {
   improved: string;
 }
 
+export interface InterviewQuestionItem {
+  question: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+}
+
 export interface AnalysisInterviewQuestions {
-  technical: string[];
-  conceptual: string[];
-  behavioral: string[];
+  technical: (string | InterviewQuestionItem)[];
+  conceptual: (string | InterviewQuestionItem)[];
+  behavioral: (string | InterviewQuestionItem)[];
 }
 
 export interface AnalysisCareerPath {

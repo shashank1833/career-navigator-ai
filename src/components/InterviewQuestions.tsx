@@ -1,12 +1,13 @@
 import DashboardCard from "./DashboardCard";
-import { MessageSquare, Briefcase, ChevronDown, ChevronUp, Send, Loader2 } from "lucide-react";
+import { MessageSquare, Briefcase, Send, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { AnalysisInterviewQuestions } from "@/types/analysis";
+import type { AnalysisInterviewQuestions, InterviewQuestionItem } from "@/types/analysis";
 
 type Category = "technical" | "conceptual" | "behavioral";
 
@@ -15,6 +16,17 @@ const categoryColors: Record<Category, string> = {
   conceptual: "bg-secondary/10 text-secondary border-secondary/20",
   behavioral: "bg-accent/10 text-accent border-accent/20",
 };
+
+const difficultyStyles: Record<string, string> = {
+  Easy: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  Medium: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  Hard: "bg-red-500/15 text-red-400 border-red-500/30",
+};
+
+function normalizeQuestion(item: string | InterviewQuestionItem): { question: string; difficulty: string } {
+  if (typeof item === "string") return { question: item, difficulty: "Medium" };
+  return { question: item.question, difficulty: item.difficulty || "Medium" };
+}
 
 interface Props {
   data: AnalysisInterviewQuestions;
@@ -28,7 +40,7 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
   const [questions, setQuestions] = useState<AnalysisInterviewQuestions | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  const displayedQuestions = questions ? (questions[activeCategory] || []) : [];
+  const displayedQuestions = (questions?.[activeCategory] || []).map(normalizeQuestion);
 
   const handleGenerate = async () => {
     if (!customJD.trim()) {
@@ -110,14 +122,22 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
         <div className="space-y-2">
           {displayedQuestions.map((q, i) => (
             <motion.div
-              key={`${activeCategory}-${i}-${q.slice(0, 20)}`}
+              key={`${activeCategory}-${i}-${q.question.slice(0, 20)}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="p-3 rounded-lg bg-muted/20 border border-border/50 text-sm text-foreground/90 hover:bg-muted/30 transition-colors"
+              className="p-3 rounded-lg bg-muted/20 border border-border/50 text-sm text-foreground/90 hover:bg-muted/30 transition-colors flex items-start justify-between gap-3"
             >
-              <span className="text-muted-foreground font-mono text-xs mr-2">Q{i + 1}</span>
-              {q}
+              <div className="flex-1">
+                <span className="text-muted-foreground font-mono text-xs mr-2">Q{i + 1}</span>
+                {q.question}
+              </div>
+              <Badge
+                variant="outline"
+                className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 ${difficultyStyles[q.difficulty] || difficultyStyles.Medium}`}
+              >
+                {q.difficulty}
+              </Badge>
             </motion.div>
           ))}
           {displayedQuestions.length === 0 && (
