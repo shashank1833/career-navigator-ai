@@ -11,6 +11,7 @@ export interface ResumeVersion {
   target_job_title: string | null;
   target_company: string | null;
   profile_data: AnalysisProfile;
+  analysis_data: AnalysisResult | null;
   optimized_summary: string | null;
   optimized_skills: string[];
   optimized_bullet_points: Array<{ original: string; optimized: string }>;
