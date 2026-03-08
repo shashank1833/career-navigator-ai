@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionId } from "@/lib/session";
 import type { AnalysisProfile } from "@/types/analysis";
 import type { ResumeOptimization } from "@/types/jobs";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface ResumeVersion {
   id: string;
@@ -59,17 +59,15 @@ export const useResumeVersions = () => {
     const existing = versions.find((v) => v.is_original);
     if (existing) return existing;
 
-    const insertData: TablesInsert<"resume_versions"> = {
-      session_id: sessionId,
-      name: "Original Resume",
-      profile_data: profile as unknown as Record<string, unknown>,
-      optimized_skills: profile.skills,
-      is_original: true,
-    };
-
     const { data, error } = await supabase
       .from("resume_versions")
-      .insert(insertData)
+      .insert({
+        session_id: sessionId,
+        name: "Original Resume",
+        profile_data: JSON.parse(JSON.stringify(profile)) as Json,
+        optimized_skills: profile.skills,
+        is_original: true,
+      })
       .select()
       .single();
 
@@ -101,22 +99,20 @@ export const useResumeVersions = () => {
   ) => {
     const name = `${jobTitle} at ${company}`;
     
-    const insertData: TablesInsert<"resume_versions"> = {
-      session_id: sessionId,
-      name,
-      target_job_title: jobTitle,
-      target_company: company,
-      profile_data: profile as unknown as Record<string, unknown>,
-      optimized_summary: optimization.optimizedSections.summary.optimized,
-      optimized_skills: optimization.optimizedSections.skills.optimized,
-      optimized_bullet_points: optimization.optimizedSections.bulletPoints as unknown as Record<string, unknown>[],
-      application_strength: optimization.applicationStrength.score,
-      is_original: false,
-    };
-
     const { data, error } = await supabase
       .from("resume_versions")
-      .insert(insertData)
+      .insert({
+        session_id: sessionId,
+        name,
+        target_job_title: jobTitle,
+        target_company: company,
+        profile_data: JSON.parse(JSON.stringify(profile)) as Json,
+        optimized_summary: optimization.optimizedSections.summary.optimized,
+        optimized_skills: optimization.optimizedSections.skills.optimized,
+        optimized_bullet_points: JSON.parse(JSON.stringify(optimization.optimizedSections.bulletPoints)) as Json,
+        application_strength: optimization.applicationStrength.score,
+        is_original: false,
+      })
       .select()
       .single();
 
