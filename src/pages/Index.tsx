@@ -176,14 +176,7 @@ const Index = () => {
 
                 <TabsContent value="improvements">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="space-y-5">
-                      <ResumeImprovements data={data.improvements} />
-                      <ResumeVersions
-                        versions={versions}
-                        loading={versionsLoading}
-                        onDelete={deleteVersion}
-                      />
-                    </div>
+                    <ResumeImprovements data={data.improvements} />
                   </motion.div>
                 </TabsContent>
 
