@@ -212,14 +212,14 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
 
         <Tabs defaultValue="recommended" className="w-full">
           <TabsList className="w-full flex justify-start gap-3 bg-muted/30 border border-border rounded-xl p-2 mb-5">
-            <TabsTrigger value="recommended" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
-              <Briefcase className="w-5 h-5" /> Recommended
+            <TabsTrigger value="recommended" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 hover:bg-accent/50 hover:scale-105 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:scale-105">
+              <Briefcase className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" /> Recommended
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
-              <Bookmark className="w-5 h-5" /> Saved ({savedJobs.length})
+            <TabsTrigger value="saved" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 hover:bg-accent/50 hover:scale-105 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:scale-105">
+              <Bookmark className="w-5 h-5 transition-transform duration-300" /> Saved ({savedJobs.length})
             </TabsTrigger>
-            <TabsTrigger value="tracker" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
-              <ClipboardList className="w-5 h-5" /> Tracker ({applications.length})
+            <TabsTrigger value="tracker" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 hover:bg-accent/50 hover:scale-105 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:scale-105">
+              <ClipboardList className="w-5 h-5 transition-transform duration-300" /> Tracker ({applications.length})
             </TabsTrigger>
           </TabsList>
 
