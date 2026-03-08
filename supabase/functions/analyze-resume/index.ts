@@ -47,10 +47,18 @@ Return ONLY valid JSON with this structure:
 {
   "profile": {
     "name": "Full name from resume",
-    "education": "Highest education",
-    "experience": "X years",
-    "skills": ["skill1", "skill2", ...],
-    "technologies": ["tech1", "tech2", ...]
+    "education": "Highest education (e.g. B.Tech Computer Science, Stanford University)",
+    "experience": "X years (or 'Undergraduate Student' / 'Recent Graduate' if no professional experience)",
+    "tagline": "A short professional descriptor (e.g. 'Computer Science Undergraduate • AI & Backend Development Enthusiast'). Do NOT say '0 years experience'. Instead describe the person's focus area.",
+    "skills": ["8-10 conceptual expertise areas ONLY — e.g. 'Backend Development', 'Machine Learning', 'Data Structures & Algorithms', 'REST API Development'. NO generic phrases like 'scalable software solutions' or 'practical software solutions'. NO specific tool names — those go in technologies."],
+    "technologies": [
+      { "category": "Languages", "items": ["C++", "Python", "Java"] },
+      { "category": "Frontend", "items": ["React.js", "HTML", "CSS"] },
+      { "category": "Backend", "items": ["Node.js", "FastAPI"] },
+      { "category": "Databases", "items": ["PostgreSQL", "MongoDB"] },
+      { "category": "ML / AI", "items": ["PyTorch", "TensorFlow"] },
+      { "category": "Tools", "items": ["Git", "Docker", "AWS"] }
+    ]
   },
   "skillGap": {
     "matching": ["skills that match the job"],
