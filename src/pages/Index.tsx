@@ -110,10 +110,10 @@ const Index = () => {
 
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="flex gap-5 overflow-x-auto pb-2">
-                      <div className="min-w-[300px] flex-1"><CareerTrajectory data={data.careerTrajectory} /></div>
-                      {data.github && data.github.username !== "N/A" && <div className="min-w-[280px] flex-1"><GitHubAnalyzer data={data.github} /></div>}
-                      <div className="min-w-[320px] flex-1"><LearningRoadmap data={data.roadmap} /></div>
+                    <div className="space-y-5">
+                      <div><CareerTrajectory data={data.careerTrajectory} /></div>
+                      {data.github && data.github.username !== "N/A" && <div><GitHubAnalyzer data={data.github} /></div>}
+                      <div><LearningRoadmap data={data.roadmap} /></div>
                     </div>
                   </motion.div>
                 </TabsContent>
