@@ -56,7 +56,7 @@ Return ONLY valid JSON with this exact structure:
         "desc": "What to build and why this tool matters for the role",
         "done": false,
         "skills": ["specific tool or framework this step covers"],
-        "links": [{ "label": "Resource name", "url": "https://real-url.com" }]
+        "links": [{ "label": "Resource name", "url": "https://real-url.com" }, { "label": "Resource 2", "url": "https://..." }, { "label": "Resource 3", "url": "https://..." }, { "label": "Resource 4", "url": "https://..." }, { "label": "Resource 5", "url": "https://..." }]
       }
     ]
   },
@@ -64,7 +64,7 @@ Return ONLY valid JSON with this exact structure:
   "tips": ["2-3 actionable tips focused on practical tool adoption"]
 }
 
-Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. Provide real, working URLs to learning resources.`;
+Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 top learning resource links (official docs, best YouTube tutorials, top Udemy/Coursera courses, GitHub repos, or blog posts). Use real, working URLs only.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
