@@ -67,9 +67,9 @@ Return ONLY valid JSON with this structure:
     { "original": "weak bullet point from resume", "improved": "rewritten version that sounds natural and human — use simple, direct language with real action verbs and specific metrics. Avoid corporate jargon, buzzwords, or AI-sounding phrases like 'leveraged', 'utilized', 'spearheaded'. Write like a real person would describe their work to a friend." }
   ],
   "interviewQuestions": {
-    "technical": ["q1", "q2", "q3", "q4", "q5"],
-    "conceptual": ["q1", "q2", "q3"],
-    "behavioral": ["q1", "q2"]
+    "technical": ["5 most commonly asked technical interview questions for this specific role/job description — focus on real questions that top companies actually ask, relevant to the required skills and technologies"],
+    "conceptual": ["3 most frequently asked conceptual/system design questions for this role — the kind interviewers love to ask to test deep understanding"],
+    "behavioral": ["3 most popular behavioral/situational questions for this role — STAR-format friendly, commonly asked at top companies"]
   },
   "careerTrajectory": [
     { "role": "Role Name", "match": 0-100, "skills": ["needed skill1", "needed skill2"] }
