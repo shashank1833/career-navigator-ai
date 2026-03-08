@@ -112,6 +112,7 @@ export type Database = {
       }
       resume_versions: {
         Row: {
+          analysis_data: Json | null
           application_strength: number | null
           created_at: string | null
           id: string
@@ -126,6 +127,7 @@ export type Database = {
           target_job_title: string | null
         }
         Insert: {
+          analysis_data?: Json | null
           application_strength?: number | null
           created_at?: string | null
           id?: string
@@ -140,6 +142,7 @@ export type Database = {
           target_job_title?: string | null
         }
         Update: {
+          analysis_data?: Json | null
           application_strength?: number | null
           created_at?: string | null
           id?: string

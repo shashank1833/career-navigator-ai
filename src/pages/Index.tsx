@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -22,8 +23,25 @@ import { useResumeVersions } from "@/hooks/useResumeVersions";
 import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
+  const location = useLocation();
   const [data, setData] = useState<AnalysisResult | null>(null);
-  const { versions, loading: versionsLoading, deleteVersion } = useResumeVersions();
+  const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
+
+  // Load analysis data from navigation state (from Resume History)
+  useEffect(() => {
+    const state = location.state as { analysisData?: AnalysisResult } | null;
+    if (state?.analysisData) {
+      setData(state.analysisData);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Save full analysis to DB when new analysis completes
+  const handleAnalyze = (result: AnalysisResult) => {
+    setData(result);
+    // Save original resume with full analysis data
+    saveOriginalResume(result.profile, result);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -57,7 +75,7 @@ const Index = () => {
         <AnimatePresence mode="wait">
           {!data ? (
             <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
-              <ResumeUpload onAnalyze={(result) => setData(result)} />
+              <ResumeUpload onAnalyze={handleAnalyze} />
             </motion.div>
           ) : (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
