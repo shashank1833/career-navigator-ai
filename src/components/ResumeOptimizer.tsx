@@ -1,20 +1,23 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import DashboardCard from "./DashboardCard";
 import type { JobListing, ResumeOptimization } from "@/types/jobs";
+import type { AnalysisProfile } from "@/types/analysis";
 import { useToast } from "@/hooks/use-toast";
+import { exportOptimizedResume } from "@/lib/pdf-export";
 
 interface ResumeOptimizerProps {
   job: JobListing;
   optimization: ResumeOptimization | null;
   loading: boolean;
   onBack: () => void;
+  profile?: AnalysisProfile;
 }
 
-const ResumeOptimizer = ({ job, optimization, loading, onBack }: ResumeOptimizerProps) => {
+const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: ResumeOptimizerProps) => {
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
@@ -44,9 +47,17 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack }: ResumeOptimizer
 
   return (
     <div className="space-y-5">
-      <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Jobs
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Jobs
+        </Button>
+        <Button
+          onClick={() => exportOptimizedResume(profile, job, optimization!)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          <Download className="w-4 h-4 mr-2" /> Export PDF
+        </Button>
+      </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
         <div className="flex items-center justify-between mb-1">

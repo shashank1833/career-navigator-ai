@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink } from "lucide-react";
+import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink, Bookmark, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { JobListing } from "@/types/jobs";
@@ -7,6 +7,8 @@ import type { JobListing } from "@/types/jobs";
 interface JobCardProps {
   job: JobListing;
   onOptimize: (job: JobListing) => void;
+  onSave?: (job: JobListing) => void;
+  onTrack?: (job: JobListing) => void;
   delay?: number;
 }
 
@@ -36,7 +38,7 @@ const CircularProgress = ({ value, size = 56 }: { value: number; size?: number }
   );
 };
 
-const JobCard = ({ job, onOptimize, delay = 0 }: JobCardProps) => {
+const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -81,7 +83,7 @@ const JobCard = ({ job, onOptimize, delay = 0 }: JobCardProps) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-4">
+          <div className="flex items-center gap-2 mt-4 flex-wrap">
             <Button
               size="sm"
               onClick={() => onOptimize(job)}
@@ -91,6 +93,28 @@ const JobCard = ({ job, onOptimize, delay = 0 }: JobCardProps) => {
               <Sparkles className="w-3 h-3 mr-1" />
               Optimize Resume
             </Button>
+            {onSave && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => onSave(job)}
+              >
+                <Bookmark className="w-3 h-3 mr-1" />
+                Save
+              </Button>
+            )}
+            {onTrack && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => onTrack(job)}
+              >
+                <ClipboardList className="w-3 h-3 mr-1" />
+                Track
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
