@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ResumeUpload from "@/components/ResumeUpload";
 import ProfileCard from "@/components/ProfileCard";
@@ -14,6 +14,25 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import type { AnalysisResult } from "@/types/analysis";
+import type { LucideIcon } from "lucide-react";
+
+const SectionHeader = ({ icon: Icon, title, subtitle, delay = 0 }: { icon: LucideIcon; title: string; subtitle: string; delay?: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+    className="flex items-center gap-3 mb-5 mt-12 first:mt-0"
+  >
+    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+      <Icon className="w-5 h-5 glow-text-primary" />
+    </div>
+    <div>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
+    </div>
+    <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent ml-4" />
+  </motion.div>
+);
 
 const Index = () => {
   const [data, setData] = useState<AnalysisResult | null>(null);
@@ -52,26 +71,43 @@ const Index = () => {
           ) : (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
               <div className="mb-6">
-                <Button
-                  variant="ghost"
-                  onClick={() => setData(null)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
+                <Button variant="ghost" onClick={() => setData(null)} className="text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="w-4 h-4 mr-2" /> New Analysis
                 </Button>
               </div>
+
+              {/* Section 1: Profile & Match Overview */}
+              <SectionHeader icon={User} title="Profile Overview" subtitle="Your extracted professional profile and job compatibility" delay={0.05} />
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <ProfileCard data={data.profile} />
                 <JobMatchScore data={data.jobMatch} />
                 <SkillGapChart data={data.skillGap} />
+              </div>
+
+              {/* Section 2: Resume & Project Analysis */}
+              <SectionHeader icon={Sparkles} title="Resume & Project Analysis" subtitle="AI suggestions to strengthen your resume and project impact" delay={0.2} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <ResumeImprovements data={data.improvements} />
-                <CareerTrajectory data={data.careerTrajectory} />
                 <ProjectImpact data={data.projectImpact} />
-                {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
                 <WeaknessDetector data={data.weaknesses} />
+              </div>
+
+              {/* Section 3: Interview Prep */}
+              <SectionHeader icon={MessageSquare} title="Interview Preparation" subtitle="AI-generated questions tailored to your profile and target role" delay={0.35} />
+              <div className="grid grid-cols-1 gap-5">
                 <InterviewQuestions data={data.interviewQuestions} />
+              </div>
+
+              {/* Section 4: Career Growth */}
+              <SectionHeader icon={TrendingUp} title="Career Growth" subtitle="Career trajectory predictions and personalized learning path" delay={0.5} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <CareerTrajectory data={data.careerTrajectory} />
+                {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
+              </div>
+              <div className="grid grid-cols-1 gap-5 mt-5">
                 <LearningRoadmap data={data.roadmap} />
               </div>
+
             </motion.div>
           )}
         </AnimatePresence>
