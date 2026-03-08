@@ -47,9 +47,17 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
 
   return (
     <div className="space-y-5">
-      <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Jobs
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Jobs
+        </Button>
+        <Button
+          onClick={() => exportOptimizedResume(profile, job, optimization!)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          <Download className="w-4 h-4 mr-2" /> Export PDF
+        </Button>
+      </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
         <div className="flex items-center justify-between mb-1">
