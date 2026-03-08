@@ -105,6 +105,15 @@ Make the roadmap steps specifically address the missing skills. Include 5-8 road
     jsonStr = jsonStr.trim();
 
     const parsed = JSON.parse(jsonStr);
+
+    // Force experienceMatch to 0 if no real work experience detected
+    if (!hasWorkExperience && parsed.matchBreakdown) {
+      parsed.matchBreakdown.experienceMatch = 0;
+      // Recalculate overall match as weighted average
+      const { skillMatch, educationMatch } = parsed.matchBreakdown;
+      parsed.matchPercentage = Math.round((skillMatch * 0.5 + educationMatch * 0.3) / 0.8);
+    }
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
