@@ -144,15 +144,15 @@ export const exportCareerReport = (
   addSectionHeader("Interview Preparation Questions");
   
   addText("Technical Questions:", 10, "bold");
-  analysis.interviewQuestions.technical.slice(0, 3).forEach((q) => addBullet(q));
+  analysis.interviewQuestions.technical.slice(0, 3).forEach((q) => addBullet(typeof q === "string" ? q : q.question));
   y += 2;
 
   addText("Conceptual Questions:", 10, "bold");
-  analysis.interviewQuestions.conceptual.slice(0, 3).forEach((q) => addBullet(q));
+  analysis.interviewQuestions.conceptual.slice(0, 3).forEach((q) => addBullet(typeof q === "string" ? q : q.question));
   y += 2;
 
   addText("Behavioral Questions:", 10, "bold");
-  analysis.interviewQuestions.behavioral.slice(0, 3).forEach((q) => addBullet(q));
+  analysis.interviewQuestions.behavioral.slice(0, 3).forEach((q) => addBullet(typeof q === "string" ? q : q.question));
 
   // Weaknesses to Address
   if (analysis.weaknesses.length > 0) {
