@@ -13,9 +13,9 @@ import CareerTrajectory from "@/components/CareerTrajectory";
 import ResumeImprovements from "@/components/ResumeImprovements";
 
 import WeaknessDetector from "@/components/WeaknessDetector";
-import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
+import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
 import ResumeVersions from "@/components/ResumeVersions";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
@@ -146,11 +146,7 @@ const Index = () => {
 
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="space-y-5">
-                      <div><CareerTrajectory data={data.careerTrajectory} /></div>
-                      
-                      <div><LearningRoadmap data={data.roadmap} /></div>
-                    </div>
+                    <CareerRoleAnalyzer profile={data.profile} />
                   </motion.div>
                 </TabsContent>
 
