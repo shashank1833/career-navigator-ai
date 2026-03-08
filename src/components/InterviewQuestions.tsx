@@ -60,7 +60,14 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
       if (error) throw error;
       if (result?.error) throw new Error(result.error);
 
-      setQuestions(result);
+      setQuestions((prev) => {
+        if (!prev) return result;
+        return {
+          technical: [...(prev.technical || []), ...(result.technical || [])],
+          conceptual: [...(prev.conceptual || []), ...(result.conceptual || [])],
+          behavioral: [...(prev.behavioral || []), ...(result.behavioral || [])],
+        };
+      });
       setActiveCategory("technical");
       toast.success("Interview questions generated!");
     } catch (err) {
