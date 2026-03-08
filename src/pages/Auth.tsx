@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 
 const Auth = () => {
+  const { user, loading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState("");
