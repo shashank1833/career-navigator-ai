@@ -26,6 +26,7 @@ import type { AnalysisResult } from "@/types/analysis";
 
 const Index = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
 
