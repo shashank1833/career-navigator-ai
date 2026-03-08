@@ -33,9 +33,12 @@ const Index = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Zap className="w-3.5 h-3.5 glow-text-primary" />
-            <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+          <div className="flex items-center justify-between mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Zap className="w-3.5 h-3.5 glow-text-primary" />
+              <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+            </div>
+            <ThemeToggle />
           </div>
           <div className="flex items-center justify-center gap-3 mb-4">
             <Brain className="w-10 h-10 glow-text-primary" />
