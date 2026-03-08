@@ -17,7 +17,7 @@ interface ResumeOptimizerProps {
   profile?: AnalysisProfile;
 }
 
-const ResumeOptimizer = ({ job, optimization, loading, onBack }: ResumeOptimizerProps) => {
+const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: ResumeOptimizerProps) => {
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
