@@ -115,11 +115,12 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Resume Versions", value: stats.resumeVersions, icon: FileText, color: "text-primary" },
             { label: "Saved Jobs", value: stats.savedJobs, icon: Briefcase, color: "text-secondary" },
             { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent" },
+            { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500" },
           ].map((s) => (
             <div key={s.label} className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border">
               <div className="flex items-center gap-3 mb-2">
@@ -131,8 +132,58 @@ const Dashboard = () => {
           ))}
         </motion.div>
 
+        {/* Charts */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Insights</h3>
+          <DashboardCharts applications={applications} />
+        </motion.div>
+
+        {/* Application Tracker */}
+        {applications.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-8">
+            <Tabs defaultValue="kanban">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Applications</h3>
+                <TabsList className="bg-card/80">
+                  <TabsTrigger value="kanban" className="text-xs gap-1"><LayoutGrid className="w-3 h-3" /> Kanban</TabsTrigger>
+                  <TabsTrigger value="table" className="text-xs gap-1"><Table className="w-3 h-3" /> Table</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="kanban">
+                <KanbanBoard applications={applications} onUpdateStatus={updateStatus} onRemove={removeApplication} />
+              </TabsContent>
+              <TabsContent value="table">
+                <div className="rounded-xl bg-card/80 backdrop-blur border border-border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground">
+                        <th className="text-left p-3 font-medium">Company</th>
+                        <th className="text-left p-3 font-medium">Role</th>
+                        <th className="text-left p-3 font-medium">Score</th>
+                        <th className="text-left p-3 font-medium">Status</th>
+                        <th className="text-left p-3 font-medium">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications.slice(0, 10).map((app) => (
+                        <tr key={app.id} className="border-b border-border/50 hover:bg-muted/20">
+                          <td className="p-3 text-foreground">{app.company}</td>
+                          <td className="p-3 text-foreground">{app.job_title}</td>
+                          <td className="p-3 text-primary font-medium">{app.match_score}%</td>
+                          <td className="p-3"><span className="capitalize text-muted-foreground">{app.status}</span></td>
+                          <td className="p-3 text-muted-foreground">{app.applied_date || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        )}
+
         {/* Quick Actions */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
@@ -162,16 +213,16 @@ const Dashboard = () => {
             </button>
 
             <button
-              onClick={() => navigate("/analyze")}
+              onClick={() => navigate("/settings")}
               className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all text-left group"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-accent/10">
-                  <Zap className="w-5 h-5 text-accent" />
+                  <Settings className="w-5 h-5 text-accent" />
                 </div>
-                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Career Growth</h4>
+                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Profile Settings</h4>
               </div>
-              <p className="text-xs text-muted-foreground">Analyze your career path and get a learning roadmap</p>
+              <p className="text-xs text-muted-foreground">Update your profile and career preferences</p>
             </button>
           </div>
         </motion.div>
