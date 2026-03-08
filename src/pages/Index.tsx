@@ -148,7 +148,7 @@ const Index = () => {
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
                       <div><CareerTrajectory data={data.careerTrajectory} /></div>
-                      {data.github && data.github.username !== "N/A" && <div><GitHubAnalyzer data={data.github} /></div>}
+                      
                       <div><LearningRoadmap data={data.roadmap} /></div>
                     </div>
                   </motion.div>
