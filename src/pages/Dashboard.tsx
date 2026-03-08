@@ -213,16 +213,16 @@ const Dashboard = () => {
             </button>
 
             <button
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/analyze")}
               className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all text-left group"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-accent/10">
-                  <Settings className="w-5 h-5 text-accent" />
+                  <Zap className="w-5 h-5 text-accent" />
                 </div>
-                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Profile Settings</h4>
+                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Career Path</h4>
               </div>
-              <p className="text-xs text-muted-foreground">Update your profile and career preferences</p>
+              <p className="text-xs text-muted-foreground">Analyze your career trajectory and get a learning roadmap</p>
             </button>
           </div>
         </motion.div>
