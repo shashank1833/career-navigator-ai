@@ -13,9 +13,9 @@ import CareerTrajectory from "@/components/CareerTrajectory";
 import ResumeImprovements from "@/components/ResumeImprovements";
 
 import WeaknessDetector from "@/components/WeaknessDetector";
-import LearningRoadmap from "@/components/LearningRoadmap";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
+import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
 import ResumeVersions from "@/components/ResumeVersions";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
