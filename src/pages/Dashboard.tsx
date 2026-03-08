@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardCharts from "@/components/DashboardCharts";
 import KanbanBoard from "@/components/KanbanBoard";
+import MarketInsights from "@/components/MarketInsights";
 import { useJobApplications } from "@/hooks/useJobApplications";
 import type { ApplicationStatus } from "@/hooks/useJobApplications";
 
