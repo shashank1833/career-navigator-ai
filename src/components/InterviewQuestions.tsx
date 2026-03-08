@@ -1,4 +1,5 @@
 import DashboardCard from "./DashboardCard";
+import MockInterviewSimulator from "./MockInterviewSimulator";
 import { MessageSquare, Briefcase, Send, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
