@@ -78,18 +78,18 @@ const Index = () => {
 
               {/* Section 1: Profile & Match Overview */}
               <SectionHeader icon={User} title="Profile Overview" subtitle="Your extracted professional profile and job compatibility" delay={0.05} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ProfileCard data={data.profile} />
-                <JobMatchScore data={data.jobMatch} />
-                <SkillGapChart data={data.skillGap} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><ProfileCard data={data.profile} /></div>
+                <div className="min-w-[300px] flex-1"><JobMatchScore data={data.jobMatch} /></div>
+                <div className="min-w-[300px] flex-1"><SkillGapChart data={data.skillGap} /></div>
               </div>
 
               {/* Section 2: Resume & Project Analysis */}
               <SectionHeader icon={Sparkles} title="Resume & Project Analysis" subtitle="AI suggestions to strengthen your resume and project impact" delay={0.2} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <ResumeImprovements data={data.improvements} />
-                <ProjectImpact data={data.projectImpact} />
-                <WeaknessDetector data={data.weaknesses} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><ResumeImprovements data={data.improvements} /></div>
+                <div className="min-w-[300px] flex-1"><ProjectImpact data={data.projectImpact} /></div>
+                <div className="min-w-[300px] flex-1"><WeaknessDetector data={data.weaknesses} /></div>
               </div>
 
               {/* Section 3: Interview Prep */}
@@ -100,12 +100,10 @@ const Index = () => {
 
               {/* Section 4: Career Growth */}
               <SectionHeader icon={TrendingUp} title="Career Growth" subtitle="Career trajectory predictions and personalized learning path" delay={0.5} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <CareerTrajectory data={data.careerTrajectory} />
-                {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
-              </div>
-              <div className="grid grid-cols-1 gap-5 mt-5">
-                <LearningRoadmap data={data.roadmap} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><CareerTrajectory data={data.careerTrajectory} /></div>
+                {data.github && data.github.username !== "N/A" && <div className="min-w-[300px] flex-1"><GitHubAnalyzer data={data.github} /></div>}
+                <div className="min-w-[300px] flex-1"><LearningRoadmap data={data.roadmap} /></div>
               </div>
 
             </motion.div>
