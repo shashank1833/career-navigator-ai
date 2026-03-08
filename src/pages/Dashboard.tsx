@@ -185,7 +185,7 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
               onClick={() => navigate("/analyze")}
               className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all text-left group"
@@ -200,16 +200,16 @@ const Dashboard = () => {
             </button>
 
             <button
-              onClick={() => navigate("/analyze")}
+              onClick={() => navigate("/resumes")}
               className="p-6 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:border-secondary/40 transition-all text-left group"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-secondary/10">
-                  <Briefcase className="w-5 h-5 text-secondary" />
+                  <FileText className="w-5 h-5 text-secondary" />
                 </div>
-                <h4 className="font-semibold text-foreground group-hover:text-secondary transition-colors">Find Jobs</h4>
+                <h4 className="font-semibold text-foreground group-hover:text-secondary transition-colors">My Resumes</h4>
               </div>
-              <p className="text-xs text-muted-foreground">Search and match jobs based on your profile</p>
+              <p className="text-xs text-muted-foreground">View and manage your previously analyzed resumes</p>
             </button>
 
             <button
@@ -218,9 +218,22 @@ const Dashboard = () => {
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-accent/10">
-                  <Zap className="w-5 h-5 text-accent" />
+                  <Briefcase className="w-5 h-5 text-accent" />
                 </div>
-                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Career Path</h4>
+                <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">Find Jobs</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">Search and match jobs based on your profile</p>
+            </button>
+
+            <button
+              onClick={() => navigate("/analyze")}
+              className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 hover:border-green-500/40 transition-all text-left group"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <Zap className="w-5 h-5 text-green-500" />
+                </div>
+                <h4 className="font-semibold text-foreground group-hover:text-green-500 transition-colors">Career Path</h4>
               </div>
               <p className="text-xs text-muted-foreground">Analyze your career trajectory and get a learning roadmap</p>
             </button>
