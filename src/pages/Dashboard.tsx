@@ -22,6 +22,7 @@ interface DashboardStats {
   resumeVersions: number;
   savedJobs: number;
   applications: number;
+  roadmapCompleted: number;
 }
 
 const Dashboard = () => {
