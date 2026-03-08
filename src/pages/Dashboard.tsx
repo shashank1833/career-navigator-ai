@@ -116,9 +116,8 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Resume Versions", value: stats.resumeVersions, icon: FileText, color: "text-primary" },
             { label: "Saved Jobs", value: stats.savedJobs, icon: Briefcase, color: "text-secondary" },
             { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent" },
             { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500" },
