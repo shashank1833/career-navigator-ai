@@ -180,7 +180,7 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
             />
             <PipelineStepIndicator
               label="AI Career Analysis"
-              status={step === "analyzing" ? "active" : step === "done" ? "done" : "pending"}
+              status={step === "analyzing" ? "active" : "pending"}
             />
           </div>
         </div>
