@@ -167,8 +167,8 @@ const Auth = () => {
               </button>
             )}
 
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            <Button type="submit" className="w-full h-11" disabled={submitting}>
+              {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isForgot ? "Send Reset Link" : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
