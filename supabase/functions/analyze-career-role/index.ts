@@ -64,7 +64,7 @@ Return ONLY valid JSON with this exact structure:
   "tips": ["2-3 actionable tips focused on practical tool adoption"]
 }
 
-Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 top learning resource links (official docs, best YouTube tutorials, top Udemy/Coursera courses, GitHub repos, or blog posts). Use real, working URLs only.`;
+Make the roadmap steps specifically address the missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 links: 1 official documentation link and 4 top YouTube tutorial/course links. Use real, working URLs only. YouTube links should be from popular channels like Fireship, Traversy Media, freeCodeCamp, Tech With Tim, Net Ninja, etc.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
