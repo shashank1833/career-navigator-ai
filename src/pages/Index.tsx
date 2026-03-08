@@ -19,7 +19,6 @@ import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
 import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
 import CareerStrategyEngine from "@/components/CareerStrategyEngine";
-import ResumeVersions from "@/components/ResumeVersions";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
 import type { AnalysisResult } from "@/types/analysis";
@@ -36,7 +35,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [navigationState] = useState<NavigationState | null>(() => location.state as NavigationState | null);
-  const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
+  const { saveOriginalResume } = useResumeVersions();
 
   // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
