@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import Resumes from "./pages/Resumes";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
