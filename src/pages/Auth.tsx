@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
+import BrandedLoader from "@/components/BrandedLoader";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 
