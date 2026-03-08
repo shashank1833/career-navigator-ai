@@ -155,10 +155,23 @@ const Dashboard = () => {
           ))}
         </motion.div>
 
-        {/* Charts */}
+        {/* Insights Tabs */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Insights</h3>
-          <DashboardCharts applications={applications} />
+          <Tabs defaultValue="overview">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Insights</h3>
+              <TabsList className="bg-card/80">
+                <TabsTrigger value="overview" className="text-xs gap-1"><LayoutGrid className="w-3 h-3" /> Overview</TabsTrigger>
+                <TabsTrigger value="market" className="text-xs gap-1"><TrendingUp className="w-3 h-3" /> Market Insights</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="overview">
+              <DashboardCharts applications={applications} />
+            </TabsContent>
+            <TabsContent value="market">
+              <MarketInsights userSkills={[]} />
+            </TabsContent>
+          </Tabs>
         </motion.div>
 
         {/* Application Tracker */}
