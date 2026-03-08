@@ -100,12 +100,10 @@ const Index = () => {
 
               {/* Section 4: Career Growth */}
               <SectionHeader icon={TrendingUp} title="Career Growth" subtitle="Career trajectory predictions and personalized learning path" delay={0.5} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <CareerTrajectory data={data.careerTrajectory} />
-                {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
-              </div>
-              <div className="grid grid-cols-1 gap-5 mt-5">
-                <LearningRoadmap data={data.roadmap} />
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="min-w-[300px] flex-1"><CareerTrajectory data={data.careerTrajectory} /></div>
+                {data.github && data.github.username !== "N/A" && <div className="min-w-[300px] flex-1"><GitHubAnalyzer data={data.github} /></div>}
+                <div className="min-w-[300px] flex-1"><LearningRoadmap data={data.roadmap} /></div>
               </div>
 
             </motion.div>
