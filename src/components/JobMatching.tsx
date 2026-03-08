@@ -211,15 +211,15 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
         </div>
 
         <Tabs defaultValue="recommended" className="w-full">
-          <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
-            <TabsTrigger value="recommended" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Briefcase className="w-3.5 h-3.5" /> Recommended
+          <TabsList className="w-full flex justify-start gap-3 bg-muted/30 border border-border rounded-xl p-2 mb-5">
+            <TabsTrigger value="recommended" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
+              <Briefcase className="w-5 h-5" /> Recommended
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Bookmark className="w-3.5 h-3.5" /> Saved ({savedJobs.length})
+            <TabsTrigger value="saved" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
+              <Bookmark className="w-5 h-5" /> Saved ({savedJobs.length})
             </TabsTrigger>
-            <TabsTrigger value="tracker" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <ClipboardList className="w-3.5 h-3.5" /> Tracker ({applications.length})
+            <TabsTrigger value="tracker" className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-md">
+              <ClipboardList className="w-5 h-5" /> Tracker ({applications.length})
             </TabsTrigger>
           </TabsList>
 
