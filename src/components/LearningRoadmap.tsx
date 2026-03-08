@@ -1,29 +1,19 @@
 import DashboardCard from "./DashboardCard";
 import { Map, CheckCircle2, Circle } from "lucide-react";
 import { motion } from "framer-motion";
+import type { AnalysisRoadmap } from "@/types/analysis";
 
-const roadmap = {
-  goal: "Machine Learning Engineer",
-  steps: [
-    { title: "Strengthen Python & Data Analysis", desc: "Master NumPy, Pandas, and statistical analysis", done: true },
-    { title: "Build ML Projects", desc: "Implement classification, regression, and NLP models", done: false },
-    { title: "Learn Model Deployment", desc: "Docker, FastAPI, and model serving with MLflow", done: false },
-    { title: "Study ML System Design", desc: "Feature stores, training pipelines, and monitoring", done: false },
-  ],
-};
-
-const LearningRoadmap = () => {
+const LearningRoadmap = ({ data }: { data: AnalysisRoadmap }) => {
   return (
     <DashboardCard title="Learning Roadmap" icon={Map} delay={0.65} accentColor="accent" className="col-span-full lg:col-span-2">
       <div className="mb-4">
         <span className="text-xs text-muted-foreground">Goal:</span>
-        <span className="ml-2 text-sm font-semibold gradient-text-secondary">{roadmap.goal}</span>
+        <span className="ml-2 text-sm font-semibold gradient-text-secondary">{data.goal}</span>
       </div>
       <div className="relative">
-        {/* Vertical line */}
         <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
         <div className="space-y-4">
-          {roadmap.steps.map((step, i) => (
+          {data.steps.map((step, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}

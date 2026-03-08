@@ -1,25 +1,18 @@
 import DashboardCard from "./DashboardCard";
 import { User, GraduationCap, Briefcase, Code2 } from "lucide-react";
+import type { AnalysisProfile } from "@/types/analysis";
 
-const mockProfile = {
-  name: "Alex Johnson",
-  education: "M.S. Computer Science, Stanford University",
-  experience: "4 years",
-  skills: ["React", "TypeScript", "Python", "Node.js", "AWS", "Docker", "PostgreSQL", "GraphQL"],
-  technologies: ["TensorFlow", "Kubernetes", "Redis", "MongoDB", "CI/CD"],
-};
-
-const ProfileCard = () => {
+const ProfileCard = ({ data }: { data: AnalysisProfile }) => {
   return (
     <DashboardCard title="Professional Profile" icon={User} delay={0.1} accentColor="accent">
       <div className="space-y-4">
         <div>
-          <h4 className="text-xl font-bold text-foreground">{mockProfile.name}</h4>
+          <h4 className="text-xl font-bold text-foreground">{data.name}</h4>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-            <GraduationCap className="w-3.5 h-3.5" /> {mockProfile.education}
+            <GraduationCap className="w-3.5 h-3.5" /> {data.education}
           </p>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-            <Briefcase className="w-3.5 h-3.5" /> {mockProfile.experience} experience
+            <Briefcase className="w-3.5 h-3.5" /> {data.experience} experience
           </p>
         </div>
         <div>
@@ -27,23 +20,21 @@ const ProfileCard = () => {
             <Code2 className="w-3 h-3" /> Skills
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {mockProfile.skills.map((s) => (
-              <span key={s} className="px-2.5 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary border border-primary/20">
-                {s}
-              </span>
+            {data.skills.map((s) => (
+              <span key={s} className="px-2.5 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary border border-primary/20">{s}</span>
             ))}
           </div>
         </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Technologies</p>
-          <div className="flex flex-wrap gap-1.5">
-            {mockProfile.technologies.map((t) => (
-              <span key={t} className="px-2.5 py-1 text-xs font-medium rounded-md bg-secondary/10 text-secondary border border-secondary/20">
-                {t}
-              </span>
-            ))}
+        {data.technologies.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Technologies</p>
+            <div className="flex flex-wrap gap-1.5">
+              {data.technologies.map((t) => (
+                <span key={t} className="px-2.5 py-1 text-xs font-medium rounded-md bg-secondary/10 text-secondary border border-secondary/20">{t}</span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </DashboardCard>
   );
