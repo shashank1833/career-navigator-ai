@@ -22,6 +22,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const hasWorkExperience = experience && 
+      experience !== "Not specified" && 
+      /intern|full[- ]?time|work|job|employ|year|month|company|role|position/i.test(experience);
+
     const prompt = `You are a career advisor AI. A candidate wants to transition to the role: "${targetRole}".
 
 Their current profile:
@@ -34,8 +38,10 @@ Analyze how well they match this target role and what skills they're missing.
 
 IMPORTANT RULES:
 - Only include skills that are DIRECTLY RELEVANT to the "${targetRole}" role. Do NOT list unrelated skills.
-- For "matchingSkills" and "missingSkills": ONLY list practical frameworks, tools, libraries, platforms, and technologies (e.g. React, Docker, Kubernetes, TensorFlow, AWS, PostgreSQL). Do NOT include theoretical concepts, soft skills, or abstract topics like "Data Structures", "System Design", "Communication", "Agile methodology".
+- For "matchingSkills" and "missingSkills": ONLY list practical frameworks, tools, libraries, platforms, and technologies (e.g. React, Docker, Kubernetes, TensorFlow, AWS, PostgreSQL). Do NOT include theoretical concepts, soft skills, or abstract topics.
 - The roadmap steps should focus on learning specific tools and frameworks, NOT theory.
+- CRITICAL: "experienceMatch" MUST be 0 if the candidate has NO internship or full-time work experience. Only assign non-zero if they clearly have internship or full-time professional experience relevant to the target role. Academic/personal projects do NOT count.
+${!hasWorkExperience ? '- The candidate has NO work experience. Set "experienceMatch" to 0.' : ''}
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -46,8 +52,8 @@ Return ONLY valid JSON with this exact structure:
     "experienceMatch": 0-100,
     "educationMatch": 0-100
   },
-  "matchingSkills": ["ONLY practical tools/frameworks the candidate knows that are relevant to ${targetRole}"],
-  "missingSkills": ["ONLY practical tools/frameworks required for ${targetRole} that the candidate lacks"],
+  "matchingSkills": ["ONLY practical tools/frameworks relevant to ${targetRole}"],
+  "missingSkills": ["ONLY practical tools/frameworks required for ${targetRole} that candidate lacks"],
   "roadmap": {
     "goal": "Become a ${targetRole}",
     "steps": [
@@ -55,7 +61,7 @@ Return ONLY valid JSON with this exact structure:
         "title": "Learn [Tool/Framework Name]",
         "desc": "What to build and why this tool matters for the role",
         "done": false,
-        "skills": ["specific tool or framework this step covers"],
+        "skills": ["specific tool or framework"],
         "links": [{ "label": "Official Docs", "url": "https://official-documentation-url.com" }, { "label": "YouTube Tutorial 1", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 2", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 3", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 4", "url": "https://youtube.com/..." }]
       }
     ]
@@ -64,7 +70,7 @@ Return ONLY valid JSON with this exact structure:
   "tips": ["2-3 actionable tips focused on practical tool adoption"]
 }
 
-Make the roadmap steps specifically address the missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 links: 1 official documentation link and 4 top YouTube tutorial/course links. Use real, working URLs only. YouTube links should be from popular channels like Fireship, Traversy Media, freeCodeCamp, Tech With Tim, Net Ninja, etc.`;
+Make the roadmap steps specifically address the missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 links: 1 official documentation link and 4 top YouTube tutorial/course links. Use real, working URLs only.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -99,6 +105,15 @@ Make the roadmap steps specifically address the missing skills. Include 5-8 road
     jsonStr = jsonStr.trim();
 
     const parsed = JSON.parse(jsonStr);
+
+    // Force experienceMatch to 0 if no real work experience detected
+    if (!hasWorkExperience && parsed.matchBreakdown) {
+      parsed.matchBreakdown.experienceMatch = 0;
+      // Recalculate overall match as weighted average
+      const { skillMatch, educationMatch } = parsed.matchBreakdown;
+      parsed.matchPercentage = Math.round((skillMatch * 0.5 + educationMatch * 0.3) / 0.8);
+    }
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
