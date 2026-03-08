@@ -90,6 +90,9 @@ const Dashboard = () => {
               </Avatar>
               <span className="text-sm font-medium text-foreground hidden sm:inline">{displayName}</span>
             </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings">
+              <Settings className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
               <LogOut className="w-4 h-4" />
             </Button>
