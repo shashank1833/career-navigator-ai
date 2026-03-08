@@ -32,7 +32,10 @@ Their current profile:
 
 Analyze how well they match this target role and what skills they're missing.
 
-IMPORTANT: Only include skills that are DIRECTLY RELEVANT to the "${targetRole}" role. Do NOT list unrelated skills from the candidate's resume. For "matchingSkills", only list the candidate's current skills that are actually required or useful for "${targetRole}". For "missingSkills", only list skills specifically needed for "${targetRole}" that the candidate lacks.
+IMPORTANT RULES:
+- Only include skills that are DIRECTLY RELEVANT to the "${targetRole}" role. Do NOT list unrelated skills.
+- For "matchingSkills" and "missingSkills": ONLY list practical frameworks, tools, libraries, platforms, and technologies (e.g. React, Docker, Kubernetes, TensorFlow, AWS, PostgreSQL). Do NOT include theoretical concepts, soft skills, or abstract topics like "Data Structures", "System Design", "Communication", "Agile methodology".
+- The roadmap steps should focus on learning specific tools and frameworks, NOT theory.
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -43,22 +46,22 @@ Return ONLY valid JSON with this exact structure:
     "experienceMatch": 0-100,
     "educationMatch": 0-100
   },
-  "matchingSkills": ["ONLY candidate skills that are relevant to ${targetRole}"],
-  "missingSkills": ["ONLY skills required for ${targetRole} that the candidate lacks"],
+  "matchingSkills": ["ONLY practical tools/frameworks the candidate knows that are relevant to ${targetRole}"],
+  "missingSkills": ["ONLY practical tools/frameworks required for ${targetRole} that the candidate lacks"],
   "roadmap": {
     "goal": "Become a ${targetRole}",
     "steps": [
       {
-        "title": "Step title",
-        "desc": "What to do and why",
+        "title": "Learn [Tool/Framework Name]",
+        "desc": "What to build and why this tool matters for the role",
         "done": false,
-        "skills": ["skill this step covers"],
+        "skills": ["specific tool or framework this step covers"],
         "links": [{ "label": "Resource name", "url": "https://real-url.com" }]
       }
     ]
   },
   "timeEstimate": "Estimated time to be job-ready",
-  "tips": ["2-3 actionable tips for this specific transition"]
+  "tips": ["2-3 actionable tips focused on practical tool adoption"]
 }
 
 Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. Provide real, working URLs to learning resources.`;
