@@ -24,22 +24,29 @@ import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
 import type { AnalysisResult } from "@/types/analysis";
 
+type NavigationState = {
+  analysisData?: AnalysisResult;
+  profileData?: AnalysisResult["profile"];
+  initialTab?: "profile" | "resume" | "improvements" | "interview" | "career" | "jobs" | "export";
+  initialJobsTab?: "recommended" | "saved" | "tracker";
+};
+
 const Index = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState<AnalysisResult | null>(null);
+  const [navigationState] = useState<NavigationState | null>(() => location.state as NavigationState | null);
   const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
 
   // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
-    const state = location.state as { analysisData?: AnalysisResult; profileData?: AnalysisResult["profile"] } | null;
-    if (state?.analysisData) {
-      setData(state.analysisData);
+    if (navigationState?.analysisData) {
+      setData(navigationState.analysisData);
       window.history.replaceState({}, document.title);
-    } else if (state?.profileData) {
+    } else if (navigationState?.profileData) {
       // Partial data from resume version without full analysis - build minimal result
       setData({
-        profile: state.profileData,
+        profile: navigationState.profileData,
         skillGap: { matching: [], missing: [], suggested: [] },
         jobMatch: { skillMatch: 0, projectRelevance: 0, experienceMatch: 0, overall: 0 },
         improvements: [],
@@ -52,7 +59,7 @@ const Index = () => {
       });
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [navigationState]);
 
   // Save full analysis to DB when new analysis completes
   const handleAnalyze = (result: AnalysisResult) => {

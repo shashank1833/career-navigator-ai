@@ -18,9 +18,10 @@ import type { JobListing, ResumeOptimization } from "@/types/jobs";
 
 interface JobMatchingProps {
   profile: AnalysisProfile;
+  initialTab?: "recommended" | "saved" | "tracker";
 }
 
-const JobMatching = ({ profile }: JobMatchingProps) => {
+const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) => {
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);

@@ -70,6 +70,15 @@ const Dashboard = () => {
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
+  const quickAccessProfile = {
+    name: displayName,
+    education: "Not provided",
+    experience: "Not provided",
+    tagline: "Career profile",
+    skills: [],
+    technologies: [],
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
