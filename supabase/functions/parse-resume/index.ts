@@ -139,8 +139,23 @@ async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
 // ===== PDF TEXT EXTRACTION =====
 async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   try {
-    const { extractText } = await import("https://esm.sh/unpdf@0.12.1?bundle-deps");
-    const { text } = await extractText(new Uint8Array(buffer));
+    const unpdf = await import("https://esm.sh/unpdf@0.12.1?bundle-deps");
+    const result = await unpdf.extractText(new Uint8Array(buffer));
+    console.log("unpdf result type:", typeof result, "keys:", result ? Object.keys(result) : "null");
+    
+    // Handle different possible return formats
+    let text: string;
+    if (typeof result === "string") {
+      text = result;
+    } else if (result && typeof result.text === "string") {
+      text = result.text;
+    } else if (result && typeof result.totalPages === "number" && result.text) {
+      text = String(result.text);
+    } else {
+      console.error("Unexpected unpdf result format:", JSON.stringify(result)?.substring(0, 200));
+      throw new Error("unpdf returned unexpected format");
+    }
+    
     return text || "";
   } catch (e) {
     console.error("unpdf extraction failed, trying fallback:", e);
