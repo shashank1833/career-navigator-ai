@@ -32,6 +32,8 @@ Their current profile:
 
 Analyze how well they match this target role and what skills they're missing.
 
+IMPORTANT: Only include skills that are DIRECTLY RELEVANT to the "${targetRole}" role. Do NOT list unrelated skills from the candidate's resume. For "matchingSkills", only list the candidate's current skills that are actually required or useful for "${targetRole}". For "missingSkills", only list skills specifically needed for "${targetRole}" that the candidate lacks.
+
 Return ONLY valid JSON with this exact structure:
 {
   "targetRole": "${targetRole}",
@@ -41,8 +43,8 @@ Return ONLY valid JSON with this exact structure:
     "experienceMatch": 0-100,
     "educationMatch": 0-100
   },
-  "matchingSkills": ["skills they already have that are relevant"],
-  "missingSkills": ["critical skills they need to learn"],
+  "matchingSkills": ["ONLY candidate skills that are relevant to ${targetRole}"],
+  "missingSkills": ["ONLY skills required for ${targetRole} that the candidate lacks"],
   "roadmap": {
     "goal": "Become a ${targetRole}",
     "steps": [
@@ -59,7 +61,7 @@ Return ONLY valid JSON with this exact structure:
   "tips": ["2-3 actionable tips for this specific transition"]
 }
 
-Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. Provide real, working URLs to learning resources (Coursera, Udemy, freeCodeCamp, MDN, official docs, YouTube channels, etc).`;
+Make the roadmap steps specifically address the missing skills. Each step should teach one or more missing skills. Include 5-8 roadmap steps. Provide real, working URLs to learning resources.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
