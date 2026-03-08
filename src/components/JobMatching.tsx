@@ -32,7 +32,7 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
   const [optimizing, setOptimizing] = useState(false);
   const [useRealJobs, setUseRealJobs] = useState(true);
   const [activeTab, setActiveTab] = useState<"recommended" | "saved" | "tracker">(initialTab);
-
+  const { toast } = useToast();
   const { applications, loading: appsLoading, addApplication, updateStatus, updateNotes, removeApplication } = useJobApplications();
   const { savedJobs, loading: savedLoading, saveJob, unsaveJob, isJobSaved } = useSavedJobs();
   const { saveOriginalResume, saveOptimizedVersion } = useResumeVersions();
