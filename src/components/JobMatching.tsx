@@ -42,6 +42,10 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
     saveOriginalResume(profile);
   }, [profile]);
 
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
   const fetchRealJobs = async () => {
     setLoading(true);
     try {
