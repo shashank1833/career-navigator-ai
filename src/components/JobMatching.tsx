@@ -215,7 +215,7 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
           </Button>
         </div>
 
-        <Tabs defaultValue="recommended" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "recommended" | "saved" | "tracker")} className="w-full">
           <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
             <TabsTrigger value="recommended" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Briefcase className="w-3.5 h-3.5" /> Recommended
