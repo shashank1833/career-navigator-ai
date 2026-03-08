@@ -64,7 +64,7 @@ Return ONLY valid JSON with this structure:
     "overall": 0-100
   },
   "improvements": [
-    { "original": "weak bullet point from resume", "improved": "stronger version with metrics" }
+    { "original": "weak bullet point from resume", "improved": "rewritten version that sounds natural and human — use simple, direct language with real action verbs and specific metrics. Avoid corporate jargon, buzzwords, or AI-sounding phrases like 'leveraged', 'utilized', 'spearheaded'. Write like a real person would describe their work to a friend." }
   ],
   "interviewQuestions": {
     "technical": ["q1", "q2", "q3", "q4", "q5"],
