@@ -35,11 +35,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are an expert technical interviewer. Generate realistic interview questions that top companies actually ask. Write in a conversational, human tone — not robotic or overly formal.",
+            content: "You are an expert technical interviewer with deep knowledge of the most commonly repeated interview questions across FAANG, Big Tech, and top startups. Focus on the questions that appear MOST FREQUENTLY in real interviews. Write in a conversational, human tone.",
           },
           {
             role: "user",
-            content: `Given this job description:\n"""${jobDescription}"""\n\nThe candidate has these skills: ${skillsList}\n\nGenerate interview questions in this EXACT JSON format:\n{\n  "technical": ["5 real-world technical questions focusing on the required skills and technologies — the kind FAANG/top companies actually ask"],\n  "conceptual": ["3 system design or conceptual questions that test deep understanding relevant to this role"],\n  "behavioral": ["3 behavioral/situational questions commonly asked for this role — STAR-format friendly"]\n}\n\nReturn ONLY valid JSON, no markdown.`,
+            content: `Given this job description:\n"""${jobDescription}"""\n\nThe candidate has these skills: ${skillsList}\n\nGenerate the MOST FREQUENTLY ASKED interview questions for this role. Focus on questions that are repeatedly asked across companies. Use this EXACT JSON format:\n{\n  "technical": ["10 most commonly repeated technical interview questions for this role — focus on the classics that keep appearing in real interviews at top companies"],\n  "conceptual": ["7 most frequently asked system design and conceptual questions that test deep understanding — the ones every candidate should prepare for"],\n  "behavioral": ["7 most repeated behavioral/situational questions — the STAR-format classics that interviewers love to ask for this type of role"]\n}\n\nReturn ONLY valid JSON, no markdown.`,
           },
         ],
       }),
