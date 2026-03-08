@@ -168,6 +168,15 @@ const Index = () => {
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <CareerRoleAnalyzer profile={data.profile} />
+                    <div className="mt-5">
+                      <CareerStrategyEngine
+                        targetRole={data.profile.tagline || "Software Engineer"}
+                        currentSkills={data.profile.skills}
+                        missingSkills={data.skillGap.missing}
+                        experience={data.profile.experience}
+                        education={data.profile.education}
+                      />
+                    </div>
                   </motion.div>
                 </TabsContent>
 
