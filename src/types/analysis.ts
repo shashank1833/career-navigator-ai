@@ -1,10 +1,16 @@
 // Types for AI analysis results
+export interface TechnologyCategory {
+  category: string;
+  items: string[];
+}
+
 export interface AnalysisProfile {
   name: string;
   education: string;
   experience: string;
+  tagline: string;
   skills: string[];
-  technologies: string[];
+  technologies: string[] | TechnologyCategory[];
 }
 
 export interface AnalysisSkillGap {
