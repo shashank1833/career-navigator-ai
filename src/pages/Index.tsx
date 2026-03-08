@@ -87,6 +87,7 @@ const Index = () => {
             </div>
             <ThemeToggle />
           </div>
+          <HeroBrain size="sm" />
           <div className="flex items-center justify-center gap-3 mb-4">
             <Brain className="w-10 h-10 glow-text-primary" />
             <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
