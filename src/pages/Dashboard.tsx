@@ -123,13 +123,15 @@ const Dashboard = () => {
             { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent" },
             { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500" },
           ].map((s) => (
-            <div key={s.label} className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <s.icon className={`w-5 h-5 ${s.color}`} />
-                <span className="text-sm text-muted-foreground">{s.label}</span>
+            <TiltCard key={s.label} tiltAmount={8}>
+              <div className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border">
+                <div className="flex items-center gap-3 mb-2">
+                  <s.icon className={`w-5 h-5 ${s.color}`} />
+                  <span className="text-sm text-muted-foreground">{s.label}</span>
+                </div>
+                <p className="text-3xl font-bold text-foreground">{s.value}</p>
               </div>
-              <p className="text-3xl font-bold text-foreground">{s.value}</p>
-            </div>
+            </TiltCard>
           ))}
         </motion.div>
 

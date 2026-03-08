@@ -182,7 +182,8 @@ const Auth = () => {
             ) : (
               <>Already have an account?{" "}<button onClick={() => setIsLogin(true)} className="text-primary hover:underline">Sign in</button></>
             )}
-          </div>
+        </div>
+        </TiltCard>
         </div>
       </motion.div>
     </div>
