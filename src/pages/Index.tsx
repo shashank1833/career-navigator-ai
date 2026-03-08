@@ -100,10 +100,15 @@ const Index = () => {
                 <TabsContent value="resume">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <div><ResumeImprovements data={data.improvements} /></div>
                       <div><ProjectImpact data={data.projectImpact} /></div>
                       <div><WeaknessDetector data={data.weaknesses} /></div>
                     </div>
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="improvements">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <ResumeImprovements data={data.improvements} />
                   </motion.div>
                 </TabsContent>
 
