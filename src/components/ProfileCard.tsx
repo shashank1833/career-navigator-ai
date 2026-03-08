@@ -5,7 +5,7 @@ import type { AnalysisProfile } from "@/types/analysis";
 const ProfileCard = ({ data }: { data: AnalysisProfile }) => {
   return (
     <DashboardCard title="Professional Profile" icon={User} delay={0.1} accentColor="accent">
-      <div className="space-y-4">
+      <div className="flex gap-6 overflow-x-auto">
         <div>
           <h4 className="text-xl font-bold text-foreground">{data.name}</h4>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
