@@ -73,18 +73,24 @@ export const useResumeVersions = () => {
       .maybeSingle();
 
     if (existing) {
-      // If analysis_data wasn't stored before, update it now
-      if (!existing.analysis_data && analysisResult) {
+      // Update with latest analysis data
+      const updates: any = {};
+      if (analysisResult) {
+        updates.analysis_data = JSON.parse(JSON.stringify(analysisResult));
+        updates.profile_data = JSON.parse(JSON.stringify(profile));
+        updates.optimized_skills = profile.skills;
+      }
+      if (Object.keys(updates).length > 0) {
         await supabase
           .from("resume_versions")
-          .update({ analysis_data: JSON.parse(JSON.stringify(analysisResult)) as unknown as Json } as any)
+          .update(updates)
           .eq("id", existing.id);
-        existing.analysis_data = JSON.parse(JSON.stringify(analysisResult));
+        Object.assign(existing, updates);
       }
       const mapped = mapRow(existing);
       setVersions((prev) => {
-        if (prev.some((v) => v.id === mapped.id)) return prev;
-        return [mapped, ...prev];
+        const filtered = prev.filter((v) => v.id !== mapped.id);
+        return [mapped, ...filtered];
       });
       return mapped;
     }
