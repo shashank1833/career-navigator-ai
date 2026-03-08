@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
+import { Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table, TrendingUp } from "lucide-react";
 import careerLogo from "@/assets/career-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
