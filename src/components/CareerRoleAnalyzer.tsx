@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardCard from "./DashboardCard";
 import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getSessionId } from "@/lib/session";
 import type { AnalysisProfile } from "@/types/analysis";
 
 interface RoadmapStep {
@@ -40,6 +41,57 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CareerRoleResult | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const sessionId = getSessionId();
+
+  // Load saved progress when result changes
+  const loadProgress = useCallback(async (role: string) => {
+    const { data } = await supabase
+      .from("roadmap_progress")
+      .select("step_index")
+      .eq("session_id", sessionId)
+      .eq("target_role", role)
+      .eq("completed", true);
+    if (data) {
+      setCompletedSteps(new Set(data.map((r: any) => r.step_index)));
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (result?.targetRole) {
+      loadProgress(result.targetRole);
+    }
+  }, [result?.targetRole, loadProgress]);
+
+  const toggleStep = async (stepIndex: number) => {
+    if (!result) return;
+    const isCompleted = completedSteps.has(stepIndex);
+    const newSet = new Set(completedSteps);
+    
+    if (isCompleted) {
+      newSet.delete(stepIndex);
+      await supabase
+        .from("roadmap_progress")
+        .delete()
+        .eq("session_id", sessionId)
+        .eq("target_role", result.targetRole)
+        .eq("step_index", stepIndex);
+    } else {
+      newSet.add(stepIndex);
+      await supabase
+        .from("roadmap_progress")
+        .upsert({
+          session_id: sessionId,
+          target_role: result.targetRole,
+          step_index: stepIndex,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        }, { onConflict: "session_id,target_role,step_index" });
+    }
+    setCompletedSteps(newSet);
+  };
+
+  const completionPct = result ? Math.round((completedSteps.size / result.roadmap.steps.length) * 100) : 0;
 
   const handleAnalyze = async () => {
     if (!targetRole.trim()) {
@@ -231,59 +283,74 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
 
             {/* Learning Roadmap */}
             <DashboardCard title="Learning Roadmap" icon={TrendingUp} delay={0.4} accentColor="accent" className="col-span-full">
-              <div className="mb-4">
-                <span className="text-xs text-muted-foreground">Goal:</span>
-                <span className="ml-2 text-sm font-semibold gradient-text-secondary">{result.roadmap.goal}</span>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-muted-foreground">Goal:</span>
+                  <span className="ml-2 text-sm font-semibold gradient-text-secondary">{result.roadmap.goal}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-32">
+                    <Progress value={completionPct} className="h-2" />
+                  </div>
+                  <span className="text-xs font-semibold text-primary">{completionPct}%</span>
+                </div>
               </div>
               <div className="relative">
                 <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
                 <div className="space-y-4">
-                  {result.roadmap.steps.map((step, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + i * 0.1 }}
-                      className="flex items-start gap-4 relative"
-                    >
-                      <div className="z-10 shrink-0 mt-0.5">
-                        {step.done ? (
-                          <CheckCircle2 className="w-6 h-6 glow-text-accent" />
-                        ) : (
-                          <Circle className="w-6 h-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/20 border border-border/50 flex-1">
-                        <p className="text-sm font-medium text-foreground">Step {i + 1} — {step.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
-                        {step.skills && step.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {step.skills.map((s) => (
-                              <Badge key={s} variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-primary/5 border-primary/20 text-primary">
-                                {s}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                        {step.links && step.links.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {step.links.map((link, li) => (
-                              <a
-                                key={li}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                                {link.label}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                  {result.roadmap.steps.map((step, i) => {
+                    const isDone = completedSteps.has(i);
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + i * 0.1 }}
+                        className="flex items-start gap-4 relative"
+                      >
+                        <button
+                          onClick={() => toggleStep(i)}
+                          className="z-10 shrink-0 mt-0.5 cursor-pointer hover:scale-110 transition-transform"
+                          title={isDone ? "Mark as incomplete" : "Mark as complete"}
+                        >
+                          {isDone ? (
+                            <CheckCircle2 className="w-6 h-6 glow-text-accent" />
+                          ) : (
+                            <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
+                          )}
+                        </button>
+                        <div className={`p-3 rounded-lg border flex-1 transition-colors ${isDone ? "bg-accent/10 border-accent/30" : "bg-muted/20 border-border/50"}`}>
+                          <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>Step {i + 1} — {step.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+                          {step.skills && step.skills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {step.skills.map((s) => (
+                                <Badge key={s} variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-primary/5 border-primary/20 text-primary">
+                                  {s}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          {step.links && step.links.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {step.links.map((link, li) => (
+                                <a
+                                  key={li}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  {link.label}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             </DashboardCard>

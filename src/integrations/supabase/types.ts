@@ -122,6 +122,36 @@ export type Database = {
         }
         Relationships: []
       }
+      roadmap_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          session_id: string
+          step_index: number
+          target_role: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          session_id: string
+          step_index: number
+          target_role: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          step_index?: number
+          target_role?: string
+        }
+        Relationships: []
+      }
       saved_jobs: {
         Row: {
           created_at: string | null
