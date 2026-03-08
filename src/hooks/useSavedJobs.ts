@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionId } from "@/lib/session";
 import type { JobListing } from "@/types/jobs";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 export const useSavedJobs = () => {
   const [savedJobs, setSavedJobs] = useState<JobListing[]>([]);
@@ -30,10 +31,12 @@ export const useSavedJobs = () => {
     // Check if already saved
     if (savedJobs.find((j) => j.id === job.id)) return false;
 
-    const { error } = await supabase.from("saved_jobs").insert({
+    const insertData: TablesInsert<"saved_jobs"> = {
       session_id: sessionId,
       job_data: job as unknown as Record<string, unknown>,
-    });
+    };
+
+    const { error } = await supabase.from("saved_jobs").insert(insertData);
 
     if (!error) {
       setSavedJobs((prev) => [job, ...prev]);
