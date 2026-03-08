@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, ArrowLeft, User, Briefcase, Shield, Loader2, Camera, Trash2 } from "lucide-react";
+import { Brain, ArrowLeft, User, Briefcase, Shield, Loader2, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -136,7 +137,6 @@ const Settings = () => {
       <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -152,172 +152,178 @@ const Settings = () => {
           <ThemeToggle />
         </motion.header>
 
-        <div className="space-y-6">
-          {/* Profile Information */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card className="bg-card/80 backdrop-blur border-border">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" />
-                  <CardTitle className="text-lg">Profile Information</CardTitle>
-                </div>
-                <CardDescription>Manage your personal details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-16 h-16">
-                    <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-1">
-                    <Label htmlFor="avatar_url">Avatar URL</Label>
-                    <Input
-                      id="avatar_url"
-                      placeholder="https://example.com/avatar.jpg"
-                      value={profile.avatar_url}
-                      onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-                    />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Accordion type="single" collapsible className="space-y-4">
+            {/* Profile Information */}
+            <AccordionItem value="profile" className="border-none">
+              <Card className="bg-card/80 backdrop-blur border-border">
+                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5 text-primary" />
+                    <div className="text-left">
+                      <p className="text-lg font-semibold">Profile Information</p>
+                      <p className="text-sm text-muted-foreground font-normal">Manage your personal details</p>
+                    </div>
                   </div>
-                </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <CardContent className="space-y-4 pt-2">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-16 h-16">
+                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-1">
+                        <Label htmlFor="avatar_url">Avatar URL</Label>
+                        <Input
+                          id="avatar_url"
+                          placeholder="https://example.com/avatar.jpg"
+                          value={profile.avatar_url}
+                          onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="display_name">Display Name</Label>
+                      <Input
+                        id="display_name"
+                        placeholder="John Doe"
+                        value={profile.display_name}
+                        onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email Address</Label>
+                      <Input value={user?.email || ""} disabled className="opacity-60" />
+                      <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
 
-                <div className="space-y-2">
-                  <Label htmlFor="display_name">Display Name</Label>
-                  <Input
-                    id="display_name"
-                    placeholder="John Doe"
-                    value={profile.display_name}
-                    onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-                  />
-                </div>
+            {/* Career Preferences */}
+            <AccordionItem value="career" className="border-none">
+              <Card className="bg-card/80 backdrop-blur border-border">
+                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-secondary" />
+                    <div className="text-left">
+                      <p className="text-lg font-semibold">Career Preferences</p>
+                      <p className="text-sm text-muted-foreground font-normal">Set your job search preferences</p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <CardContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_role">Preferred Job Role</Label>
+                      <Input
+                        id="preferred_role"
+                        placeholder="e.g. Frontend Developer, Data Scientist"
+                        value={profile.preferred_role}
+                        onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_location">Preferred Location</Label>
+                      <Input
+                        id="preferred_location"
+                        placeholder="e.g. Remote, San Francisco, London"
+                        value={profile.preferred_location}
+                        onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experience_level">Experience Level</Label>
+                      <Select
+                        value={profile.experience_level}
+                        onValueChange={(v) => setProfile({ ...profile, experience_level: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your experience level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="intern">Intern</SelectItem>
+                          <SelectItem value="junior">Junior (0-2 years)</SelectItem>
+                          <SelectItem value="mid">Mid-Level (2-5 years)</SelectItem>
+                          <SelectItem value="senior">Senior (5-10 years)</SelectItem>
+                          <SelectItem value="lead">Lead / Staff (10+ years)</SelectItem>
+                          <SelectItem value="executive">Executive / Director</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
 
-                <div className="space-y-2">
-                  <Label>Email Address</Label>
-                  <Input value={user?.email || ""} disabled className="opacity-60" />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Career Preferences */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="bg-card/80 backdrop-blur border-border">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-secondary" />
-                  <CardTitle className="text-lg">Career Preferences</CardTitle>
-                </div>
-                <CardDescription>Set your job search preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_role">Preferred Job Role</Label>
-                  <Input
-                    id="preferred_role"
-                    placeholder="e.g. Frontend Developer, Data Scientist"
-                    value={profile.preferred_role}
-                    onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_location">Preferred Location</Label>
-                  <Input
-                    id="preferred_location"
-                    placeholder="e.g. Remote, San Francisco, London"
-                    value={profile.preferred_location}
-                    onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="experience_level">Experience Level</Label>
-                  <Select
-                    value={profile.experience_level}
-                    onValueChange={(v) => setProfile({ ...profile, experience_level: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="intern">Intern</SelectItem>
-                      <SelectItem value="junior">Junior (0-2 years)</SelectItem>
-                      <SelectItem value="mid">Mid-Level (2-5 years)</SelectItem>
-                      <SelectItem value="senior">Senior (5-10 years)</SelectItem>
-                      <SelectItem value="lead">Lead / Staff (10+ years)</SelectItem>
-                      <SelectItem value="executive">Executive / Director</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+            {/* Account Settings */}
+            <AccordionItem value="account" className="border-none">
+              <Card className="bg-card/80 backdrop-blur border-border">
+                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-accent" />
+                    <div className="text-left">
+                      <p className="text-lg font-semibold">Account Settings</p>
+                      <p className="text-sm text-muted-foreground font-normal">Manage your account security</p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <CardContent className="space-y-4 pt-2">
+                    <form onSubmit={handleChangePassword} className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="new_password">New Password</Label>
+                        <Input
+                          id="new_password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          minLength={6}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm_password">Confirm Password</Label>
+                        <Input
+                          id="confirm_password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          minLength={6}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" variant="outline" disabled={changingPassword}>
+                        {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        Change Password
+                      </Button>
+                    </form>
+                    <Separator />
+                    <div>
+                      <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
+                      <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
+          </Accordion>
 
           {/* Save Profile Button */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <div className="mt-6">
             <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-11">
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Save Profile
             </Button>
-          </motion.div>
-
-          <Separator />
-
-          {/* Account Settings */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card className="bg-card/80 backdrop-blur border-border">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-accent" />
-                  <CardTitle className="text-lg">Account Settings</CardTitle>
-                </div>
-                <CardDescription>Manage your account security</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleChangePassword} className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="new_password">New Password</Label>
-                    <Input
-                      id="new_password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      minLength={6}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm_password">Confirm Password</Label>
-                    <Input
-                      id="confirm_password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      minLength={6}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" variant="outline" disabled={changingPassword}>
-                    {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Change Password
-                  </Button>
-                </form>
-
-                <Separator />
-
-                <div>
-                  <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
-                  <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Account
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
