@@ -32,9 +32,24 @@ const Index = () => {
 
   // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
-    const state = location.state as { analysisData?: AnalysisResult } | null;
+    const state = location.state as { analysisData?: AnalysisResult; profileData?: AnalysisResult["profile"] } | null;
     if (state?.analysisData) {
       setData(state.analysisData);
+      window.history.replaceState({}, document.title);
+    } else if (state?.profileData) {
+      // Partial data from resume version without full analysis - build minimal result
+      setData({
+        profile: state.profileData,
+        skillGap: { matching: [], missing: [], suggested: [] },
+        jobMatch: { skillMatch: 0, projectRelevance: 0, experienceMatch: 0, overall: 0 },
+        improvements: [],
+        interviewQuestions: { technical: [], conceptual: [], behavioral: [] },
+        careerTrajectory: [],
+        weaknesses: [],
+        projectImpact: [],
+        roadmap: { goal: "", steps: [] },
+        github: { username: "N/A", repos: 0, languages: [], devScore: 0, topProject: { name: "", stars: 0, forks: 0 }, activity: "N/A" },
+      });
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
