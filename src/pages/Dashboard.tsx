@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User } from "lucide-react";
+import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
