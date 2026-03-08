@@ -109,8 +109,9 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background: linear-gradient(135deg, hsl(222 47% 6%), hsl(217 33% 12%), hsl(222 47% 8%));
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)), hsl(var(--gradient-start)));
     min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
   }
 }
 
