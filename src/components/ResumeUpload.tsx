@@ -129,15 +129,6 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         />
       </div>
 
-      <div className="mb-6">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">GitHub Username (optional)</label>
-        <Input
-          value={githubUsername}
-          onChange={(e) => setGithubUsername(e.target.value)}
-          placeholder="e.g. octocat"
-          className="bg-muted/30 border-border/50 text-foreground placeholder:text-muted-foreground/50"
-        />
-      </div>
 
       <Button
         onClick={handleAnalyze}
