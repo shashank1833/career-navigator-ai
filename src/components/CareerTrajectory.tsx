@@ -1,18 +1,13 @@
 import DashboardCard from "./DashboardCard";
 import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import type { AnalysisCareerPath } from "@/types/analysis";
 
-const careers = [
-  { role: "Backend Engineer", match: 85, skills: ["System Design", "Distributed Systems", "API Design"] },
-  { role: "ML Engineer", match: 72, skills: ["PyTorch", "MLOps", "Feature Engineering"] },
-  { role: "Cloud Engineer", match: 68, skills: ["Terraform", "Networking", "Security"] },
-];
-
-const CareerTrajectory = () => {
+const CareerTrajectory = ({ data }: { data: AnalysisCareerPath[] }) => {
   return (
     <DashboardCard title="Career Trajectory" icon={TrendingUp} delay={0.5} accentColor="secondary">
       <div className="space-y-4">
-        {careers.map((c, i) => (
+        {data.map((c, i) => (
           <div key={c.role} className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-foreground">{c.role}</span>

@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
-import { Upload, FileText, Sparkles } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import type { AnalysisResult } from "@/types/analysis";
 
 interface ResumeUploadProps {
-  onAnalyze: () => void;
+  onAnalyze: (data: AnalysisResult) => void;
 }
 
 const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
@@ -14,6 +16,8 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [githubUsername, setGithubUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -27,6 +31,45 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected) setFile(selected);
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
+      if (githubUsername.trim()) formData.append("githubUsername", githubUsername);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-resume`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Analysis failed" }));
+        throw new Error(err.error || `Error ${res.status}`);
+      }
+
+      const data: AnalysisResult = await res.json();
+      onAnalyze(data);
+    } catch (e) {
+      toast({
+        title: "Analysis Failed",
+        description: e instanceof Error ? e.message : "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,27 +93,16 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         <p className="text-muted-foreground text-sm">Drop your PDF or DOCX and let AI analyze your career</p>
       </div>
 
-      {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 cursor-pointer mb-6 ${
-          isDragging
-            ? "border-primary bg-primary/5"
-            : file
-            ? "border-accent bg-accent/5"
-            : "border-border hover:border-muted-foreground/40"
+          isDragging ? "border-primary bg-primary/5" : file ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground/40"
         }`}
         onClick={() => document.getElementById("resume-input")?.click()}
       >
-        <input
-          id="resume-input"
-          type="file"
-          accept=".pdf,.docx"
-          className="hidden"
-          onChange={handleFileChange}
-        />
+        <input id="resume-input" type="file" accept=".pdf,.docx" className="hidden" onChange={handleFileChange} />
         {file ? (
           <div className="flex items-center justify-center gap-3">
             <FileText className="w-6 h-6 glow-text-accent" />
@@ -86,11 +118,8 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         )}
       </div>
 
-      {/* Job Description */}
       <div className="mb-4">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-          Job Description (optional)
-        </label>
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Job Description (optional)</label>
         <Textarea
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
@@ -99,11 +128,8 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         />
       </div>
 
-      {/* GitHub */}
       <div className="mb-6">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-          GitHub Username (optional)
-        </label>
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">GitHub Username (optional)</label>
         <Input
           value={githubUsername}
           onChange={(e) => setGithubUsername(e.target.value)}
@@ -113,12 +139,21 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
       </div>
 
       <Button
-        onClick={onAnalyze}
-        disabled={!file}
+        onClick={handleAnalyze}
+        disabled={!file || loading}
         className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 disabled:opacity-30"
       >
-        <Sparkles className="w-4 h-4 mr-2" />
-        Analyze with AI
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Analyzing with AI...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Analyze with AI
+          </>
+        )}
       </Button>
     </motion.div>
   );

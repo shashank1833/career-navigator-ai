@@ -1,12 +1,7 @@
 import DashboardCard from "./DashboardCard";
 import { Layers } from "lucide-react";
 import { motion } from "framer-motion";
-
-const projects = [
-  { name: "Neural Search Engine", algorithm: 90, depth: 85, usefulness: 78, deployment: 60 },
-  { name: "E-Commerce Platform", algorithm: 55, depth: 70, usefulness: 92, deployment: 88 },
-  { name: "Chat Application", algorithm: 45, depth: 60, usefulness: 75, deployment: 70 },
-];
+import type { AnalysisProjectImpact } from "@/types/analysis";
 
 const metrics = ["algorithm", "depth", "usefulness", "deployment"] as const;
 const metricLabels: Record<string, string> = {
@@ -16,11 +11,11 @@ const metricLabels: Record<string, string> = {
   deployment: "Deploy Ready",
 };
 
-const ProjectImpact = () => {
+const ProjectImpact = ({ data }: { data: AnalysisProjectImpact[] }) => {
   return (
     <DashboardCard title="Project Impact" icon={Layers} delay={0.45} accentColor="primary">
       <div className="space-y-5">
-        {projects.map((p, pi) => (
+        {data.map((p, pi) => (
           <div key={p.name}>
             <p className="text-sm font-medium text-foreground mb-2 code-font">{p.name}</p>
             <div className="grid grid-cols-2 gap-2">

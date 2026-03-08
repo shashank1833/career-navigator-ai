@@ -1,13 +1,7 @@
 import DashboardCard from "./DashboardCard";
 import { Target } from "lucide-react";
 import { motion } from "framer-motion";
-
-const scores = [
-  { label: "Skill Match", value: 78, color: "from-primary to-accent" },
-  { label: "Project Relevance", value: 65, color: "from-secondary to-primary" },
-  { label: "Experience Match", value: 82, color: "from-accent to-primary" },
-  { label: "Overall Match", value: 75, color: "from-primary via-secondary to-accent" },
-];
+import type { AnalysisJobMatch } from "@/types/analysis";
 
 const CircularScore = ({ value, label, delay }: { value: number; label: string; delay: number }) => {
   const radius = 36;
@@ -43,7 +37,14 @@ const CircularScore = ({ value, label, delay }: { value: number; label: string; 
   );
 };
 
-const JobMatchScore = () => {
+const JobMatchScore = ({ data }: { data: AnalysisJobMatch }) => {
+  const scores = [
+    { label: "Skill Match", value: data.skillMatch },
+    { label: "Project Relevance", value: data.projectRelevance },
+    { label: "Experience Match", value: data.experienceMatch },
+    { label: "Overall Match", value: data.overall },
+  ];
+
   return (
     <DashboardCard title="Job Match Score" icon={Target} delay={0.3} accentColor="primary">
       <div className="grid grid-cols-2 gap-6">
