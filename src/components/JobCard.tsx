@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink, Bookmark, ClipboardList } from "lucide-react";
+import { Briefcase, MapPin, Clock, DollarSign, ChevronRight, Sparkles, ExternalLink, Bookmark, BookmarkCheck, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { JobListing } from "@/types/jobs";
@@ -9,6 +9,7 @@ interface JobCardProps {
   onOptimize: (job: JobListing) => void;
   onSave?: (job: JobListing) => void;
   onTrack?: (job: JobListing) => void;
+  isSaved?: boolean;
   delay?: number;
 }
 
@@ -38,7 +39,7 @@ const CircularProgress = ({ value, size = 56 }: { value: number; size?: number }
   );
 };
 
-const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) => {
+const JobCard = ({ job, onOptimize, onSave, onTrack, isSaved = false, delay = 0 }: JobCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -97,11 +98,15 @@ const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) 
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className={`text-xs ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={() => onSave(job)}
               >
-                <Bookmark className="w-3 h-3 mr-1" />
-                Save
+                {isSaved ? (
+                  <BookmarkCheck className="w-3 h-3 mr-1" />
+                ) : (
+                  <Bookmark className="w-3 h-3 mr-1" />
+                )}
+                {isSaved ? "Saved" : "Save"}
               </Button>
             )}
             {onTrack && (
