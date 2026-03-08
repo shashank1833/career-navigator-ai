@@ -87,7 +87,12 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const userSkills = [...(skills || []), ...(technologies || [])].map(normalizeSkill);
+    
+    // Flatten technologies: support both string[] and {category, items}[] formats
+    const flatTechnologies: string[] = (technologies || []).flatMap((t: any) =>
+      typeof t === "string" ? [t] : Array.isArray(t?.items) ? t.items : []
+    );
+    const userSkills = [...(skills || []), ...flatTechnologies].filter((s: any) => typeof s === "string").map(normalizeSkill);
     const userSkillSet = new Set(userSkills.map(s => s.toLowerCase()));
 
     // Transform Adzuna results to our format with match scoring
