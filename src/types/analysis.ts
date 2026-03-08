@@ -29,6 +29,7 @@ export interface AnalysisJobMatch {
 export interface AnalysisImprovement {
   original: string;
   improved: string;
+  alternatives?: string[];
 }
 
 export interface InterviewQuestionItem {
