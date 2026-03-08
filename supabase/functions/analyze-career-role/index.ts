@@ -56,7 +56,7 @@ Return ONLY valid JSON with this exact structure:
         "desc": "What to build and why this tool matters for the role",
         "done": false,
         "skills": ["specific tool or framework this step covers"],
-        "links": [{ "label": "Resource name", "url": "https://real-url.com" }]
+        "links": [{ "label": "Resource name", "url": "https://real-url.com" }, { "label": "Resource 2", "url": "https://..." }, { "label": "Resource 3", "url": "https://..." }, { "label": "Resource 4", "url": "https://..." }, { "label": "Resource 5", "url": "https://..." }]
       }
     ]
   },
