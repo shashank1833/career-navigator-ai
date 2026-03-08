@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardCard from "./DashboardCard";
 import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getSessionId } from "@/lib/session";
 import type { AnalysisProfile } from "@/types/analysis";
 
 interface RoadmapStep {
@@ -40,6 +41,57 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CareerRoleResult | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const sessionId = getSessionId();
+
+  // Load saved progress when result changes
+  const loadProgress = useCallback(async (role: string) => {
+    const { data } = await supabase
+      .from("roadmap_progress")
+      .select("step_index")
+      .eq("session_id", sessionId)
+      .eq("target_role", role)
+      .eq("completed", true);
+    if (data) {
+      setCompletedSteps(new Set(data.map((r: any) => r.step_index)));
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (result?.targetRole) {
+      loadProgress(result.targetRole);
+    }
+  }, [result?.targetRole, loadProgress]);
+
+  const toggleStep = async (stepIndex: number) => {
+    if (!result) return;
+    const isCompleted = completedSteps.has(stepIndex);
+    const newSet = new Set(completedSteps);
+    
+    if (isCompleted) {
+      newSet.delete(stepIndex);
+      await supabase
+        .from("roadmap_progress")
+        .delete()
+        .eq("session_id", sessionId)
+        .eq("target_role", result.targetRole)
+        .eq("step_index", stepIndex);
+    } else {
+      newSet.add(stepIndex);
+      await supabase
+        .from("roadmap_progress")
+        .upsert({
+          session_id: sessionId,
+          target_role: result.targetRole,
+          step_index: stepIndex,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        }, { onConflict: "session_id,target_role,step_index" });
+    }
+    setCompletedSteps(newSet);
+  };
+
+  const completionPct = result ? Math.round((completedSteps.size / result.roadmap.steps.length) * 100) : 0;
 
   const handleAnalyze = async () => {
     if (!targetRole.trim()) {
