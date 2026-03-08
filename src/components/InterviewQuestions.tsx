@@ -103,7 +103,7 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
                 activeCategory === cat ? categoryColors[cat] : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
               }`}
             >
-              {cat} ({(questions[cat] || []).length})
+              {cat} ({(questions?.[cat] || []).length})
             </button>
           ))}
         </div>
