@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
+import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
@@ -67,7 +67,12 @@ const Index = () => {
                   </TabsTrigger>
                   <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                     <Sparkles className="w-4 h-4" />
-                    <span className="hidden sm:inline">Resume & Projects</span>
+                    <span className="hidden sm:inline">Projects</span>
+                    <span className="sm:hidden">Projects</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <FileText className="w-4 h-4" />
+                    <span className="hidden sm:inline">Resume Improvements</span>
                     <span className="sm:hidden">Resume</span>
                   </TabsTrigger>
                   <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -95,10 +100,15 @@ const Index = () => {
                 <TabsContent value="resume">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <div><ResumeImprovements data={data.improvements} /></div>
                       <div><ProjectImpact data={data.projectImpact} /></div>
                       <div><WeaknessDetector data={data.weaknesses} /></div>
                     </div>
+                  </motion.div>
+                </TabsContent>
+
+                <TabsContent value="improvements">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <ResumeImprovements data={data.improvements} />
                   </motion.div>
                 </TabsContent>
 
