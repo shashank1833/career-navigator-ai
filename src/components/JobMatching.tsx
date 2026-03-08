@@ -18,9 +18,10 @@ import type { JobListing, ResumeOptimization } from "@/types/jobs";
 
 interface JobMatchingProps {
   profile: AnalysisProfile;
+  initialTab?: "recommended" | "saved" | "tracker";
 }
 
-const JobMatching = ({ profile }: JobMatchingProps) => {
+const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) => {
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -30,8 +31,8 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
   const [optimization, setOptimization] = useState<ResumeOptimization | null>(null);
   const [optimizing, setOptimizing] = useState(false);
   const [useRealJobs, setUseRealJobs] = useState(true);
+  const [activeTab, setActiveTab] = useState<"recommended" | "saved" | "tracker">(initialTab);
   const { toast } = useToast();
-
   const { applications, loading: appsLoading, addApplication, updateStatus, updateNotes, removeApplication } = useJobApplications();
   const { savedJobs, loading: savedLoading, saveJob, unsaveJob, isJobSaved } = useSavedJobs();
   const { saveOriginalResume, saveOptimizedVersion } = useResumeVersions();
@@ -40,6 +41,10 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
   useEffect(() => {
     saveOriginalResume(profile);
   }, [profile]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const fetchRealJobs = async () => {
     setLoading(true);
@@ -210,7 +215,7 @@ const JobMatching = ({ profile }: JobMatchingProps) => {
           </Button>
         </div>
 
-        <Tabs defaultValue="recommended" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "recommended" | "saved" | "tracker")} className="w-full">
           <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
             <TabsTrigger value="recommended" className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Briefcase className="w-3.5 h-3.5" /> Recommended

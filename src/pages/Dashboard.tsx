@@ -70,6 +70,15 @@ const Dashboard = () => {
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
+  const quickAccessProfile = {
+    name: displayName,
+    education: "Not provided",
+    experience: "Not provided",
+    tagline: "Career profile",
+    skills: [],
+    technologies: [],
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
@@ -118,13 +127,21 @@ const Dashboard = () => {
         {/* Stats */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Saved Jobs", value: stats.savedJobs, icon: Briefcase, color: "text-secondary", route: "/analyze", desc: "View saved job listings" },
-            { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent", route: "/analyze", desc: "Track your applications" },
-            { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500", route: "/analyze", desc: "Continue learning roadmap" },
+            { label: "Saved Jobs", value: stats.savedJobs, icon: Briefcase, color: "text-secondary", desc: "View saved job listings", initialTab: "jobs", initialJobsTab: "saved" },
+            { label: "Applications", value: stats.applications, icon: BookOpen, color: "text-accent", desc: "Track your applications", initialTab: "jobs", initialJobsTab: "tracker" },
+            { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Zap, color: "text-green-500", desc: "Continue learning roadmap", initialTab: "career" },
           ].map((s) => (
             <button
               key={s.label}
-              onClick={() => navigate(s.route)}
+              onClick={() =>
+                navigate("/analyze", {
+                  state: {
+                    profileData: quickAccessProfile,
+                    initialTab: s.initialTab,
+                    initialJobsTab: s.initialJobsTab,
+                  },
+                })
+              }
               className="p-5 rounded-xl bg-card/80 backdrop-blur border border-border hover:border-primary/40 transition-all text-left group"
             >
               <div className="flex items-center gap-3 mb-2">
