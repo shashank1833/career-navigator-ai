@@ -134,12 +134,22 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
                 <span className="text-muted-foreground font-mono text-xs mr-2">Q{i + 1}</span>
                 {q.question}
               </div>
-              <Badge
-                variant="outline"
-                className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 ${difficultyStyles[q.difficulty] || difficultyStyles.Medium}`}
-              >
-                {q.difficulty}
-              </Badge>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-semibold px-2 py-0.5 ${difficultyStyles[q.difficulty] || difficultyStyles.Medium}`}
+                >
+                  {q.difficulty}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => setSelectedQuestion(q)}
+                >
+                  Practice
+                </Button>
+              </div>
             </motion.div>
           ))}
           {displayedQuestions.length === 0 && (
