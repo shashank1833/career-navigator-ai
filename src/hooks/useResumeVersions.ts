@@ -63,7 +63,7 @@ export const useResumeVersions = () => {
     fetchVersions();
   }, [fetchVersions]);
 
-  const saveOriginalResume = async (profile: AnalysisProfile, analysisResult?: AnalysisResult) => {
+  const saveOriginalResume = async (profile: AnalysisProfile, analysisResult?: AnalysisResult, rawText?: string, parsedResume?: any) => {
     // Check DB directly to prevent duplicates
     const { data: existing } = await supabase
       .from("resume_versions")
@@ -80,6 +80,8 @@ export const useResumeVersions = () => {
         updates.profile_data = JSON.parse(JSON.stringify(profile));
         updates.optimized_skills = profile.skills;
       }
+      if (rawText) updates.raw_text = rawText;
+      if (parsedResume) updates.parsed_resume = JSON.parse(JSON.stringify(parsedResume));
       if (Object.keys(updates).length > 0) {
         await supabase
           .from("resume_versions")
@@ -95,16 +97,20 @@ export const useResumeVersions = () => {
       return mapped;
     }
 
+    const insertData: any = {
+      session_id: sessionId,
+      name: "Original Resume",
+      profile_data: JSON.parse(JSON.stringify(profile)) as Json,
+      optimized_skills: profile.skills,
+      is_original: true,
+      analysis_data: analysisResult ? JSON.parse(JSON.stringify(analysisResult)) as unknown as Json : null,
+    };
+    if (rawText) insertData.raw_text = rawText;
+    if (parsedResume) insertData.parsed_resume = JSON.parse(JSON.stringify(parsedResume));
+
     const { data, error } = await supabase
       .from("resume_versions")
-      .insert({
-        session_id: sessionId,
-        name: "Original Resume",
-        profile_data: JSON.parse(JSON.stringify(profile)) as Json,
-        optimized_skills: profile.skills,
-        is_original: true,
-        analysis_data: analysisResult ? JSON.parse(JSON.stringify(analysisResult)) as unknown as Json : null,
-      } as any)
+      .insert(insertData)
       .select()
       .single();
 
