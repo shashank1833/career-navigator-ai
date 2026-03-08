@@ -721,7 +721,9 @@ serve(async (req) => {
     console.log(`Extracting text from ${isDocx ? "DOCX" : "PDF"} file: ${file.name}`);
     let rawText: string;
     try {
-      rawText = isDocx ? await extractDocxText(arrayBuffer) : await extractPdfText(arrayBuffer);
+      const extracted = isDocx ? await extractDocxText(arrayBuffer) : await extractPdfText(arrayBuffer);
+      // Ensure rawText is always a string
+      rawText = typeof extracted === "string" ? extracted : String(extracted || "");
     } catch (extractError) {
       console.error("Text extraction failed:", extractError);
       return new Response(
