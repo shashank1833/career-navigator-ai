@@ -23,6 +23,3 @@ verify_jwt = false
 
 [functions.generate-career-strategy]
 verify_jwt = false
-
-[functions.parse-resume]
-verify_jwt = false

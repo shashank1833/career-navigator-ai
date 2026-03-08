@@ -163,9 +163,7 @@ export type Database = {
           optimized_bullet_points: Json | null
           optimized_skills: string[] | null
           optimized_summary: string | null
-          parsed_resume: Json | null
           profile_data: Json
-          raw_text: string | null
           session_id: string
           target_company: string | null
           target_job_title: string | null
@@ -180,9 +178,7 @@ export type Database = {
           optimized_bullet_points?: Json | null
           optimized_skills?: string[] | null
           optimized_summary?: string | null
-          parsed_resume?: Json | null
           profile_data: Json
-          raw_text?: string | null
           session_id: string
           target_company?: string | null
           target_job_title?: string | null
@@ -197,9 +193,7 @@ export type Database = {
           optimized_bullet_points?: Json | null
           optimized_skills?: string[] | null
           optimized_summary?: string | null
-          parsed_resume?: Json | null
           profile_data?: Json
-          raw_text?: string | null
           session_id?: string
           target_company?: string | null
           target_job_title?: string | null

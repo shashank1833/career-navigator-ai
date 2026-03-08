@@ -62,10 +62,10 @@ const Index = () => {
   }, [navigationState]);
 
   // Save full analysis to DB when new analysis completes
-  const handleAnalyze = (result: AnalysisResult, rawText?: string, parsedResume?: any) => {
+  const handleAnalyze = (result: AnalysisResult) => {
     setData(result);
-    // Save original resume with full analysis data + parsed text
-    saveOriginalResume(result.profile, result, rawText, parsedResume);
+    // Save original resume with full analysis data
+    saveOriginalResume(result.profile, result);
   };
 
   return (
