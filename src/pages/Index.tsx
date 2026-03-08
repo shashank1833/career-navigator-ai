@@ -25,17 +25,23 @@ import type { AnalysisResult } from "@/types/analysis";
 const Index = () => {
   const location = useLocation();
   const [data, setData] = useState<AnalysisResult | null>(null);
-  const { versions, loading: versionsLoading, deleteVersion } = useResumeVersions();
+  const { versions, loading: versionsLoading, deleteVersion, saveOriginalResume } = useResumeVersions();
 
   // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
     const state = location.state as { analysisData?: AnalysisResult } | null;
     if (state?.analysisData) {
       setData(state.analysisData);
-      // Clear the state so refresh doesn't re-load
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Save full analysis to DB when new analysis completes
+  const handleAnalyze = (result: AnalysisResult) => {
+    setData(result);
+    // Save original resume with full analysis data
+    saveOriginalResume(result.profile, result);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
