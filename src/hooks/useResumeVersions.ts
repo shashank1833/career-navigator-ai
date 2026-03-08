@@ -20,6 +20,21 @@ export interface ResumeVersion {
   created_at: string;
 }
 
+const mapRow = (v: any): ResumeVersion => ({
+  id: v.id,
+  name: v.name,
+  target_job_title: v.target_job_title,
+  target_company: v.target_company,
+  profile_data: v.profile_data as unknown as AnalysisProfile,
+  analysis_data: (v.analysis_data as unknown as AnalysisResult) || null,
+  optimized_summary: v.optimized_summary,
+  optimized_skills: v.optimized_skills || [],
+  optimized_bullet_points: (v.optimized_bullet_points as unknown as Array<{ original: string; optimized: string }>) || [],
+  application_strength: v.application_strength,
+  is_original: v.is_original || false,
+  created_at: v.created_at || "",
+});
+
 export const useResumeVersions = () => {
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,19 +49,7 @@ export const useResumeVersions = () => {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setVersions(data.map(v => ({
-        id: v.id,
-        name: v.name,
-        target_job_title: v.target_job_title,
-        target_company: v.target_company,
-        profile_data: v.profile_data as unknown as AnalysisProfile,
-        optimized_summary: v.optimized_summary,
-        optimized_skills: v.optimized_skills || [],
-        optimized_bullet_points: (v.optimized_bullet_points as unknown as Array<{ original: string; optimized: string }>) || [],
-        application_strength: v.application_strength,
-        is_original: v.is_original || false,
-        created_at: v.created_at || "",
-      })));
+      setVersions(data.map(mapRow));
     }
     setLoading(false);
   }, [sessionId]);
@@ -55,8 +58,8 @@ export const useResumeVersions = () => {
     fetchVersions();
   }, [fetchVersions]);
 
-  const saveOriginalResume = async (profile: AnalysisProfile) => {
-    // Check DB directly to prevent duplicates (not just in-memory state)
+  const saveOriginalResume = async (profile: AnalysisProfile, analysisResult?: AnalysisResult) => {
+    // Check DB directly to prevent duplicates
     const { data: existing } = await supabase
       .from("resume_versions")
       .select("*")
@@ -65,20 +68,15 @@ export const useResumeVersions = () => {
       .maybeSingle();
 
     if (existing) {
-      const mapped: ResumeVersion = {
-        id: existing.id,
-        name: existing.name,
-        target_job_title: existing.target_job_title,
-        target_company: existing.target_company,
-        profile_data: existing.profile_data as unknown as AnalysisProfile,
-        optimized_summary: existing.optimized_summary,
-        optimized_skills: existing.optimized_skills || [],
-        optimized_bullet_points: (existing.optimized_bullet_points as unknown as Array<{ original: string; optimized: string }>) || [],
-        application_strength: existing.application_strength,
-        is_original: existing.is_original || false,
-        created_at: existing.created_at || "",
-      };
-      // Update in-memory state if not already there
+      // If analysis_data wasn't stored before, update it now
+      if (!existing.analysis_data && analysisResult) {
+        await supabase
+          .from("resume_versions")
+          .update({ analysis_data: JSON.parse(JSON.stringify(analysisResult)) as unknown as Json } as any)
+          .eq("id", existing.id);
+        existing.analysis_data = JSON.parse(JSON.stringify(analysisResult));
+      }
+      const mapped = mapRow(existing);
       setVersions((prev) => {
         if (prev.some((v) => v.id === mapped.id)) return prev;
         return [mapped, ...prev];
@@ -94,24 +92,13 @@ export const useResumeVersions = () => {
         profile_data: JSON.parse(JSON.stringify(profile)) as Json,
         optimized_skills: profile.skills,
         is_original: true,
-      })
+        analysis_data: analysisResult ? JSON.parse(JSON.stringify(analysisResult)) as unknown as Json : null,
+      } as any)
       .select()
       .single();
 
     if (!error && data) {
-      const newVersion: ResumeVersion = {
-        id: data.id,
-        name: data.name,
-        target_job_title: data.target_job_title,
-        target_company: data.target_company,
-        profile_data: data.profile_data as unknown as AnalysisProfile,
-        optimized_summary: data.optimized_summary,
-        optimized_skills: data.optimized_skills || [],
-        optimized_bullet_points: (data.optimized_bullet_points as unknown as Array<{ original: string; optimized: string }>) || [],
-        application_strength: data.application_strength,
-        is_original: data.is_original || false,
-        created_at: data.created_at || "",
-      };
+      const newVersion = mapRow(data);
       setVersions((prev) => [newVersion, ...prev]);
       return newVersion;
     }
@@ -144,19 +131,7 @@ export const useResumeVersions = () => {
       .single();
 
     if (!error && data) {
-      const newVersion: ResumeVersion = {
-        id: data.id,
-        name: data.name,
-        target_job_title: data.target_job_title,
-        target_company: data.target_company,
-        profile_data: data.profile_data as unknown as AnalysisProfile,
-        optimized_summary: data.optimized_summary,
-        optimized_skills: data.optimized_skills || [],
-        optimized_bullet_points: (data.optimized_bullet_points as unknown as Array<{ original: string; optimized: string }>) || [],
-        application_strength: data.application_strength,
-        is_original: data.is_original || false,
-        created_at: data.created_at || "",
-      };
+      const newVersion = mapRow(data);
       setVersions((prev) => [newVersion, ...prev]);
       return newVersion;
     }
