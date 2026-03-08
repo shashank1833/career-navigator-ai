@@ -38,7 +38,7 @@ const CircularProgress = ({ value, size = 56 }: { value: number; size?: number }
   );
 };
 
-const JobCard = ({ job, onOptimize, delay = 0 }: JobCardProps) => {
+const JobCard = ({ job, onOptimize, onSave, onTrack, delay = 0 }: JobCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
