@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionId } from "@/lib/session";
-import type { AnalysisProfile } from "@/types/analysis";
+import type { AnalysisProfile, AnalysisResult } from "@/types/analysis";
 import type { ResumeOptimization } from "@/types/jobs";
 import type { Json } from "@/integrations/supabase/types";
 
