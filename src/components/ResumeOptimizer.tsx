@@ -1,17 +1,20 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import DashboardCard from "./DashboardCard";
 import type { JobListing, ResumeOptimization } from "@/types/jobs";
+import type { AnalysisProfile } from "@/types/analysis";
 import { useToast } from "@/hooks/use-toast";
+import { exportOptimizedResume } from "@/lib/pdf-export";
 
 interface ResumeOptimizerProps {
   job: JobListing;
   optimization: ResumeOptimization | null;
   loading: boolean;
   onBack: () => void;
+  profile?: AnalysisProfile;
 }
 
 const ResumeOptimizer = ({ job, optimization, loading, onBack }: ResumeOptimizerProps) => {
