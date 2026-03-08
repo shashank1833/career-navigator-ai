@@ -54,6 +54,7 @@ export interface AnalysisRoadmapStep {
   title: string;
   desc: string;
   done: boolean;
+  links?: { label: string; url: string }[];
 }
 
 export interface AnalysisRoadmap {
