@@ -53,7 +53,8 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Check your email to verify your account!");
+        toast.success("Account created! Signing you in...");
+        navigate("/dashboard");
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
