@@ -98,11 +98,15 @@ const JobCard = ({ job, onOptimize, onSave, onTrack, isSaved = false, delay = 0 
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className={`text-xs ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={() => onSave(job)}
               >
-                <Bookmark className="w-3 h-3 mr-1" />
-                Save
+                {isSaved ? (
+                  <BookmarkCheck className="w-3 h-3 mr-1" />
+                ) : (
+                  <Bookmark className="w-3 h-3 mr-1" />
+                )}
+                {isSaved ? "Saved" : "Save"}
               </Button>
             )}
             {onTrack && (
