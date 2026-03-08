@@ -69,38 +69,38 @@ const Index = () => {
 
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="w-full flex justify-start gap-2 bg-muted/50 border border-border rounded-xl p-2 mb-8 overflow-x-auto">
-                  <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <User className="w-4 h-4" />
+                  <TabsTrigger value="profile" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <User className="w-5 h-5" />
                     <span className="hidden sm:inline">Profile Overview</span>
                     <span className="sm:hidden">Profile</span>
                   </TabsTrigger>
-                  <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Sparkles className="w-4 h-4" />
+                  <TabsTrigger value="resume" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Sparkles className="w-5 h-5" />
                     <span className="hidden sm:inline">Projects</span>
                     <span className="sm:hidden">Projects</span>
                   </TabsTrigger>
-                  <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <FileText className="w-4 h-4" />
+                  <TabsTrigger value="improvements" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <FileText className="w-5 h-5" />
                     <span className="hidden sm:inline">Resume</span>
                     <span className="sm:hidden">Resume</span>
                   </TabsTrigger>
-                  <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <MessageSquare className="w-4 h-4" />
+                  <TabsTrigger value="interview" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <MessageSquare className="w-5 h-5" />
                     <span className="hidden sm:inline">Interview Prep</span>
                     <span className="sm:hidden">Interview</span>
                   </TabsTrigger>
-                  <TabsTrigger value="career" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <TrendingUp className="w-4 h-4" />
+                  <TabsTrigger value="career" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <TrendingUp className="w-5 h-5" />
                     <span className="hidden sm:inline">Career Growth</span>
                     <span className="sm:hidden">Career</span>
                   </TabsTrigger>
-                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Briefcase className="w-4 h-4" />
+                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Briefcase className="w-5 h-5" />
                     <span className="hidden sm:inline">Job Matching</span>
                     <span className="sm:hidden">Jobs</span>
                   </TabsTrigger>
-                  <TabsTrigger value="export" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Download className="w-4 h-4" />
+                  <TabsTrigger value="export" className="flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <Download className="w-5 h-5" />
                     <span className="hidden sm:inline">Export Report</span>
                     <span className="sm:hidden">Export</span>
                   </TabsTrigger>
