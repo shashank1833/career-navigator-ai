@@ -18,6 +18,7 @@ import WeaknessDetector from "@/components/WeaknessDetector";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
 import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
+import CareerStrategyEngine from "@/components/CareerStrategyEngine";
 import ResumeVersions from "@/components/ResumeVersions";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
