@@ -84,20 +84,20 @@ const Index = () => {
 
                 <TabsContent value="profile">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      <ProfileCard data={data.profile} />
-                      <JobMatchScore data={data.jobMatch} />
-                      <SkillGapChart data={data.skillGap} />
+                    <div className="flex gap-5 overflow-x-auto pb-2">
+                      <div className="min-w-[320px] flex-1"><ProfileCard data={data.profile} /></div>
+                      <div className="min-w-[280px] flex-1"><JobMatchScore data={data.jobMatch} /></div>
+                      <div className="min-w-[280px] flex-1"><SkillGapChart data={data.skillGap} /></div>
                     </div>
                   </motion.div>
                 </TabsContent>
 
                 <TabsContent value="resume">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      <ResumeImprovements data={data.improvements} />
-                      <ProjectImpact data={data.projectImpact} />
-                      <WeaknessDetector data={data.weaknesses} />
+                    <div className="flex gap-5 overflow-x-auto pb-2">
+                      <div className="min-w-[280px] flex-1"><ResumeImprovements data={data.improvements} /></div>
+                      <div className="min-w-[280px] flex-1"><ProjectImpact data={data.projectImpact} /></div>
+                      <div className="min-w-[280px] flex-1"><WeaknessDetector data={data.weaknesses} /></div>
                     </div>
                   </motion.div>
                 </TabsContent>
@@ -110,12 +110,10 @@ const Index = () => {
 
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      <CareerTrajectory data={data.careerTrajectory} />
-                      {data.github && data.github.username !== "N/A" && <GitHubAnalyzer data={data.github} />}
-                    </div>
-                    <div className="mt-5">
-                      <LearningRoadmap data={data.roadmap} />
+                    <div className="flex gap-5 overflow-x-auto pb-2">
+                      <div className="min-w-[300px] flex-1"><CareerTrajectory data={data.careerTrajectory} /></div>
+                      {data.github && data.github.username !== "N/A" && <div className="min-w-[280px] flex-1"><GitHubAnalyzer data={data.github} /></div>}
+                      <div className="min-w-[320px] flex-1"><LearningRoadmap data={data.roadmap} /></div>
                     </div>
                   </motion.div>
                 </TabsContent>
