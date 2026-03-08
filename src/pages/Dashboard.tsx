@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings } from "lucide-react";
+import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardCharts from "@/components/DashboardCharts";
+import KanbanBoard from "@/components/KanbanBoard";
+import { useJobApplications } from "@/hooks/useJobApplications";
+import type { ApplicationStatus } from "@/hooks/useJobApplications";
 
 interface Profile {
   display_name: string | null;
