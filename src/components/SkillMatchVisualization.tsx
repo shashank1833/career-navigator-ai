@@ -67,49 +67,6 @@ const SkillMatchVisualization = ({ skillGap, jobMatch }: Props) => {
         </div>
       </DashboardCard>
 
-      {/* Radar Chart */}
-      <DashboardCard title="Resume vs Requirements" icon={BarChart3} delay={0.2} accentColor="secondary">
-        <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={radarData} cx="50%" cy="50%">
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis
-                dataKey="skill"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, 100]}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-              />
-              <Radar
-                name="Required"
-                dataKey="required"
-                stroke="hsl(var(--muted-foreground))"
-                fill="hsl(var(--muted))"
-                fillOpacity={0.3}
-              />
-              <Radar
-                name="Your Resume"
-                dataKey="resume"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.3}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex justify-center gap-6 mt-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-sm bg-primary/30 border border-primary" />
-            Your Resume
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-sm bg-muted/30 border border-muted-foreground" />
-            Required
-          </div>
-        </div>
-      </DashboardCard>
 
       {/* Skill Groups */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
