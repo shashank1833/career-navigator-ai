@@ -29,6 +29,15 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Show loading while auth state is being restored
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
