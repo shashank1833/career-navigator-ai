@@ -152,10 +152,10 @@ const Index = () => {
                 <TabsContent value="profile">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <div><ProfileCard data={data.profile} /></div>
-                      <div><JobMatchScore data={data.jobMatch} /></div>
-                      <div><SkillGapChart data={data.skillGap} /></div>
-                      <SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} />
+                      <TiltCard><ProfileCard data={data.profile} /></TiltCard>
+                      <TiltCard><JobMatchScore data={data.jobMatch} /></TiltCard>
+                      <TiltCard><SkillGapChart data={data.skillGap} /></TiltCard>
+                      <TiltCard tiltAmount={6}><SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} /></TiltCard>
                     </div>
                   </motion.div>
                 </TabsContent>
