@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
+import { Zap, LogOut, FileText, Briefcase, BookOpen, Plus, User, Settings, LayoutGrid, Table } from "lucide-react";
+import careerLogo from "@/assets/career-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -87,7 +88,7 @@ const Dashboard = () => {
           className="flex items-center justify-between mb-10"
         >
           <div className="flex items-center gap-3">
-            <Brain className="w-8 h-8 glow-text-primary" />
+            <img src={careerLogo} alt="Career Intelligence" className="w-8 h-8" />
             <h1 className="text-2xl font-extrabold gradient-text">Career Intelligence</h1>
           </div>
           <div className="flex items-center gap-3">
