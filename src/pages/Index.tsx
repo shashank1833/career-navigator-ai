@@ -140,7 +140,7 @@ const Index = () => {
 
                 <TabsContent value="interview">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                    <InterviewQuestions data={data.interviewQuestions} jobDescription={data._jobDescription} />
+                    <InterviewQuestions data={data.interviewQuestions} jobDescription={data._jobDescription} skills={data.profile.skills} />
                   </motion.div>
                 </TabsContent>
 
