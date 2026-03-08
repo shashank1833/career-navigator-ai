@@ -24,12 +24,11 @@ interface Props {
 
 const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
   const [activeCategory, setActiveCategory] = useState<Category>("technical");
-  const [showJD, setShowJD] = useState(false);
   const [customJD, setCustomJD] = useState(jobDescription || "");
-  const [questions, setQuestions] = useState<AnalysisInterviewQuestions>(data);
+  const [questions, setQuestions] = useState<AnalysisInterviewQuestions | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  const displayedQuestions = questions[activeCategory] || [];
+  const displayedQuestions = questions ? (questions[activeCategory] || []) : [];
 
   const handleGenerate = async () => {
     if (!customJD.trim()) {
