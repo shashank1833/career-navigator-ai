@@ -159,6 +159,15 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
           )}
         </div>
       </DashboardCard>
+
+      {/* Mock Interview Simulator */}
+      {selectedQuestion && (
+        <MockInterviewSimulator
+          question={selectedQuestion.question}
+          category={activeCategory}
+          difficulty={selectedQuestion.difficulty}
+        />
+      )}
     </div>
   );
 };
