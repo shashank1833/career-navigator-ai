@@ -83,7 +83,7 @@ Return ONLY valid JSON with this structure:
   "roadmap": {
     "goal": "Recommended career goal",
     "steps": [
-      { "title": "Step title", "desc": "Step description", "done": false }
+      { "title": "Step title", "desc": "Step description", "done": false, "links": [{ "label": "Resource name", "url": "https://real-learning-resource-url.com" }] }
     ]
   },
   "github": {
