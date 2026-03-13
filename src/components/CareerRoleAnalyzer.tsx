@@ -1,14 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import DashboardCard from "./DashboardCard";
-import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target } from "lucide-react";
+import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getSessionId } from "@/lib/session";
+import type { AnalysisProfile } from "@/types/analysis";
+
+const PERIOD_OPTIONS = [
+  { value: "3-months", label: "3 Months" },
+  { value: "6-months", label: "6 Months" },
+  { value: "1-year", label: "1 Year" },
+  { value: "2-years", label: "2 Years" },
+];
 import type { AnalysisProfile } from "@/types/analysis";
 
 interface RoadmapStep {
