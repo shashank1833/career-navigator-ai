@@ -18,7 +18,6 @@ const PERIOD_OPTIONS = [
   { value: "1-year", label: "1 Year" },
   { value: "2-years", label: "2 Years" },
 ];
-import type { AnalysisProfile } from "@/types/analysis";
 
 interface RoadmapStep {
   title: string;
