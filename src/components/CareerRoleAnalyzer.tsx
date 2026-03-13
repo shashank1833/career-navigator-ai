@@ -1,15 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import DashboardCard from "./DashboardCard";
-import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target } from "lucide-react";
+import { TrendingUp, Search, Loader2, CheckCircle2, Circle, ExternalLink, Clock, Lightbulb, Target, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getSessionId } from "@/lib/session";
 import type { AnalysisProfile } from "@/types/analysis";
+
+const PERIOD_OPTIONS = [
+  { value: "3-months", label: "3 Months" },
+  { value: "6-months", label: "6 Months" },
+  { value: "1-year", label: "1 Year" },
+  { value: "2-years", label: "2 Years" },
+];
 
 interface RoadmapStep {
   title: string;
@@ -39,6 +47,7 @@ interface CareerRoleResult {
 
 const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
   const [targetRole, setTargetRole] = useState("");
+  const [period, setPeriod] = useState("6-months");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CareerRoleResult | null>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -104,6 +113,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
       const { data, error } = await supabase.functions.invoke("analyze-career-role", {
         body: {
           targetRole: targetRole.trim(),
+          period,
           currentSkills: profile.skills,
           currentTechnologies: profile.technologies,
           experience: profile.experience,
@@ -138,7 +148,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
       {/* Input Section */}
       <DashboardCard title="Career Role Analyzer" icon={Target} delay={0.1} accentColor="secondary">
         <p className="text-sm text-muted-foreground mb-4">
-          Enter your desired role and we'll analyze your match percentage and create a personalized learning roadmap.
+          Enter your desired role, select a timeline, and we'll analyze your match percentage and create a personalized learning roadmap.
         </p>
         <div className="flex gap-3">
           <Input
@@ -148,6 +158,17 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
             onKeyDown={(e) => e.key === "Enter" && !loading && handleAnalyze()}
             className="flex-1"
           />
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[140px] shrink-0">
+              <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={handleAnalyze} disabled={loading || !targetRole.trim()} className="shrink-0">
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
             Analyze
