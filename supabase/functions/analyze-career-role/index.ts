@@ -43,6 +43,8 @@ IMPORTANT RULES:
 - For "matchingSkills" and "missingSkills": ONLY list practical frameworks, tools, libraries, platforms, and technologies (e.g. React, Docker, Kubernetes, TensorFlow, AWS, PostgreSQL). Do NOT include theoretical concepts, soft skills, or abstract topics.
 - The roadmap steps should focus on learning specific tools and frameworks, NOT theory.
 - CRITICAL: "experienceMatch" MUST be 0 if the candidate has NO internship or full-time work experience. Only assign non-zero if they clearly have internship or full-time professional experience relevant to the target role. Academic/personal projects do NOT count.
+- The learning roadmap MUST be scoped to a ${periodLabel} timeframe. Distribute the steps across this period with realistic weekly/monthly milestones. Each step title should include a time marker like "Week 1-2" or "Month 1" based on the ${periodLabel} period.
+- The "timeEstimate" should reflect the ${periodLabel} timeframe.
 ${!hasWorkExperience ? '- The candidate has NO work experience. Set "experienceMatch" to 0.' : ''}
 
 Return ONLY valid JSON with this exact structure:
