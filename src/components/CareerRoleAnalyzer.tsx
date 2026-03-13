@@ -48,6 +48,7 @@ interface CareerRoleResult {
 
 const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
   const [targetRole, setTargetRole] = useState("");
+  const [period, setPeriod] = useState("6-months");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CareerRoleResult | null>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
