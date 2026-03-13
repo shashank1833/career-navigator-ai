@@ -28,7 +28,7 @@ serve(async (req) => {
       experience !== "Not specified" && 
       /intern|full[- ]?time|work|job|employ|year|month|company|role|position/i.test(experience);
 
-    const prompt = `You are a career advisor AI. A candidate wants to transition to the role: "${targetRole}".
+    const prompt = `You are a career advisor AI. A candidate wants to transition to the role: "${targetRole}" within a ${periodLabel} timeframe.
 
 Their current profile:
 - Skills: ${(currentSkills || []).join(", ") || "Not specified"}
