@@ -114,6 +114,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
       const { data, error } = await supabase.functions.invoke("analyze-career-role", {
         body: {
           targetRole: targetRole.trim(),
+          period,
           currentSkills: profile.skills,
           currentTechnologies: profile.technologies,
           experience: profile.experience,
