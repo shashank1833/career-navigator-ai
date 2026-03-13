@@ -62,7 +62,7 @@ Return ONLY valid JSON with this exact structure:
         "desc": "What to build and why this tool matters for the role",
         "done": false,
         "skills": ["specific tool or framework"],
-        "links": [{ "label": "Official Docs", "url": "https://official-documentation-url.com" }, { "label": "YouTube Tutorial 1", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 2", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 3", "url": "https://youtube.com/..." }, { "label": "YouTube Tutorial 4", "url": "https://youtube.com/..." }]
+        "links": [{ "label": "Official Docs", "url": "https://react.dev" }, { "label": "FreeCodeCamp Course", "url": "https://www.freecodecamp.org/learn" }]
       }
     ]
   },
@@ -70,7 +70,17 @@ Return ONLY valid JSON with this exact structure:
   "tips": ["2-3 actionable tips focused on practical tool adoption"]
 }
 
-Make the roadmap steps specifically address the missing skills. Include 5-8 roadmap steps. For EACH step, provide exactly 5 links: 1 official documentation link and 4 top YouTube tutorial/course links. Use real, working URLs only.`;
+Make the roadmap steps specifically address the missing skills. Include 5-8 roadmap steps.
+
+CRITICAL RULES FOR LINKS:
+- For EACH step, provide 2-5 resource links.
+- ONLY use REAL, VERIFIED URLs that you are confident actually exist. Examples of good URLs:
+  - Official documentation sites (e.g. https://react.dev, https://docs.docker.com, https://kubernetes.io/docs)
+  - Well-known learning platforms (e.g. https://www.freecodecamp.org/learn, https://developer.mozilla.org, https://www.w3schools.com)
+  - Official GitHub repos (e.g. https://github.com/facebook/react)
+- DO NOT fabricate or guess URLs. Do NOT use placeholder URLs like "https://youtube.com/..." or made-up documentation paths.
+- If you are not 100% sure a URL exists, DO NOT include it. Fewer real links are better than many broken ones.
+- Prefer official documentation and well-known educational platforms over random blog posts.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
