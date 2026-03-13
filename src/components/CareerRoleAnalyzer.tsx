@@ -149,7 +149,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
       {/* Input Section */}
       <DashboardCard title="Career Role Analyzer" icon={Target} delay={0.1} accentColor="secondary">
         <p className="text-sm text-muted-foreground mb-4">
-          Enter your desired role and we'll analyze your match percentage and create a personalized learning roadmap.
+          Enter your desired role, select a timeline, and we'll analyze your match percentage and create a personalized learning roadmap.
         </p>
         <div className="flex gap-3">
           <Input
@@ -159,6 +159,17 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
             onKeyDown={(e) => e.key === "Enter" && !loading && handleAnalyze()}
             className="flex-1"
           />
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[140px] shrink-0">
+              <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={handleAnalyze} disabled={loading || !targetRole.trim()} className="shrink-0">
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
             Analyze
