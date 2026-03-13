@@ -10,7 +10,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { targetRole, currentSkills, currentTechnologies, experience, education } = await req.json();
+    const { targetRole, period, currentSkills, currentTechnologies, experience, education } = await req.json();
+    const timeframe = period || "6-months";
+    const periodLabel = timeframe.replace("-", " ");
 
     if (!targetRole) {
       return new Response(JSON.stringify({ error: "Target role is required" }), {
