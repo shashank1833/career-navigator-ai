@@ -33,7 +33,16 @@ const LearningRoadmap = ({ data }: { data: AnalysisRoadmap }) => {
                 <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
                 {step.links && step.links.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {step.links.map((link, li) => (
+                    {step.links
+                      .filter((link) => {
+                        // Filter out placeholder/fake URLs
+                        const url = link.url || "";
+                        if (!url.startsWith("http")) return false;
+                        if (url.includes("...") || url.includes("example.com") || url.includes("official-documentation-url")) return false;
+                        if (/https?:\/\/[^/]+\/?$/.test(url) && url.includes("youtube.com")) return false;
+                        return true;
+                      })
+                      .map((link, li) => (
                       <a
                         key={li}
                         href={link.url}
