@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Zap, ArrowLeft, User, Target, MessageSquare, TrendingUp, Sparkles, FileText, Briefcase, Download, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ResumeUpload from "@/components/ResumeUpload";
@@ -13,7 +12,6 @@ import JobMatchScore from "@/components/JobMatchScore";
 import InterviewQuestions from "@/components/InterviewQuestions";
 import CareerTrajectory from "@/components/CareerTrajectory";
 import ResumeImprovements from "@/components/ResumeImprovements";
-
 import WeaknessDetector from "@/components/WeaknessDetector";
 import ProjectImpact from "@/components/ProjectImpact";
 import JobMatching from "@/components/JobMatching";
@@ -37,13 +35,11 @@ const Index = () => {
   const [navigationState] = useState<NavigationState | null>(() => location.state as NavigationState | null);
   const { saveOriginalResume } = useResumeVersions();
 
-  // Load analysis data from navigation state (from Resume History)
   useEffect(() => {
     if (navigationState?.analysisData) {
       setData(navigationState.analysisData);
       window.history.replaceState({}, document.title);
     } else if (navigationState?.profileData) {
-      // Partial data from resume version without full analysis - build minimal result
       setData({
         profile: navigationState.profileData,
         skillGap: { matching: [], missing: [], suggested: [] },
@@ -60,50 +56,38 @@ const Index = () => {
     }
   }, [navigationState]);
 
-  // Save full analysis to DB when new analysis completes
   const handleAnalyze = (result: AnalysisResult) => {
     setData(result);
-    // Save original resume with full analysis data
     saveOriginalResume(result.profile, result);
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
-      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
-      <div className="floating-orb w-64 h-64 bg-accent bottom-20 right-1/4 animate-pulse-glow" style={{ animationDelay: "2s" }} />
+    <div className="relative">
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
+      <div className="floating-orb w-80 h-80 bg-secondary top-1/2 -left-40 animate-pulse-glow opacity-10" style={{ animationDelay: "1s" }} />
+      <div className="floating-orb w-64 h-64 bg-accent bottom-20 right-1/4 animate-pulse-glow opacity-5" style={{ animationDelay: "2s" }} />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
-              </Button>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                <Zap className="w-3.5 h-3.5 glow-text-primary" />
-                <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Brain className="w-10 h-10 glow-text-primary" />
-            <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
-          </div>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            Upload your resume and unlock AI-driven insights to accelerate your career growth
-          </p>
-        </motion.header>
-
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         <AnimatePresence mode="wait">
           {!data ? (
             <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center mb-12"
+              >
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                  <Zap className="w-3.5 h-3.5 glow-text-primary" />
+                  <span className="text-xs font-medium text-primary">AI-Powered Career Intelligence</span>
+                </div>
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Brain className="w-10 h-10 glow-text-primary" />
+                  <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
+                </div>
+                <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
+                  Upload your resume and unlock AI-driven insights to accelerate your career growth
+                </p>
+              </motion.div>
               <ResumeUpload onAnalyze={handleAnalyze} />
             </motion.div>
           ) : (
@@ -115,76 +99,58 @@ const Index = () => {
               </div>
 
               <Tabs defaultValue={navigationState?.initialTab ?? "profile"} className="w-full">
-                <TabsList className="w-full flex flex-wrap justify-start gap-2 bg-muted/50 border border-border rounded-xl p-2 mb-8 h-auto min-h-[56px]">
+                <TabsList className="w-full flex flex-wrap justify-start gap-2 bg-muted/50 border border-border/50 rounded-xl p-2 mb-8 h-auto min-h-[56px]">
                   <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">Profile Overview</span>
-                    <span className="sm:hidden">Profile</span>
+                    <User className="w-4 h-4" /><span className="hidden sm:inline">Profile Overview</span><span className="sm:hidden">Profile</span>
                   </TabsTrigger>
                   <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="hidden sm:inline">Projects</span>
-                    <span className="sm:hidden">Projects</span>
+                    <Sparkles className="w-4 h-4" /><span>Projects</span>
                   </TabsTrigger>
                   <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <FileText className="w-4 h-4" />
-                    <span className="hidden sm:inline">Resume</span>
-                    <span className="sm:hidden">Resume</span>
+                    <FileText className="w-4 h-4" /><span>Resume</span>
                   </TabsTrigger>
                   <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="hidden sm:inline">Interview Prep</span>
-                    <span className="sm:hidden">Interview</span>
+                    <MessageSquare className="w-4 h-4" /><span className="hidden sm:inline">Interview Prep</span><span className="sm:hidden">Interview</span>
                   </TabsTrigger>
                   <TabsTrigger value="career" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="hidden sm:inline">Career Growth</span>
-                    <span className="sm:hidden">Career</span>
+                    <TrendingUp className="w-4 h-4" /><span className="hidden sm:inline">Career Growth</span><span className="sm:hidden">Career</span>
                   </TabsTrigger>
                   <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Briefcase className="w-4 h-4" />
-                    <span className="hidden sm:inline">Job Matching</span>
-                    <span className="sm:hidden">Jobs</span>
+                    <Briefcase className="w-4 h-4" /><span className="hidden sm:inline">Job Matching</span><span className="sm:hidden">Jobs</span>
                   </TabsTrigger>
                   <TabsTrigger value="export" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">Export Report</span>
-                    <span className="sm:hidden">Export</span>
+                    <Download className="w-4 h-4" /><span className="hidden sm:inline">Export Report</span><span className="sm:hidden">Export</span>
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <div><ProfileCard data={data.profile} /></div>
-                      <div><JobMatchScore data={data.jobMatch} /></div>
-                      <div><SkillGapChart data={data.skillGap} /></div>
+                      <ProfileCard data={data.profile} />
+                      <JobMatchScore data={data.jobMatch} />
+                      <SkillGapChart data={data.skillGap} />
                       <SkillMatchVisualization skillGap={data.skillGap} jobMatch={data.jobMatch} />
                     </div>
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="resume">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <div className="space-y-5">
-                      <div><ProjectImpact data={data.projectImpact} /></div>
-                      <div><WeaknessDetector data={data.weaknesses} /></div>
+                      <ProjectImpact data={data.projectImpact} />
+                      <WeaknessDetector data={data.weaknesses} />
                     </div>
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="improvements">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <ResumeImprovements data={data.improvements} />
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="interview">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <InterviewQuestions data={data.interviewQuestions} jobDescription={data._jobDescription} skills={data.profile.skills} />
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="career">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <CareerRoleAnalyzer profile={data.profile} />
@@ -199,13 +165,11 @@ const Index = () => {
                     </div>
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="jobs">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <JobMatching profile={data.profile} initialTab={navigationState?.initialJobsTab} />
                   </motion.div>
                 </TabsContent>
-
                 <TabsContent value="export">
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     <CareerReportExport analysis={data} />
