@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, ArrowLeft, User, Briefcase, Shield, Loader2, Trash2, ChevronDown } from "lucide-react";
+import { User, Briefcase, Shield, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +13,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ThemeToggle from "@/components/ThemeToggle";
 
 interface ProfileData {
   display_name: string;
@@ -27,11 +26,7 @@ const Settings = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData>({
-    display_name: "",
-    avatar_url: "",
-    preferred_role: "",
-    preferred_location: "",
-    experience_level: "",
+    display_name: "", avatar_url: "", preferred_role: "", preferred_location: "", experience_level: "",
   });
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -79,252 +74,170 @@ const Settings = () => {
       } as any)
       .eq("id", user.id);
     setSaving(false);
-    if (error) {
-      toast.error("Failed to save profile");
-    } else {
-      toast.success("Profile saved!");
-    }
+    if (error) { toast.error("Failed to save profile"); }
+    else { toast.success("Profile saved!"); }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords don't match");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    if (newPassword !== confirmPassword) { toast.error("Passwords don't match"); return; }
+    if (newPassword.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setChangingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPassword(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Password updated!");
-      setNewPassword("");
-      setConfirmPassword("");
-    }
+    if (error) { toast.error(error.message); }
+    else { toast.success("Password updated!"); setNewPassword(""); setConfirmPassword(""); }
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone."
-    );
+    const confirmed = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
     if (!confirmed) return;
     toast.error("Account deletion requires admin support. Please contact us.");
   };
 
   if (authLoading || loadingProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
 
   const initials = (profile.display_name || user?.email?.split("@")[0] || "U")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+    .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
-      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
+    <div className="relative">
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <Brain className="w-7 h-7 glow-text-primary" />
-            <h1 className="text-2xl font-extrabold gradient-text">Settings</h1>
-          </div>
-          <ThemeToggle />
-        </motion.header>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 max-w-3xl mx-auto px-6 py-8"
+      >
+        <h1 className="text-2xl font-bold text-foreground mb-6">Settings</h1>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Accordion type="single" collapsible className="space-y-4">
-            {/* Profile Information */}
-            <AccordionItem value="profile" className="border-none">
-              <Card className="bg-card/80 backdrop-blur border-border">
-                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                  <div className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-primary" />
-                    <div className="text-left">
-                      <p className="text-lg font-semibold">Profile Information</p>
-                      <p className="text-sm text-muted-foreground font-normal">Manage your personal details</p>
+        <Accordion type="single" collapsible className="space-y-4">
+          <AccordionItem value="profile" className="border-none">
+            <Card className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  <div className="text-left">
+                    <p className="text-lg font-semibold">Profile Information</p>
+                    <p className="text-sm text-muted-foreground font-normal">Manage your personal details</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <CardContent className="space-y-4 pt-2">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-16 h-16">
+                      <AvatarImage src={profile.avatar_url || undefined} />
+                      <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-1">
+                      <Label htmlFor="avatar_url">Avatar URL</Label>
+                      <Input id="avatar_url" placeholder="https://example.com/avatar.jpg" value={profile.avatar_url} onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })} />
                     </div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <CardContent className="space-y-4 pt-2">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-16 h-16">
-                        <AvatarImage src={profile.avatar_url || undefined} />
-                        <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <Label htmlFor="avatar_url">Avatar URL</Label>
-                        <Input
-                          id="avatar_url"
-                          placeholder="https://example.com/avatar.jpg"
-                          value={profile.avatar_url}
-                          onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="display_name">Display Name</Label>
-                      <Input
-                        id="display_name"
-                        placeholder="John Doe"
-                        value={profile.display_name}
-                        onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email Address</Label>
-                      <Input value={user?.email || ""} disabled className="opacity-60" />
-                      <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-
-            {/* Career Preferences */}
-            <AccordionItem value="career" className="border-none">
-              <Card className="bg-card/80 backdrop-blur border-border">
-                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-secondary" />
-                    <div className="text-left">
-                      <p className="text-lg font-semibold">Career Preferences</p>
-                      <p className="text-sm text-muted-foreground font-normal">Set your job search preferences</p>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="display_name">Display Name</Label>
+                    <Input id="display_name" placeholder="John Doe" value={profile.display_name} onChange={(e) => setProfile({ ...profile, display_name: e.target.value })} />
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <CardContent className="space-y-4 pt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="preferred_role">Preferred Job Role</Label>
-                      <Input
-                        id="preferred_role"
-                        placeholder="e.g. Frontend Developer, Data Scientist"
-                        value={profile.preferred_role}
-                        onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="preferred_location">Preferred Location</Label>
-                      <Input
-                        id="preferred_location"
-                        placeholder="e.g. Remote, San Francisco, London"
-                        value={profile.preferred_location}
-                        onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="experience_level">Experience Level</Label>
-                      <Select
-                        value={profile.experience_level}
-                        onValueChange={(v) => setProfile({ ...profile, experience_level: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your experience level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="intern">Intern</SelectItem>
-                          <SelectItem value="junior">Junior (0-2 years)</SelectItem>
-                          <SelectItem value="mid">Mid-Level (2-5 years)</SelectItem>
-                          <SelectItem value="senior">Senior (5-10 years)</SelectItem>
-                          <SelectItem value="lead">Lead / Staff (10+ years)</SelectItem>
-                          <SelectItem value="executive">Executive / Director</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-
-            {/* Account Settings */}
-            <AccordionItem value="account" className="border-none">
-              <Card className="bg-card/80 backdrop-blur border-border">
-                <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-accent" />
-                    <div className="text-left">
-                      <p className="text-lg font-semibold">Account Settings</p>
-                      <p className="text-sm text-muted-foreground font-normal">Manage your account security</p>
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Email Address</Label>
+                    <Input value={user?.email || ""} disabled className="opacity-60" />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <CardContent className="space-y-4 pt-2">
-                    <form onSubmit={handleChangePassword} className="space-y-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="new_password">New Password</Label>
-                        <Input
-                          id="new_password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          minLength={6}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm_password">Confirm Password</Label>
-                        <Input
-                          id="confirm_password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          minLength={6}
-                          required
-                        />
-                      </div>
-                      <Button type="submit" variant="outline" disabled={changingPassword}>
-                        {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                        Change Password
-                      </Button>
-                    </form>
-                    <Separator />
-                    <div>
-                      <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
-                      <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Account
-                      </Button>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-          </Accordion>
+                </CardContent>
+              </AccordionContent>
+            </Card>
+          </AccordionItem>
 
-          {/* Save Profile Button */}
-          <div className="mt-6">
-            <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-11">
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Save Profile
-            </Button>
-          </div>
-        </motion.div>
-      </div>
+          <AccordionItem value="career" className="border-none">
+            <Card className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-secondary" />
+                  <div className="text-left">
+                    <p className="text-lg font-semibold">Career Preferences</p>
+                    <p className="text-sm text-muted-foreground font-normal">Set your job search preferences</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <CardContent className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_role">Preferred Job Role</Label>
+                    <Input id="preferred_role" placeholder="e.g. Frontend Developer" value={profile.preferred_role} onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_location">Preferred Location</Label>
+                    <Input id="preferred_location" placeholder="e.g. Remote, San Francisco" value={profile.preferred_location} onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="experience_level">Experience Level</Label>
+                    <Select value={profile.experience_level} onValueChange={(v) => setProfile({ ...profile, experience_level: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select your experience level" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="intern">Intern</SelectItem>
+                        <SelectItem value="junior">Junior (0-2 years)</SelectItem>
+                        <SelectItem value="mid">Mid-Level (2-5 years)</SelectItem>
+                        <SelectItem value="senior">Senior (5-10 years)</SelectItem>
+                        <SelectItem value="lead">Lead / Staff (10+ years)</SelectItem>
+                        <SelectItem value="executive">Executive / Director</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </AccordionContent>
+            </Card>
+          </AccordionItem>
+
+          <AccordionItem value="account" className="border-none">
+            <Card className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-accent" />
+                  <div className="text-left">
+                    <p className="text-lg font-semibold">Account Settings</p>
+                    <p className="text-sm text-muted-foreground font-normal">Manage your account security</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <CardContent className="space-y-4 pt-2">
+                  <form onSubmit={handleChangePassword} className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="new_password">New Password</Label>
+                      <Input id="new_password" type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm_password">Confirm Password</Label>
+                      <Input id="confirm_password" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6} required />
+                    </div>
+                    <Button type="submit" variant="outline" disabled={changingPassword}>
+                      {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                      Change Password
+                    </Button>
+                  </form>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
+                    <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete Account
+                    </Button>
+                  </div>
+                </CardContent>
+              </AccordionContent>
+            </Card>
+          </AccordionItem>
+        </Accordion>
+
+        <div className="mt-6">
+          <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-11">
+            {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            Save Profile
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 };
