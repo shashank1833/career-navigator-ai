@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, FileText, Briefcase, BookOpen, Plus, TrendingUp, LayoutGrid, Table, Brain, Target, Award, ArrowUpRight } from "lucide-react";
+import { FileText, Briefcase, BookOpen, Plus, TrendingUp, LayoutGrid, Table, Brain, Target, ArrowUpRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,7 +77,7 @@ const Dashboard = () => {
   }, [user]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
@@ -117,8 +117,8 @@ const Dashboard = () => {
         className="relative z-10 max-w-6xl mx-auto px-6 py-8 space-y-8"
       >
         {/* Hero Welcome */}
-        <motion.div variants={item} className="relative overflow-hidden rounded-2xl border border-border/50 p-8 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+        <motion.div variants={item} className="glass-card p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none rounded-xl" />
           <div className="relative z-10">
             <div className="flex items-start justify-between">
               <div>
@@ -126,7 +126,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-sm text-muted-foreground mb-1"
+                  className="text-xs text-muted-foreground mb-1"
                 >
                   {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                 </motion.p>
@@ -142,7 +142,7 @@ const Dashboard = () => {
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 className="hidden sm:block"
               >
-                <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
+                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
                   <Brain className="w-8 h-8 text-primary" />
                 </div>
               </motion.div>
@@ -187,10 +187,10 @@ const Dashboard = () => {
         <motion.div variants={item}>
           <Tabs defaultValue="overview">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Insights</h3>
-              <TabsList className="bg-card/80 border border-border/50">
-                <TabsTrigger value="overview" className="text-xs gap-1.5"><LayoutGrid className="w-3.5 h-3.5" /> Overview</TabsTrigger>
-                <TabsTrigger value="market" className="text-xs gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Market</TabsTrigger>
+              <h3 className="text-base font-semibold text-foreground">Insights</h3>
+              <TabsList className="bg-muted/50 border border-border/50 rounded-lg p-1">
+                <TabsTrigger value="overview" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><LayoutGrid className="w-3.5 h-3.5" /> Overview</TabsTrigger>
+                <TabsTrigger value="market" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><TrendingUp className="w-3.5 h-3.5" /> Market</TabsTrigger>
               </TabsList>
             </div>
             <TabsContent value="overview">
@@ -207,35 +207,35 @@ const Dashboard = () => {
           <motion.div variants={item}>
             <Tabs defaultValue="kanban">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Applications</h3>
-                <TabsList className="bg-card/80 border border-border/50">
-                  <TabsTrigger value="kanban" className="text-xs gap-1.5"><LayoutGrid className="w-3.5 h-3.5" /> Kanban</TabsTrigger>
-                  <TabsTrigger value="table" className="text-xs gap-1.5"><Table className="w-3.5 h-3.5" /> Table</TabsTrigger>
+                <h3 className="text-base font-semibold text-foreground">Applications</h3>
+                <TabsList className="bg-muted/50 border border-border/50 rounded-lg p-1">
+                  <TabsTrigger value="kanban" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><LayoutGrid className="w-3.5 h-3.5" /> Kanban</TabsTrigger>
+                  <TabsTrigger value="table" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><Table className="w-3.5 h-3.5" /> Table</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="kanban">
                 <KanbanBoard applications={applications} onUpdateStatus={updateStatus} onRemove={removeApplication} />
               </TabsContent>
               <TabsContent value="table">
-                <div className="rounded-xl bg-card/80 backdrop-blur-xl border border-border/50 overflow-hidden">
+                <div className="glass-card overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/50 text-muted-foreground">
-                        <th className="text-left p-3 font-medium">Company</th>
-                        <th className="text-left p-3 font-medium">Role</th>
-                        <th className="text-left p-3 font-medium">Score</th>
-                        <th className="text-left p-3 font-medium">Status</th>
-                        <th className="text-left p-3 font-medium">Date</th>
+                        <th className="text-left p-3 text-xs font-medium">Company</th>
+                        <th className="text-left p-3 text-xs font-medium">Role</th>
+                        <th className="text-left p-3 text-xs font-medium">Score</th>
+                        <th className="text-left p-3 text-xs font-medium">Status</th>
+                        <th className="text-left p-3 text-xs font-medium">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {applications.slice(0, 10).map((app) => (
                         <tr key={app.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
-                          <td className="p-3 text-foreground font-medium">{app.company}</td>
-                          <td className="p-3 text-foreground">{app.job_title}</td>
-                          <td className="p-3 text-primary font-semibold">{app.match_score}%</td>
+                          <td className="p-3 text-foreground text-sm font-medium">{app.company}</td>
+                          <td className="p-3 text-foreground text-sm">{app.job_title}</td>
+                          <td className="p-3 text-primary text-sm font-semibold">{app.match_score}%</td>
                           <td className="p-3"><span className="capitalize text-muted-foreground text-xs px-2 py-1 rounded-full bg-muted/30">{app.status}</span></td>
-                          <td className="p-3 text-muted-foreground">{app.applied_date || "—"}</td>
+                          <td className="p-3 text-muted-foreground text-sm">{app.applied_date || "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -248,7 +248,7 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <motion.div variants={item}>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+          <h3 className="text-base font-semibold text-foreground mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
               <motion.button
@@ -260,9 +260,9 @@ const Dashboard = () => {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`p-2 rounded-lg ${action.iconBg}`}>
-                    <action.icon className={`w-5 h-5 ${action.iconColor}`} />
+                    <action.icon className={`w-4 h-4 ${action.iconColor}`} />
                   </div>
-                  <h4 className={`font-semibold text-foreground ${action.hoverText} transition-colors text-sm`}>{action.title}</h4>
+                  <h4 className={`font-medium text-foreground ${action.hoverText} transition-colors text-sm`}>{action.title}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground">{action.desc}</p>
               </motion.button>

@@ -67,7 +67,7 @@ const Index = () => {
       <div className="floating-orb w-80 h-80 bg-secondary top-1/2 -left-40 animate-pulse-glow opacity-10" style={{ animationDelay: "1s" }} />
       <div className="floating-orb w-64 h-64 bg-accent bottom-20 right-1/4 animate-pulse-glow opacity-5" style={{ animationDelay: "2s" }} />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
         <AnimatePresence mode="wait">
           {!data ? (
             <motion.div key="upload" exit={{ opacity: 0, y: -30, transition: { duration: 0.3 } }}>
@@ -84,7 +84,7 @@ const Index = () => {
                   <Brain className="w-10 h-10 glow-text-primary" />
                   <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
                 </div>
-                <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
+                <p className="text-muted-foreground max-w-xl mx-auto text-sm">
                   Upload your resume and unlock AI-driven insights to accelerate your career growth
                 </p>
               </motion.div>
@@ -93,34 +93,32 @@ const Index = () => {
           ) : (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
               <div className="mb-6">
-                <Button variant="ghost" onClick={() => setData(null)} className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" onClick={() => setData(null)} className="text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="w-4 h-4 mr-2" /> New Analysis
                 </Button>
               </div>
 
               <Tabs defaultValue={navigationState?.initialTab ?? "profile"} className="w-full">
-                <TabsList className="w-full flex flex-wrap justify-start gap-2 bg-muted/50 border border-border/50 rounded-xl p-2 mb-8 h-auto min-h-[56px]">
-                  <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <User className="w-4 h-4" /><span className="hidden sm:inline">Profile Overview</span><span className="sm:hidden">Profile</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="resume" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Sparkles className="w-4 h-4" /><span>Projects</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="improvements" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <FileText className="w-4 h-4" /><span>Resume</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="interview" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <MessageSquare className="w-4 h-4" /><span className="hidden sm:inline">Interview Prep</span><span className="sm:hidden">Interview</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="career" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <TrendingUp className="w-4 h-4" /><span className="hidden sm:inline">Career Growth</span><span className="sm:hidden">Career</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="jobs" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Briefcase className="w-4 h-4" /><span className="hidden sm:inline">Job Matching</span><span className="sm:hidden">Jobs</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="export" className="flex items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                    <Download className="w-4 h-4" /><span className="hidden sm:inline">Export Report</span><span className="sm:hidden">Export</span>
-                  </TabsTrigger>
+                <TabsList className="w-full flex flex-wrap justify-start gap-1.5 bg-muted/50 border border-border/50 rounded-xl p-1.5 mb-8 h-auto min-h-[48px]">
+                  {[
+                    { value: "profile", icon: User, label: "Profile Overview", shortLabel: "Profile" },
+                    { value: "resume", icon: Sparkles, label: "Projects", shortLabel: "Projects" },
+                    { value: "improvements", icon: FileText, label: "Resume", shortLabel: "Resume" },
+                    { value: "interview", icon: MessageSquare, label: "Interview Prep", shortLabel: "Interview" },
+                    { value: "career", icon: TrendingUp, label: "Career Growth", shortLabel: "Career" },
+                    { value: "jobs", icon: Briefcase, label: "Job Matching", shortLabel: "Jobs" },
+                    { value: "export", icon: Download, label: "Export Report", shortLabel: "Export" },
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className="sm:hidden">{tab.shortLabel}</span>
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
 
                 <TabsContent value="profile">

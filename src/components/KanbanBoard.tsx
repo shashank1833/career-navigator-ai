@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, GripVertical, Building2, MapPin, Star } from "lucide-react";
+import { Trash2, Building2, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { JobApplication, ApplicationStatus } from "@/hooks/useJobApplications";
 
@@ -28,16 +28,16 @@ const KanbanBoard = ({ applications, onUpdateStatus, onRemove }: KanbanBoardProp
         return (
           <div
             key={col.status}
-            className={`flex-shrink-0 w-64 rounded-xl bg-card/50 backdrop-blur border border-border border-t-2 ${col.color}`}
+            className={`flex-shrink-0 w-64 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 border-t-2 ${col.color}`}
           >
             <div className="p-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">{col.label}</h3>
-              <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+              <h3 className="text-xs font-medium text-foreground">{col.label}</h3>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{items.length}</Badge>
             </div>
             <div className="px-2 pb-2 space-y-2 min-h-[120px]">
               {items.map((app) => (
                 <motion.div key={app.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                  <Card className="bg-card/80 border-border hover:border-primary/30 transition-colors">
+                  <Card className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-colors">
                     <CardContent className="p-3 space-y-2">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
