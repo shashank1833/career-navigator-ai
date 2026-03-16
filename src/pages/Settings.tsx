@@ -96,7 +96,7 @@ const Settings = () => {
   };
 
   if (authLoading || loadingProfile) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   const initials = (profile.display_name || user?.email?.split("@")[0] || "U")
@@ -115,67 +115,71 @@ const Settings = () => {
 
         <Accordion type="single" collapsible className="space-y-4">
           <AccordionItem value="profile" className="border-none">
-            <Card className="glass-card">
-              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" />
+            <div className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-5 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
                   <div className="text-left">
-                    <p className="text-lg font-semibold">Profile Information</p>
-                    <p className="text-sm text-muted-foreground font-normal">Manage your personal details</p>
+                    <p className="text-sm font-semibold text-foreground">Profile Information</p>
+                    <p className="text-xs text-muted-foreground font-normal">Manage your personal details</p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <CardContent className="space-y-4 pt-2">
+                <div className="px-5 pb-5 space-y-4">
                   <div className="flex items-center gap-4">
-                    <Avatar className="w-16 h-16">
+                    <Avatar className="w-14 h-14">
                       <AvatarImage src={profile.avatar_url || undefined} />
-                      <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
+                      <AvatarFallback className="text-base bg-primary/10 text-primary">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-1">
-                      <Label htmlFor="avatar_url">Avatar URL</Label>
-                      <Input id="avatar_url" placeholder="https://example.com/avatar.jpg" value={profile.avatar_url} onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })} />
+                      <Label htmlFor="avatar_url" className="text-xs">Avatar URL</Label>
+                      <Input id="avatar_url" placeholder="https://example.com/avatar.jpg" value={profile.avatar_url} onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })} className="bg-muted/50 border-border/50" />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="display_name">Display Name</Label>
-                    <Input id="display_name" placeholder="John Doe" value={profile.display_name} onChange={(e) => setProfile({ ...profile, display_name: e.target.value })} />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="display_name" className="text-xs">Display Name</Label>
+                    <Input id="display_name" placeholder="John Doe" value={profile.display_name} onChange={(e) => setProfile({ ...profile, display_name: e.target.value })} className="bg-muted/50 border-border/50" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Email Address</Label>
-                    <Input value={user?.email || ""} disabled className="opacity-60" />
-                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Email Address</Label>
+                    <Input value={user?.email || ""} disabled className="opacity-60 bg-muted/50 border-border/50" />
+                    <p className="text-[10px] text-muted-foreground">Email cannot be changed</p>
                   </div>
-                </CardContent>
+                </div>
               </AccordionContent>
-            </Card>
+            </div>
           </AccordionItem>
 
           <AccordionItem value="career" className="border-none">
-            <Card className="glass-card">
-              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-secondary" />
+            <div className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-5 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-secondary/10">
+                    <Briefcase className="w-4 h-4 text-secondary" />
+                  </div>
                   <div className="text-left">
-                    <p className="text-lg font-semibold">Career Preferences</p>
-                    <p className="text-sm text-muted-foreground font-normal">Set your job search preferences</p>
+                    <p className="text-sm font-semibold text-foreground">Career Preferences</p>
+                    <p className="text-xs text-muted-foreground font-normal">Set your job search preferences</p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <CardContent className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred_role">Preferred Job Role</Label>
-                    <Input id="preferred_role" placeholder="e.g. Frontend Developer" value={profile.preferred_role} onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })} />
+                <div className="px-5 pb-5 space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="preferred_role" className="text-xs">Preferred Job Role</Label>
+                    <Input id="preferred_role" placeholder="e.g. Frontend Developer" value={profile.preferred_role} onChange={(e) => setProfile({ ...profile, preferred_role: e.target.value })} className="bg-muted/50 border-border/50" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred_location">Preferred Location</Label>
-                    <Input id="preferred_location" placeholder="e.g. Remote, San Francisco" value={profile.preferred_location} onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })} />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="preferred_location" className="text-xs">Preferred Location</Label>
+                    <Input id="preferred_location" placeholder="e.g. Remote, San Francisco" value={profile.preferred_location} onChange={(e) => setProfile({ ...profile, preferred_location: e.target.value })} className="bg-muted/50 border-border/50" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="experience_level">Experience Level</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="experience_level" className="text-xs">Experience Level</Label>
                     <Select value={profile.experience_level} onValueChange={(v) => setProfile({ ...profile, experience_level: v })}>
-                      <SelectTrigger><SelectValue placeholder="Select your experience level" /></SelectTrigger>
+                      <SelectTrigger className="bg-muted/50 border-border/50"><SelectValue placeholder="Select your experience level" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="intern">Intern</SelectItem>
                         <SelectItem value="junior">Junior (0-2 years)</SelectItem>
@@ -186,53 +190,55 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                </CardContent>
+                </div>
               </AccordionContent>
-            </Card>
+            </div>
           </AccordionItem>
 
           <AccordionItem value="account" className="border-none">
-            <Card className="glass-card">
-              <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-accent" />
+            <div className="glass-card">
+              <AccordionTrigger className="hover:no-underline px-5 py-4 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-accent/10">
+                    <Shield className="w-4 h-4 text-accent" />
+                  </div>
                   <div className="text-left">
-                    <p className="text-lg font-semibold">Account Settings</p>
-                    <p className="text-sm text-muted-foreground font-normal">Manage your account security</p>
+                    <p className="text-sm font-semibold text-foreground">Account Settings</p>
+                    <p className="text-xs text-muted-foreground font-normal">Manage your account security</p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <CardContent className="space-y-4 pt-2">
+                <div className="px-5 pb-5 space-y-4">
                   <form onSubmit={handleChangePassword} className="space-y-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="new_password">New Password</Label>
-                      <Input id="new_password" type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} required />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new_password" className="text-xs">New Password</Label>
+                      <Input id="new_password" type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} required className="bg-muted/50 border-border/50" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm_password">Confirm Password</Label>
-                      <Input id="confirm_password" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6} required />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="confirm_password" className="text-xs">Confirm Password</Label>
+                      <Input id="confirm_password" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6} required className="bg-muted/50 border-border/50" />
                     </div>
-                    <Button type="submit" variant="outline" disabled={changingPassword}>
+                    <Button type="submit" variant="outline" size="sm" disabled={changingPassword}>
                       {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                       Change Password
                     </Button>
                   </form>
-                  <Separator />
+                  <Separator className="bg-border/50" />
                   <div>
-                    <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
+                    <h4 className="text-xs font-medium text-destructive mb-2">Danger Zone</h4>
                     <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete Account
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete Account
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </AccordionContent>
-            </Card>
+            </div>
           </AccordionItem>
         </Accordion>
 
         <div className="mt-6">
-          <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-11">
+          <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-10 text-sm">
             {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Save Profile
           </Button>
