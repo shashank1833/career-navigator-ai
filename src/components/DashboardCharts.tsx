@@ -46,7 +46,7 @@ const DashboardCharts = ({ applications }: DashboardChartsProps) => {
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground text-sm">
+      <div className="glass-card p-5 text-center py-10 text-muted-foreground text-sm">
         No application data yet. Start applying to jobs to see insights here.
       </div>
     );

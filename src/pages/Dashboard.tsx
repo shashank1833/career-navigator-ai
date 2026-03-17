@@ -106,9 +106,9 @@ const Dashboard = () => {
   return (
     <div className="relative">
       {/* Ambient orbs */}
-      <div className="floating-orb w-[500px] h-[500px] bg-primary -top-64 -right-64 animate-pulse-glow opacity-10" />
-      <div className="floating-orb w-[400px] h-[400px] bg-secondary top-1/2 -left-48 animate-pulse-glow opacity-10" style={{ animationDelay: "1.5s" }} />
-      <div className="floating-orb w-[300px] h-[300px] bg-accent bottom-0 right-1/4 animate-pulse-glow opacity-5" style={{ animationDelay: "3s" }} />
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
+      <div className="floating-orb w-80 h-80 bg-secondary top-1/2 -left-40 animate-pulse-glow opacity-10" style={{ animationDelay: "1.5s" }} />
+      <div className="floating-orb w-64 h-64 bg-accent bottom-0 right-1/4 animate-pulse-glow opacity-5" style={{ animationDelay: "3s" }} />
 
       <motion.div
         variants={container}
@@ -117,7 +117,7 @@ const Dashboard = () => {
         className="relative z-10 max-w-6xl mx-auto px-6 py-8 space-y-8"
       >
         {/* Hero Welcome */}
-        <motion.div variants={item} className="glass-card p-6 sm:p-8">
+        <motion.div variants={item} className="glass-card p-5 sm:p-6">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none rounded-xl" />
           <div className="relative z-10">
             <div className="flex items-start justify-between">

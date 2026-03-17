@@ -112,9 +112,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Top Skills Demand */}
           <div className="glass-card p-5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <p className="text-sm font-medium text-foreground">Top Skills in Demand</p>
+              <p className="text-xs font-medium text-muted-foreground">Top Skills in Demand</p>
             </div>
             <ResponsiveContainer width="100%" height={Math.max(300, data.skillDemand.slice(0, 15).length * 32)}>
               <BarChart data={data.skillDemand.slice(0, 15)} layout="vertical" margin={{ left: 80, right: 20 }}>
@@ -129,9 +129,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Technology Categories */}
             <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <Zap className="w-4 h-4 text-accent" />
-                <p className="text-sm font-medium text-foreground">Technology Stack Insights</p>
+                <p className="text-xs font-medium text-muted-foreground">Technology Stack Insights</p>
               </div>
               <div className="space-y-4">
                 {data.technologyCategories.slice(0, 5).map((cat) => (
@@ -159,9 +159,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
             {/* Salary Insights */}
             <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="w-4 h-4 text-green-500" />
-                <p className="text-sm font-medium text-foreground">Salary Insights</p>
+                <p className="text-xs font-medium text-muted-foreground">Salary Insights</p>
               </div>
               {data.salaryInsights ? (
                 <div className="space-y-4">
@@ -197,10 +197,10 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Skill Gap Comparison */}
           <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-secondary" />
-                <p className="text-sm font-medium text-foreground">Skill Gap vs Market Demand</p>
+                <p className="text-xs font-medium text-muted-foreground">Skill Gap vs Market Demand</p>
               </div>
               <Badge variant="outline" className="text-xs">
                 Coverage: {data.skillGap.coverageScore}%
@@ -244,9 +244,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Emerging Trends */}
           <div className="glass-card p-5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <Zap className="w-4 h-4 text-yellow-500" />
-              <p className="text-sm font-medium text-foreground">Emerging Skill Trends</p>
+              <p className="text-xs font-medium text-muted-foreground">Emerging Skill Trends</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {data.emergingSkills.map((s) => (
