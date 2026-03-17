@@ -117,7 +117,7 @@ const Dashboard = () => {
         className="relative z-10 max-w-6xl mx-auto px-6 py-8 space-y-8"
       >
         {/* Hero Welcome */}
-        <motion.div variants={item} className="glass-card p-6 sm:p-8">
+        <motion.div variants={item} className="glass-card p-5 sm:p-6">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none rounded-xl" />
           <div className="relative z-10">
             <div className="flex items-start justify-between">
