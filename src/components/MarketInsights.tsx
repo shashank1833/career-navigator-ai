@@ -244,9 +244,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Emerging Trends */}
           <div className="glass-card p-5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <Zap className="w-4 h-4 text-yellow-500" />
-              <p className="text-sm font-medium text-foreground">Emerging Skill Trends</p>
+              <p className="text-xs font-medium text-muted-foreground">Emerging Skill Trends</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {data.emergingSkills.map((s) => (

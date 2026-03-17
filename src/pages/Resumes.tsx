@@ -44,7 +44,7 @@ const Resumes = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 max-w-5xl mx-auto px-6 py-8"
+        className="relative z-10 max-w-6xl mx-auto px-6 py-8"
       >
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-foreground">Resume History</h1>
