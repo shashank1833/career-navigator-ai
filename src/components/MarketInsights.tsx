@@ -129,9 +129,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Technology Categories */}
             <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <Zap className="w-4 h-4 text-accent" />
-                <p className="text-sm font-medium text-foreground">Technology Stack Insights</p>
+                <p className="text-xs font-medium text-muted-foreground">Technology Stack Insights</p>
               </div>
               <div className="space-y-4">
                 {data.technologyCategories.slice(0, 5).map((cat) => (
