@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
+import { Brain, Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles, BarChart3, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,12 @@ import ThemeToggle from "@/components/ThemeToggle";
 import BrandedLoader from "@/components/BrandedLoader";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+
+const TRUST_POINTS = [
+  { icon: Sparkles, text: "AI-powered resume analysis" },
+  { icon: BarChart3, text: "Real-time job market insights" },
+  { icon: Target, text: "Personalized career roadmaps" },
+];
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -30,7 +36,6 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // Show loading while auth state is being restored
   if (loading) return <BrandedLoader />;
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -59,7 +64,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Account created! Signing you in...");
+        toast.success("Account created! Check your email to verify.");
         navigate("/dashboard");
       }
     } catch (err: any) {
@@ -96,7 +101,12 @@ const Auth = () => {
             <h1 className="text-3xl font-extrabold gradient-text">Career Intelligence</h1>
           </div>
           <p className="text-muted-foreground text-sm">
-            {isForgot ? "Reset your password" : isLogin ? "Sign in to your account" : "Create your account"}
+            {isForgot
+              ? "Enter your email and we'll send a reset link"
+              : isLogin
+              ? "Welcome back — sign in to continue"
+              : "Create a free account to get started"
+            }
           </p>
         </div>
 
@@ -120,7 +130,7 @@ const Auth = () => {
           {!isForgot && (
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or</span></div>
+              <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or continue with email</span></div>
             </div>
           )}
 
@@ -130,7 +140,7 @@ const Auth = () => {
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="pl-10" required />
+                  <Input id="name" placeholder="Jane Smith" value={name} onChange={(e) => setName(e.target.value)} className="pl-10" required />
                 </div>
               </div>
             )}
@@ -181,12 +191,29 @@ const Auth = () => {
             {isForgot ? (
               <button onClick={() => setIsForgot(false)} className="text-primary hover:underline">Back to sign in</button>
             ) : isLogin ? (
-              <>Don't have an account?{" "}<button onClick={() => setIsLogin(false)} className="text-primary hover:underline">Sign up</button></>
+              <>Don't have an account?{" "}<button onClick={() => setIsLogin(false)} className="text-primary hover:underline">Sign up free</button></>
             ) : (
               <>Already have an account?{" "}<button onClick={() => setIsLogin(true)} className="text-primary hover:underline">Sign in</button></>
             )}
           </div>
         </div>
+
+        {/* Trust points */}
+        {!isForgot && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-4 mt-6"
+          >
+            {TRUST_POINTS.map((tp) => (
+              <div key={tp.text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <tp.icon className="w-3.5 h-3.5 text-primary" />
+                <span>{tp.text}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

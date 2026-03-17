@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Briefcase, BookOpen, Plus, TrendingUp, LayoutGrid, Table, Brain, Target, ArrowUpRight, Loader2 } from "lucide-react";
+import { FileText, Briefcase, BookOpen, Plus, TrendingUp, LayoutGrid, Table, Brain, Target, ArrowUpRight, Loader2, Sparkles, Rocket, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +81,7 @@ const Dashboard = () => {
   }
 
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const firstName = displayName.split(" ")[0];
   const quickAccessProfile = {
     name: displayName,
     education: "Not provided",
@@ -91,17 +92,26 @@ const Dashboard = () => {
   };
 
   const statCards = [
-    { label: "Saved Jobs", value: stats.savedJobs, icon: Briefcase, gradient: "from-primary/15 to-primary/5", borderColor: "border-primary/20 hover:border-primary/40", iconColor: "text-primary", glowColor: "hsl(var(--primary) / 0.15)", initialTab: "jobs", initialJobsTab: "saved" },
-    { label: "Applications", value: stats.applications, icon: BookOpen, gradient: "from-secondary/15 to-secondary/5", borderColor: "border-secondary/20 hover:border-secondary/40", iconColor: "text-secondary", glowColor: "hsl(var(--secondary) / 0.15)", initialTab: "jobs", initialJobsTab: "tracker" },
-    { label: "Roadmap Done", value: stats.roadmapCompleted, icon: Target, gradient: "from-accent/15 to-accent/5", borderColor: "border-accent/20 hover:border-accent/40", iconColor: "text-accent", glowColor: "hsl(var(--accent) / 0.15)", initialTab: "career" },
+    { label: "Saved Jobs", subtitle: "Bookmarked opportunities", value: stats.savedJobs, icon: Briefcase, gradient: "from-primary/15 to-primary/5", borderColor: "border-primary/20 hover:border-primary/40", iconColor: "text-primary", glowColor: "hsl(var(--primary) / 0.15)", initialTab: "jobs", initialJobsTab: "saved" },
+    { label: "Applications", subtitle: "Tracked submissions", value: stats.applications, icon: BookOpen, gradient: "from-secondary/15 to-secondary/5", borderColor: "border-secondary/20 hover:border-secondary/40", iconColor: "text-secondary", glowColor: "hsl(var(--secondary) / 0.15)", initialTab: "jobs", initialJobsTab: "tracker" },
+    { label: "Milestones", subtitle: "Roadmap progress", value: stats.roadmapCompleted, icon: Target, gradient: "from-accent/15 to-accent/5", borderColor: "border-accent/20 hover:border-accent/40", iconColor: "text-accent", glowColor: "hsl(var(--accent) / 0.15)", initialTab: "career" },
   ];
 
   const quickActions = [
-    { title: "New Analysis", desc: "Upload resume for AI insights", icon: Plus, gradient: "from-primary/12 to-primary/4", border: "border-primary/20 hover:border-primary/40", iconBg: "bg-primary/10", iconColor: "text-primary", hoverText: "group-hover:text-primary", route: "/analyze" },
-    { title: "My Resumes", desc: "View analyzed resumes", icon: FileText, gradient: "from-secondary/12 to-secondary/4", border: "border-secondary/20 hover:border-secondary/40", iconBg: "bg-secondary/10", iconColor: "text-secondary", hoverText: "group-hover:text-secondary", route: "/resumes" },
-    { title: "Find Jobs", desc: "Match jobs to your profile", icon: Briefcase, gradient: "from-accent/12 to-accent/4", border: "border-accent/20 hover:border-accent/40", iconBg: "bg-accent/10", iconColor: "text-accent", hoverText: "group-hover:text-accent", route: "/analyze" },
-    { title: "Career Path", desc: "Get a learning roadmap", icon: TrendingUp, gradient: "from-primary/12 to-accent/4", border: "border-primary/20 hover:border-primary/40", iconBg: "bg-primary/10", iconColor: "text-primary", hoverText: "group-hover:text-primary", route: "/analyze" },
+    { title: "Resume Analysis", desc: "Get AI-powered feedback on your resume in seconds", icon: Sparkles, gradient: "from-primary/12 to-primary/4", border: "border-primary/20 hover:border-primary/40", iconBg: "bg-primary/10", iconColor: "text-primary", hoverText: "group-hover:text-primary", route: "/analyze" },
+    { title: "Resume History", desc: "Compare versions and track optimization progress", icon: FileText, gradient: "from-secondary/12 to-secondary/4", border: "border-secondary/20 hover:border-secondary/40", iconBg: "bg-secondary/10", iconColor: "text-secondary", hoverText: "group-hover:text-secondary", route: "/resumes" },
+    { title: "Job Matching", desc: "Discover roles that align with your skills and goals", icon: Briefcase, gradient: "from-accent/12 to-accent/4", border: "border-accent/20 hover:border-accent/40", iconBg: "bg-accent/10", iconColor: "text-accent", hoverText: "group-hover:text-accent", route: "/analyze" },
+    { title: "Career Roadmap", desc: "Build a personalized learning path for your next role", icon: Rocket, gradient: "from-primary/12 to-accent/4", border: "border-primary/20 hover:border-primary/40", iconBg: "bg-primary/10", iconColor: "text-primary", hoverText: "group-hover:text-primary", route: "/analyze" },
   ];
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const hasActivity = stats.resumeVersions > 0 || stats.savedJobs > 0 || stats.applications > 0;
 
   return (
     <div className="relative">
@@ -131,11 +141,23 @@ const Dashboard = () => {
                   {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                 </motion.p>
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                  Welcome back, <span className="gradient-text">{displayName}</span> 👋
+                  {getGreeting()}, <span className="gradient-text">{firstName}</span>
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-lg">
-                  Your career intelligence hub — track applications, analyze skills, and discover opportunities.
+                  {hasActivity
+                    ? "Pick up where you left off — review your applications, refine your resume, or explore new opportunities."
+                    : "Start by uploading your resume to unlock personalized insights, job matches, and a tailored career roadmap."
+                  }
                 </p>
+                {!hasActivity && (
+                  <Button
+                    onClick={() => navigate("/analyze")}
+                    size="sm"
+                    className="mt-4 gap-2"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Analyze Your Resume
+                  </Button>
+                )}
               </div>
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
@@ -177,7 +199,8 @@ const Dashboard = () => {
                 ) : (
                   <p className="text-3xl font-bold text-foreground mb-0.5">{s.value}</p>
                 )}
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+                <p className="text-xs font-medium text-foreground mb-0.5">{s.label}</p>
+                <p className="text-[10px] text-muted-foreground">{s.subtitle}</p>
               </div>
             </motion.button>
           ))}
@@ -187,7 +210,10 @@ const Dashboard = () => {
         <motion.div variants={item}>
           <Tabs defaultValue="overview">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-foreground">Insights</h3>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Insights</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Application analytics and market intelligence</p>
+              </div>
               <TabsList className="bg-muted/50 border border-border/50 rounded-lg p-1">
                 <TabsTrigger value="overview" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><LayoutGrid className="w-3.5 h-3.5" /> Overview</TabsTrigger>
                 <TabsTrigger value="market" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><TrendingUp className="w-3.5 h-3.5" /> Market</TabsTrigger>
@@ -207,7 +233,10 @@ const Dashboard = () => {
           <motion.div variants={item}>
             <Tabs defaultValue="kanban">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold text-foreground">Applications</h3>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Applications</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Track your job submissions across every stage</p>
+                </div>
                 <TabsList className="bg-muted/50 border border-border/50 rounded-lg p-1">
                   <TabsTrigger value="kanban" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><LayoutGrid className="w-3.5 h-3.5" /> Kanban</TabsTrigger>
                   <TabsTrigger value="table" className="text-xs gap-1.5 rounded-md px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><Table className="w-3.5 h-3.5" /> Table</TabsTrigger>
@@ -223,9 +252,9 @@ const Dashboard = () => {
                       <tr className="border-b border-border/50 text-muted-foreground">
                         <th className="text-left p-3 text-xs font-medium">Company</th>
                         <th className="text-left p-3 text-xs font-medium">Role</th>
-                        <th className="text-left p-3 text-xs font-medium">Score</th>
+                        <th className="text-left p-3 text-xs font-medium">Match</th>
                         <th className="text-left p-3 text-xs font-medium">Status</th>
-                        <th className="text-left p-3 text-xs font-medium">Date</th>
+                        <th className="text-left p-3 text-xs font-medium">Applied</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -248,7 +277,10 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <motion.div variants={item}>
-          <h3 className="text-base font-semibold text-foreground mb-4">Quick Actions</h3>
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-foreground">Quick Actions</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Jump into any workflow in one click</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
               <motion.button
@@ -264,7 +296,7 @@ const Dashboard = () => {
                   </div>
                   <h4 className={`font-medium text-foreground ${action.hoverText} transition-colors text-sm`}>{action.title}</h4>
                 </div>
-                <p className="text-xs text-muted-foreground">{action.desc}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{action.desc}</p>
               </motion.button>
             ))}
           </div>
