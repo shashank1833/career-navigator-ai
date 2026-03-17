@@ -47,9 +47,12 @@ const Resumes = () => {
         className="relative z-10 max-w-6xl mx-auto px-6 py-8"
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Resume History</h1>
-          <Button onClick={() => navigate("/analyze")} size="sm">
-            <Sparkles className="w-4 h-4 mr-2" /> New Analysis
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Resume History</h1>
+            <p className="text-xs text-muted-foreground mt-1">Every version analyzed — compare, optimize, and track your progress over time.</p>
+          </div>
+          <Button onClick={() => navigate("/analyze")} size="sm" className="gap-1.5">
+            <Sparkles className="w-4 h-4" /> New Analysis
           </Button>
         </div>
 
