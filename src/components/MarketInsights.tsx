@@ -112,9 +112,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Top Skills Demand */}
           <div className="glass-card p-5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <p className="text-sm font-medium text-foreground">Top Skills in Demand</p>
+              <p className="text-xs font-medium text-muted-foreground">Top Skills in Demand</p>
             </div>
             <ResponsiveContainer width="100%" height={Math.max(300, data.skillDemand.slice(0, 15).length * 32)}>
               <BarChart data={data.skillDemand.slice(0, 15)} layout="vertical" margin={{ left: 80, right: 20 }}>
