@@ -197,10 +197,10 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
           {/* Skill Gap Comparison */}
           <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-secondary" />
-                <p className="text-sm font-medium text-foreground">Skill Gap vs Market Demand</p>
+                <p className="text-xs font-medium text-muted-foreground">Skill Gap vs Market Demand</p>
               </div>
               <Badge variant="outline" className="text-xs">
                 Coverage: {data.skillGap.coverageScore}%
