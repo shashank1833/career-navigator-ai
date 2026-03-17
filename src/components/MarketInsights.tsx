@@ -159,9 +159,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
 
             {/* Salary Insights */}
             <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="w-4 h-4 text-green-500" />
-                <p className="text-sm font-medium text-foreground">Salary Insights</p>
+                <p className="text-xs font-medium text-muted-foreground">Salary Insights</p>
               </div>
               {data.salaryInsights ? (
                 <div className="space-y-4">
