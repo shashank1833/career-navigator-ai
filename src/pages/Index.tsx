@@ -84,8 +84,8 @@ const Index = () => {
                   <Brain className="w-10 h-10 glow-text-primary" />
                   <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">Career Intelligence</h1>
                 </div>
-                <p className="text-muted-foreground max-w-xl mx-auto text-sm">
-                  Upload your resume and unlock AI-driven insights to accelerate your career growth
+                <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
+                  Upload your resume and get instant, actionable insights — from skill gap analysis and job matching to interview prep and a personalized career roadmap.
                 </p>
               </motion.div>
               <ResumeUpload onAnalyze={handleAnalyze} />

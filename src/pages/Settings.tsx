@@ -111,7 +111,10 @@ const Settings = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 max-w-3xl mx-auto px-6 py-8"
       >
-        <h1 className="text-2xl font-bold text-foreground mb-6">Settings</h1>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          <p className="text-xs text-muted-foreground mt-1">Manage your profile, career preferences, and account security.</p>
+        </div>
 
         <Accordion type="single" collapsible className="space-y-4">
           <AccordionItem value="profile" className="border-none">

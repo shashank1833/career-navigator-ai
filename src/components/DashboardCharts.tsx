@@ -1,5 +1,8 @@
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart3, PieChart as PieChartIcon, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import type { JobApplication } from "@/hooks/useJobApplications";
 
 interface DashboardChartsProps {
@@ -22,6 +25,8 @@ const tooltipStyle = {
 };
 
 const DashboardCharts = ({ applications }: DashboardChartsProps) => {
+  const navigate = useNavigate();
+
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
     applications.forEach((a) => {
@@ -46,8 +51,17 @@ const DashboardCharts = ({ applications }: DashboardChartsProps) => {
 
   if (applications.length === 0) {
     return (
-      <div className="glass-card p-5 text-center py-10 text-muted-foreground text-sm">
-        No application data yet. Start applying to jobs to see insights here.
+      <div className="glass-card p-8 text-center">
+        <div className="p-3 rounded-xl bg-primary/10 w-fit mx-auto mb-4">
+          <BarChart3 className="w-6 h-6 text-primary" />
+        </div>
+        <h4 className="text-sm font-semibold text-foreground mb-1">No insights yet</h4>
+        <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
+          Once you start applying to jobs, you'll see a breakdown of your application pipeline and match score distribution here.
+        </p>
+        <Button variant="outline" size="sm" onClick={() => navigate("/analyze")} className="gap-1.5">
+          <Sparkles className="w-3.5 h-3.5" /> Start Analyzing
+        </Button>
       </div>
     );
   }
@@ -55,7 +69,10 @@ const DashboardCharts = ({ applications }: DashboardChartsProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="glass-card p-5">
-        <p className="text-xs font-medium text-muted-foreground mb-3">Application Status</p>
+        <div className="flex items-center gap-2 mb-3">
+          <PieChartIcon className="w-3.5 h-3.5 text-muted-foreground" />
+          <p className="text-xs font-medium text-muted-foreground">Application Pipeline</p>
+        </div>
         <ResponsiveContainer width="100%" height={180}>
           <PieChart>
             <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={35}>
@@ -77,7 +94,10 @@ const DashboardCharts = ({ applications }: DashboardChartsProps) => {
       </div>
 
       <div className="glass-card p-5">
-        <p className="text-xs font-medium text-muted-foreground mb-3">Match Score Distribution</p>
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+          <p className="text-xs font-medium text-muted-foreground">Match Score Distribution</p>
+        </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={matchScoreDistribution}>
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} />

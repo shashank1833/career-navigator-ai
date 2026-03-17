@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2, ShieldCheck, Zap, Brain } from "lucide-react";
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { AnalysisResult } from "@/types/analysis";
 
@@ -11,11 +10,16 @@ interface ResumeUploadProps {
   onAnalyze: (data: AnalysisResult) => void;
 }
 
+const FEATURES = [
+  { icon: Brain, label: "AI-powered skill extraction" },
+  { icon: Zap, label: "Instant job match scoring" },
+  { icon: ShieldCheck, label: "Privacy-first — your data stays yours" },
+];
+
 const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
-  const [githubUsername, setGithubUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -41,7 +45,6 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
       const formData = new FormData();
       formData.append("resume", file);
       if (jobDescription.trim()) formData.append("jobDescription", jobDescription);
-      if (githubUsername.trim()) formData.append("githubUsername", githubUsername);
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-resume`,
@@ -91,7 +94,9 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
           </div>
         </motion.div>
         <h2 className="text-2xl font-bold gradient-text mb-2">Upload Your Resume</h2>
-        <p className="text-muted-foreground text-sm">Drop your PDF or DOCX and let AI analyze your career</p>
+        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+          Our AI reads your resume, extracts skills and experience, then generates actionable insights to accelerate your job search.
+        </p>
       </div>
 
       <div
@@ -113,22 +118,31 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         ) : (
           <div>
             <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground text-sm">Drag & drop or click to upload</p>
-            <p className="text-muted-foreground/60 text-xs mt-1">PDF or DOCX, max 10MB</p>
+            <p className="text-foreground text-sm font-medium mb-1">Drag & drop your resume here</p>
+            <p className="text-muted-foreground/60 text-xs">Supports PDF and DOCX — up to 10 MB</p>
           </div>
         )}
       </div>
 
-      <div className="mb-4">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Job Description (optional)</label>
+      <div className="mb-6">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Target Job Description <span className="normal-case font-normal">(optional)</span></label>
         <Textarea
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste the job description here for skill gap analysis..."
+          placeholder="Paste a job listing here and we'll score your resume against its requirements…"
           className="bg-muted/30 border-border/50 text-foreground placeholder:text-muted-foreground/50 min-h-[80px] resize-none"
         />
       </div>
 
+      {/* Feature highlights */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
+        {FEATURES.map((f) => (
+          <div key={f.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <f.icon className="w-3.5 h-3.5 text-primary" />
+            <span>{f.label}</span>
+          </div>
+        ))}
+      </div>
 
       <Button
         onClick={handleAnalyze}
@@ -138,7 +152,7 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         {loading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Analyzing with AI...
+            Analyzing — this takes about 15 seconds…
           </>
         ) : (
           <>

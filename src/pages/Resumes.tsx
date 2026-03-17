@@ -60,8 +60,8 @@ const Resumes = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
             <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-lg font-semibold text-foreground mb-2">No resumes analyzed yet</h2>
-            <p className="text-sm text-muted-foreground mb-6">Upload and analyze a resume to see it here.</p>
-            <Button onClick={() => navigate("/analyze")}><Sparkles className="w-4 h-4 mr-2" /> Analyze Resume</Button>
+            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">Upload your first resume to get AI-powered feedback, skill extraction, and a personalized improvement plan.</p>
+            <Button onClick={() => navigate("/analyze")} className="gap-1.5"><Sparkles className="w-4 h-4" /> Analyze Resume</Button>
           </motion.div>
         ) : (
           <div className="space-y-4">

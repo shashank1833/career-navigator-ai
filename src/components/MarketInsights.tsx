@@ -81,7 +81,7 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
       <div className="glass-card p-5">
         <div className="flex gap-3">
           <Input
-            placeholder="Enter a job title (e.g. Backend Engineer, Data Scientist)"
+            placeholder="e.g. Frontend Engineer, Data Scientist, Product Manager…"
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && analyzeMarket()}
