@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download, Edit3, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import DashboardCard from "./DashboardCard";
 import type { JobListing, ResumeOptimization } from "@/types/jobs";
 import type { AnalysisProfile } from "@/types/analysis";
