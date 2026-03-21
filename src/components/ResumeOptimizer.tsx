@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, CheckCircle, XCircle, Lightbulb, ArrowRight, Copy, FileText, Download, Edit3, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import DashboardCard from "./DashboardCard";
 import type { JobListing, ResumeOptimization } from "@/types/jobs";
 import type { AnalysisProfile } from "@/types/analysis";
@@ -19,6 +22,24 @@ interface ResumeOptimizerProps {
 
 const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: ResumeOptimizerProps) => {
   const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [editedSummary, setEditedSummary] = useState("");
+  const [editedBullets, setEditedBullets] = useState<Array<{ original: string; optimized: string }>>([]);
+
+  const startEditing = () => {
+    if (!optimization) return;
+    setEditedSummary(optimization.optimizedSections.summary.optimized);
+    setEditedBullets(optimization.optimizedSections.bulletPoints.map((bp) => ({ ...bp })));
+    setEditing(true);
+  };
+
+  const applyEdits = () => {
+    if (!optimization) return;
+    optimization.optimizedSections.summary.optimized = editedSummary;
+    optimization.optimizedSections.bulletPoints = editedBullets;
+    setEditing(false);
+    toast({ title: "Edits applied", description: "Your changes will be included in the export" });
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -47,16 +68,27 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Jobs
         </Button>
-        <Button
-          onClick={() => exportOptimizedResume(profile, job, optimization!)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          <Download className="w-4 h-4 mr-2" /> Export PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <Button onClick={applyEdits} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+              <Save className="w-4 h-4" /> Apply Edits
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={startEditing} className="gap-2">
+              <Edit3 className="w-4 h-4" /> Edit Before Saving
+            </Button>
+          )}
+          <Button
+            onClick={() => exportOptimizedResume(profile, job, optimization!)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Download className="w-4 h-4 mr-2" /> Export PDF
+          </Button>
+        </div>
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
@@ -119,7 +151,16 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
           <div className="flex justify-center"><ArrowRight className="w-4 h-4 text-primary" /></div>
           <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 relative group">
             <p className="text-[10px] uppercase tracking-wider text-primary mb-1">Optimized</p>
-            <p className="text-sm text-foreground">{optimizedSections.summary.optimized}</p>
+            {editing ? (
+              <Textarea
+                value={editedSummary}
+                onChange={(e) => setEditedSummary(e.target.value)}
+                rows={4}
+                className="bg-background/50 resize-none text-sm"
+              />
+            ) : (
+              <p className="text-sm text-foreground">{optimizedSections.summary.optimized}</p>
+            )}
             <Button
               size="icon"
               variant="ghost"
@@ -136,22 +177,37 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
       {optimizedSections.bulletPoints.length > 0 && (
         <DashboardCard title="Optimized Bullet Points" icon={Sparkles} accentColor="primary" delay={0.3}>
           <div className="space-y-4">
-            {optimizedSections.bulletPoints.map((bp, i) => (
+            {(editing ? editedBullets : optimizedSections.bulletPoints).map((bp, i) => (
               <div key={i} className="space-y-2">
                 <div className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
                   <p className="text-xs text-muted-foreground">{bp.original}</p>
                 </div>
                 <div className="flex justify-center"><ArrowRight className="w-3 h-3 text-primary" /></div>
                 <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 relative group">
-                  <p className="text-xs text-foreground">{bp.optimized}</p>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute top-1.5 right-1.5 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => copyToClipboard(bp.optimized)}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
+                  {editing ? (
+                    <Textarea
+                      value={bp.optimized}
+                      onChange={(e) => {
+                        const updated = [...editedBullets];
+                        updated[i] = { ...updated[i], optimized: e.target.value };
+                        setEditedBullets(updated);
+                      }}
+                      rows={2}
+                      className="bg-background/50 resize-none text-xs"
+                    />
+                  ) : (
+                    <p className="text-xs text-foreground">{bp.optimized}</p>
+                  )}
+                  {!editing && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute top-1.5 right-1.5 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => copyToClipboard(bp.optimized)}
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
