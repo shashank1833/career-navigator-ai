@@ -40,6 +40,8 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
     setEditing(false);
     toast({ title: "Edits applied", description: "Your changes will be included in the export" });
   };
+
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied", description: "Text copied to clipboard" });
   };
