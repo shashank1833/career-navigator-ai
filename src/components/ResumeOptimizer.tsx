@@ -177,22 +177,37 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
       {optimizedSections.bulletPoints.length > 0 && (
         <DashboardCard title="Optimized Bullet Points" icon={Sparkles} accentColor="primary" delay={0.3}>
           <div className="space-y-4">
-            {optimizedSections.bulletPoints.map((bp, i) => (
+            {(editing ? editedBullets : optimizedSections.bulletPoints).map((bp, i) => (
               <div key={i} className="space-y-2">
                 <div className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
                   <p className="text-xs text-muted-foreground">{bp.original}</p>
                 </div>
                 <div className="flex justify-center"><ArrowRight className="w-3 h-3 text-primary" /></div>
                 <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 relative group">
-                  <p className="text-xs text-foreground">{bp.optimized}</p>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute top-1.5 right-1.5 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => copyToClipboard(bp.optimized)}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
+                  {editing ? (
+                    <Textarea
+                      value={bp.optimized}
+                      onChange={(e) => {
+                        const updated = [...editedBullets];
+                        updated[i] = { ...updated[i], optimized: e.target.value };
+                        setEditedBullets(updated);
+                      }}
+                      rows={2}
+                      className="bg-background/50 resize-none text-xs"
+                    />
+                  ) : (
+                    <p className="text-xs text-foreground">{bp.optimized}</p>
+                  )}
+                  {!editing && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute top-1.5 right-1.5 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => copyToClipboard(bp.optimized)}
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
