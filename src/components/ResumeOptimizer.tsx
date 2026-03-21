@@ -22,8 +22,24 @@ interface ResumeOptimizerProps {
 
 const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: ResumeOptimizerProps) => {
   const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [editedSummary, setEditedSummary] = useState("");
+  const [editedBullets, setEditedBullets] = useState<Array<{ original: string; optimized: string }>>([]);
 
-  const copyToClipboard = (text: string) => {
+  const startEditing = () => {
+    if (!optimization) return;
+    setEditedSummary(optimization.optimizedSections.summary.optimized);
+    setEditedBullets(optimization.optimizedSections.bulletPoints.map((bp) => ({ ...bp })));
+    setEditing(true);
+  };
+
+  const applyEdits = () => {
+    if (!optimization) return;
+    optimization.optimizedSections.summary.optimized = editedSummary;
+    optimization.optimizedSections.bulletPoints = editedBullets;
+    setEditing(false);
+    toast({ title: "Edits applied", description: "Your changes will be included in the export" });
+  };
     navigator.clipboard.writeText(text);
     toast({ title: "Copied", description: "Text copied to clipboard" });
   };
