@@ -151,7 +151,16 @@ const ResumeOptimizer = ({ job, optimization, loading, onBack, profile }: Resume
           <div className="flex justify-center"><ArrowRight className="w-4 h-4 text-primary" /></div>
           <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 relative group">
             <p className="text-[10px] uppercase tracking-wider text-primary mb-1">Optimized</p>
-            <p className="text-sm text-foreground">{optimizedSections.summary.optimized}</p>
+            {editing ? (
+              <Textarea
+                value={editedSummary}
+                onChange={(e) => setEditedSummary(e.target.value)}
+                rows={4}
+                className="bg-background/50 resize-none text-sm"
+              />
+            ) : (
+              <p className="text-sm text-foreground">{optimizedSections.summary.optimized}</p>
+            )}
             <Button
               size="icon"
               variant="ghost"
