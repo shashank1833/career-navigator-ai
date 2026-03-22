@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import BrandedLoader from "@/components/BrandedLoader";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
@@ -8,6 +9,7 @@ const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshAuth } = useAuth();
   const hasProcessed = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +49,18 @@ const AuthCallback = () => {
 
         const user = await response.json();
         
-        // Clear the hash from URL and navigate to dashboard with user data
+        // Clear the hash from URL
         window.history.replaceState(null, "", window.location.pathname);
         
+        // Refresh auth state to pick up the new session
+        await refreshAuth();
+        
         toast.success(`Welcome, ${user.name || user.email}!`);
-        navigate("/dashboard", { state: { user }, replace: true });
+        
+        // Small delay to ensure auth state is updated before navigation
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 100);
         
       } catch (err: any) {
         console.error("Auth callback error:", err);
@@ -62,7 +71,7 @@ const AuthCallback = () => {
     };
 
     processAuth();
-  }, [location, navigate]);
+  }, [location, navigate, refreshAuth]);
 
   if (error) {
     return (

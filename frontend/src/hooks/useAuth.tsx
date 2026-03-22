@@ -22,6 +22,7 @@ interface AuthContext {
   loading: boolean;
   signOut: () => Promise<void>;
   isEmergentAuth: boolean;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthCtx = createContext<AuthContext>({
@@ -30,6 +31,7 @@ const AuthCtx = createContext<AuthContext>({
   loading: true,
   signOut: async () => {},
   isEmergentAuth: false,
+  refreshAuth: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -38,8 +40,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isEmergentAuth, setIsEmergentAuth] = useState(false);
   const isEmergentAuthRef = useRef(false);
+  const authInitialized = useRef(false);
+
+  const checkEmergentAuth = async (): Promise<boolean> => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser({
+          id: userData.user_id,
+          email: userData.email,
+          name: userData.name,
+          picture: userData.picture,
+        });
+        setIsEmergentAuth(true);
+        isEmergentAuthRef.current = true;
+        return true;
+      }
+    } catch (error) {
+      // Emergent auth not available
+    }
+    return false;
+  };
+
+  const refreshAuth = async () => {
+    const hasEmergent = await checkEmergentAuth();
+    if (!hasEmergent) {
+      const { data: { session: supaSession } } = await supabase.auth.getSession();
+      if (supaSession?.user) {
+        setSession(supaSession);
+        setUser({
+          id: supaSession.user.id,
+          email: supaSession.user.email || "",
+          name: supaSession.user.user_metadata?.full_name,
+          picture: supaSession.user.user_metadata?.avatar_url,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (authInitialized.current) return;
+    authInitialized.current = true;
+    
     let isMounted = true;
     
     // CRITICAL: If returning from OAuth callback, skip the /me check.
@@ -51,27 +98,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initAuth = async () => {
       // First, check Emergent auth (cookie-based)
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
-          credentials: "include",
-        });
-        
-        if (response.ok && isMounted) {
-          const userData = await response.json();
-          setUser({
-            id: userData.user_id,
-            email: userData.email,
-            name: userData.name,
-            picture: userData.picture,
-          });
-          setIsEmergentAuth(true);
-          isEmergentAuthRef.current = true;
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        // Emergent auth check failed, will fall back to Supabase
-        console.log("Emergent auth not available, checking Supabase");
+      const hasEmergent = await checkEmergentAuth();
+      
+      if (hasEmergent) {
+        if (isMounted) setLoading(false);
+        return;
       }
 
       // Fall back to Supabase auth
@@ -99,25 +130,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initAuth();
 
-    // Listen for Supabase auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    // Listen for Supabase auth changes - but ONLY if not using Emergent auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!isMounted) return;
       
-      // Only handle Supabase auth changes if not using Emergent auth
-      // Use ref to get latest value in callback
-      if (!isEmergentAuthRef.current) {
-        setSession(newSession);
+      // CRITICAL: Skip if using Emergent auth
+      if (isEmergentAuthRef.current) return;
+      
+      // Only update on meaningful events
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (newSession?.user) {
+          setSession(newSession);
           setUser({
             id: newSession.user.id,
             email: newSession.user.email || "",
             name: newSession.user.user_metadata?.full_name,
             picture: newSession.user.user_metadata?.avatar_url,
           });
-        } else {
-          setUser(null);
         }
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
       }
+      // Ignore other events like INITIAL_SESSION to prevent unnecessary updates
     });
 
     return () => {
@@ -147,7 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, session, loading, signOut, isEmergentAuth }}>
+    <AuthCtx.Provider value={{ user, session, loading, signOut, isEmergentAuth, refreshAuth }}>
       {children}
     </AuthCtx.Provider>
   );

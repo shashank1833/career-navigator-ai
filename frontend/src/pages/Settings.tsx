@@ -35,10 +35,6 @@ const Settings = () => {
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth", { replace: true });
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
     if (!user) return;
     const fetchProfile = async () => {
       const { data } = await supabase

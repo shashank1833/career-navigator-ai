@@ -24,10 +24,6 @@ const Resumes = () => {
   const { versions, loading, deleteVersion, refresh } = useResumeVersions();
   const [editingVersion, setEditingVersion] = useState<ResumeVersion | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !user) navigate("/auth", { replace: true });
-  }, [user, authLoading, navigate]);
-
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
     await deleteVersion(id);

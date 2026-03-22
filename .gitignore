@@ -89,3 +89,8 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Test files
+test_result.md
+test_reports/
+auth_testing.md
