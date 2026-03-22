@@ -45,10 +45,7 @@ const Dashboard = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const { applications, updateStatus, removeApplication } = useJobApplications();
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
-
+  // Profile and stats fetching - only when user is available
   useEffect(() => {
     if (!user) return;
 
@@ -89,6 +86,11 @@ const Dashboard = () => {
   }, [user, isEmergentAuth]);
 
   if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
+  // If no user, the ProtectedRoute wrapper will redirect to auth
+  if (!user) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 

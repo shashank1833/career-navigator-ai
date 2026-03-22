@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEmergentAuth, setIsEmergentAuth] = useState(false);
+  const isEmergentAuthRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             picture: userData.picture,
           });
           setIsEmergentAuth(true);
+          isEmergentAuthRef.current = true;
           setLoading(false);
           return;
         }
@@ -102,7 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!isMounted) return;
       
       // Only handle Supabase auth changes if not using Emergent auth
-      if (!isEmergentAuth) {
+      // Use ref to get latest value in callback
+      if (!isEmergentAuthRef.current) {
         setSession(newSession);
         if (newSession?.user) {
           setUser({
@@ -136,6 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setUser(null);
       setIsEmergentAuth(false);
+      isEmergentAuthRef.current = false;
     } else {
       // Logout from Supabase
       await supabase.auth.signOut();
