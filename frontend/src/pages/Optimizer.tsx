@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { 
-  Sparkles, Upload, FileText, Loader2, ArrowRight, 
-  Target, Key, BarChart3, Edit3, Download, CheckCircle
+  Sparkles, FileText, Loader2, ArrowRight, 
+  Target, Key, BarChart3, Edit3, Download, CheckCircle,
+  ChevronRight, Upload, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,31 +13,14 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import DashboardCard from "@/components/DashboardCard";
-import ResumeTemplatePreview, { type TemplateData } from "@/components/ResumeTemplatePreview";
+import TemplateSelector from "@/components/TemplateSelector";
+import StyledResume, { type ResumeData } from "@/components/StyledResume";
+import { type TemplateStyle, getTemplate } from "@/lib/resume-templates";
 import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
-
-interface ResumeData {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  skills: string[];
-  experiences: Array<{
-    title: string;
-    company: string;
-    duration: string;
-    bullets: string[];
-  }>;
-  projects: Array<{
-    name: string;
-    description: string;
-    technologies: string[];
-  }>;
-  education: string;
-}
 
 interface OptimizeResult {
   optimized_resume: {
@@ -63,13 +47,20 @@ interface OptimizeResult {
 
 const Optimizer = () => {
   const { toast } = useToast();
-  const [step, setStep] = useState<"input" | "loading" | "result">("input");
+  const resumeRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<"template" | "input" | "loading" | "result">("template");
+  
+  // Template selection
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>("modern");
   
   // Resume input
   const [resumeText, setResumeText] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
   const [skills, setSkills] = useState("");
+  const [education, setEducation] = useState("");
   
   // Job input
   const [jobTitle, setJobTitle] = useState("");
@@ -78,26 +69,67 @@ const Optimizer = () => {
   
   // Results
   const [result, setResult] = useState<OptimizeResult | null>(null);
-  const [templateData, setTemplateData] = useState<TemplateData | null>(null);
-  const [originalTemplate, setOriginalTemplate] = useState<TemplateData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [originalData, setOriginalData] = useState<ResumeData | null>(null);
   const [activeView, setActiveView] = useState<"preview" | "analysis" | "compare">("preview");
 
   const parseResumeText = (): ResumeData => {
-    // Simple parsing of resume text
-    const lines = resumeText.split('\n').filter(l => l.trim());
     const skillsList = skills.split(',').map(s => s.trim()).filter(Boolean);
+    
+    // Parse experiences from resume text (basic parsing)
+    const experiences: ResumeData["experiences"] = [];
+    const projects: ResumeData["projects"] = [];
+    
+    // Simple heuristic parsing
+    const lines = resumeText.split('\n').filter(l => l.trim());
+    let currentSection = "";
+    let currentExp: ResumeData["experiences"][0] | null = null;
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.toLowerCase().includes("experience") || trimmed.toLowerCase().includes("work history")) {
+        currentSection = "experience";
+        continue;
+      }
+      if (trimmed.toLowerCase().includes("project")) {
+        currentSection = "projects";
+        continue;
+      }
+      if (trimmed.toLowerCase().includes("education")) {
+        currentSection = "education";
+        continue;
+      }
+      
+      if (currentSection === "experience") {
+        if (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*")) {
+          if (currentExp) {
+            currentExp.bullets.push(trimmed.replace(/^[•\-*]\s*/, ''));
+          }
+        } else if (trimmed.length > 5) {
+          if (currentExp) experiences.push(currentExp);
+          currentExp = {
+            title: trimmed,
+            company: "",
+            duration: "",
+            bullets: []
+          };
+        }
+      }
+    }
+    if (currentExp) experiences.push(currentExp);
     
     return {
       name: name || "Candidate",
       email: email || "",
-      phone: "",
-      location: "",
-      summary: lines.slice(0, 3).join(' ') || "",
+      phone: phone || "",
+      location: location || "",
+      summary: lines.slice(0, 3).join(' ').substring(0, 300) || "",
       skills: skillsList,
-      experiences: [],
-      projects: [],
-      education: "",
+      experiences: experiences.length > 0 ? experiences : [
+        { title: "Position", company: "Company", duration: "Present", bullets: ["Key responsibility"] }
+      ],
+      projects: projects,
+      education: education || "",
     };
   };
 
@@ -114,39 +146,26 @@ const Optimizer = () => {
     setStep("loading");
 
     try {
-      const resumeData = parseResumeText();
-      
-      // Save original template
-      setOriginalTemplate({
-        name: resumeData.name,
-        email: resumeData.email,
-        phone: resumeData.phone,
-        location: resumeData.location,
-        linkedin: "",
-        summary: resumeData.summary,
-        skills: resumeData.skills,
-        experiences: resumeData.experiences,
-        projects: resumeData.projects,
-        education: resumeData.education,
-      });
+      const inputData = parseResumeText();
+      setOriginalData(inputData);
 
       const response = await fetch(`${BACKEND_URL}/api/optimize-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profile: {
-            name: resumeData.name,
-            email: resumeData.email,
-            phone: resumeData.phone,
-            location: resumeData.location,
+            name: inputData.name,
+            email: inputData.email,
+            phone: inputData.phone,
+            location: inputData.location,
             linkedin: "",
             tagline: "",
-            summary: resumeData.summary,
-            skills: resumeData.skills,
+            summary: inputData.summary,
+            skills: inputData.skills,
             experience_text: resumeText,
-            education: resumeData.education,
-            experiences: resumeData.experiences,
-            projects: resumeData.projects,
+            education: inputData.education,
+            experiences: inputData.experiences,
+            projects: inputData.projects,
           },
           job: {
             title: jobTitle || "Target Role",
@@ -166,22 +185,21 @@ const Optimizer = () => {
       const data: OptimizeResult = await response.json();
       setResult(data);
       
-      // Build template from result
-      setTemplateData({
-        name: resumeData.name,
-        email: resumeData.email,
-        phone: resumeData.phone,
-        location: resumeData.location,
-        linkedin: "",
+      // Build optimized resume data
+      setResumeData({
+        name: inputData.name,
+        email: inputData.email,
+        phone: inputData.phone,
+        location: inputData.location,
         summary: data.optimized_resume.summary,
         skills: data.optimized_resume.skills,
-        experiences: data.optimized_resume.experiences || [],
-        projects: data.optimized_resume.projects || [],
-        education: resumeData.education,
+        experiences: data.optimized_resume.experiences || inputData.experiences,
+        projects: data.optimized_resume.projects || inputData.projects,
+        education: inputData.education,
       });
 
       setStep("result");
-      toast({ title: "Resume Optimized!", description: `Optimized for ${data.job_title} at ${data.company_name}` });
+      toast({ title: "Resume Optimized!", description: `Tailored for ${data.job_title} at ${data.company_name}` });
 
     } catch (error) {
       console.error("Optimization failed:", error);
@@ -194,60 +212,130 @@ const Optimizer = () => {
     }
   };
 
-  const handleDownloadPdf = () => {
-    if (!templateData) return;
+  const handleDownloadPdf = async () => {
+    if (!resumeRef.current || !resumeData) return;
     
-    import("@/lib/template-pdf-export").then(({ exportTemplatePdf }) => {
-      exportTemplatePdf(templateData, {
-        jobTitle: result?.job_title || jobTitle,
-        company: result?.company_name || company,
-        score: result?.application_strength.score,
+    toast({ title: "Generating PDF...", description: "Please wait" });
+    
+    try {
+      const canvas = await html2canvas(resumeRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
       });
-      toast({ title: "PDF Downloaded", description: "Your optimized resume has been exported." });
-    });
-  };
-
-  const handleTemplateChange = (updated: TemplateData) => {
-    setTemplateData(updated);
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+      
+      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      const fileName = `${resumeData.name.replace(/\s+/g, '_')}_${result?.job_title?.replace(/\s+/g, '_') || 'Resume'}.pdf`;
+      pdf.save(fileName);
+      
+      toast({ title: "PDF Downloaded!", description: fileName });
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      toast({ title: "PDF Generation Failed", description: "Please try again", variant: "destructive" });
+    }
   };
 
   const handleReset = () => {
-    setStep("input");
+    setStep("template");
     setResult(null);
-    setTemplateData(null);
-    setOriginalTemplate(null);
+    setResumeData(null);
+    setOriginalData(null);
   };
 
   const scoreColor = (score: number) =>
     score >= 80 ? "text-green-500" : score >= 60 ? "text-primary" : "text-orange-500";
 
-  // Step 1: Input Form
-  if (step === "input") {
+  // Step 1: Template Selection
+  if (step === "template") {
     return (
       <div className="relative">
         <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
-        <div className="floating-orb w-80 h-80 bg-secondary top-1/2 -left-40 animate-pulse-glow opacity-10" style={{ animationDelay: "1s" }} />
+        
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
+              <Palette className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-medium text-primary">Step 1 of 2</span>
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Choose Your Template</h1>
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+              Select a professional template for your optimized resume. Each template is designed for different industries and roles.
+            </p>
+          </motion.div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.2 }}
+            className="flex justify-center"
+          >
+            <Button
+              onClick={() => setStep("input")}
+              size="lg"
+              className="gap-2 px-8"
+            >
+              Continue with {getTemplate(selectedTemplate).name} Template
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Input Form
+  if (step === "input") {
+    const template = getTemplate(selectedTemplate);
+    
+    return (
+      <div className="relative">
+        <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
+        
+        <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-medium text-primary">AI-Powered Resume Optimizer</span>
+              <span className="text-xs font-medium text-primary">Step 2 of 2 • {template.name} Template</span>
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Optimize Your Resume</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Enter Your Details</h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-              Paste your resume and a job description. Our AI will tailor your resume to match the job requirements while keeping your original template.
+              Provide your resume content and the target job description. Our AI will optimize your resume for the role.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Resume Input */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-              <DashboardCard title="Your Resume" icon={FileText} accentColor="primary">
-                <div className="space-y-4">
+              <DashboardCard title="Your Information" icon={FileText} accentColor="primary">
+                <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="name" className="text-xs text-muted-foreground">Full Name</Label>
+                      <Label htmlFor="name" className="text-xs text-muted-foreground">Full Name *</Label>
                       <Input
                         id="name"
                         value={name}
@@ -257,7 +345,7 @@ const Optimizer = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-xs text-muted-foreground">Email</Label>
+                      <Label htmlFor="email" className="text-xs text-muted-foreground">Email *</Label>
                       <Input
                         id="email"
                         value={email}
@@ -268,8 +356,31 @@ const Optimizer = () => {
                     </div>
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="phone" className="text-xs text-muted-foreground">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+1 234 567 8900"
+                        className="mt-1 bg-muted/30"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location" className="text-xs text-muted-foreground">Location</Label>
+                      <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="New York, NY"
+                        className="mt-1 bg-muted/30"
+                      />
+                    </div>
+                  </div>
+                  
                   <div>
-                    <Label htmlFor="skills" className="text-xs text-muted-foreground">Skills (comma-separated)</Label>
+                    <Label htmlFor="skills" className="text-xs text-muted-foreground">Skills (comma-separated) *</Label>
                     <Input
                       id="skills"
                       value={skills}
@@ -278,15 +389,26 @@ const Optimizer = () => {
                       className="mt-1 bg-muted/30"
                     />
                   </div>
+                  
+                  <div>
+                    <Label htmlFor="education" className="text-xs text-muted-foreground">Education</Label>
+                    <Input
+                      id="education"
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
+                      placeholder="BS Computer Science, MIT, 2020"
+                      className="mt-1 bg-muted/30"
+                    />
+                  </div>
 
                   <div>
-                    <Label htmlFor="resume" className="text-xs text-muted-foreground">Resume Content</Label>
+                    <Label htmlFor="resume" className="text-xs text-muted-foreground">Resume Content *</Label>
                     <Textarea
                       id="resume"
                       value={resumeText}
                       onChange={(e) => setResumeText(e.target.value)}
-                      placeholder="Paste your resume content here... Include your experience, projects, education, etc."
-                      className="mt-1 bg-muted/30 min-h-[200px] resize-none"
+                      placeholder="Paste your full resume content here including experience, projects, achievements..."
+                      className="mt-1 bg-muted/30 min-h-[150px] resize-none"
                     />
                   </div>
                 </div>
@@ -296,10 +418,10 @@ const Optimizer = () => {
             {/* Job Description Input */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
               <DashboardCard title="Target Job" icon={Target} accentColor="secondary">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="jobTitle" className="text-xs text-muted-foreground">Job Title</Label>
+                      <Label htmlFor="jobTitle" className="text-xs text-muted-foreground">Job Title *</Label>
                       <Input
                         id="jobTitle"
                         value={jobTitle}
@@ -309,7 +431,7 @@ const Optimizer = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="company" className="text-xs text-muted-foreground">Company</Label>
+                      <Label htmlFor="company" className="text-xs text-muted-foreground">Company *</Label>
                       <Input
                         id="company"
                         value={company}
@@ -326,8 +448,8 @@ const Optimizer = () => {
                       id="jobDesc"
                       value={jobDescription}
                       onChange={(e) => setJobDescription(e.target.value)}
-                      placeholder="Paste the full job description here..."
-                      className="mt-1 bg-muted/30 min-h-[200px] resize-none"
+                      placeholder="Paste the full job description here including requirements, responsibilities, qualifications..."
+                      className="mt-1 bg-muted/30 min-h-[280px] resize-none"
                     />
                   </div>
                 </div>
@@ -335,31 +457,23 @@ const Optimizer = () => {
             </motion.div>
           </div>
 
-          {/* Features */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {[
-                { icon: Key, label: "Keyword Extraction", desc: "Identifies key requirements" },
-                { icon: Target, label: "Skill Matching", desc: "Aligns your skills" },
-                { icon: Edit3, label: "Content Rewriting", desc: "Optimizes language" },
-                { icon: BarChart3, label: "Match Scoring", desc: "Rates your fit" },
-              ].map((f) => (
-                <div key={f.label} className="p-3 rounded-lg bg-muted/20 border border-border/50">
-                  <f.icon className="w-4 h-4 text-primary mb-2" />
-                  <p className="text-xs font-medium text-foreground">{f.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.3 }}
+            className="mt-6 flex gap-3 justify-center"
+          >
+            <Button variant="outline" onClick={() => setStep("template")} className="gap-2">
+              <Palette className="w-4 h-4" /> Change Template
+            </Button>
             <Button
               onClick={handleOptimize}
-              disabled={!resumeText.trim() || !jobDescription.trim()}
-              className="w-full h-12 text-base gap-2"
+              disabled={!name.trim() || !resumeText.trim() || !jobDescription.trim() || !jobTitle.trim()}
+              className="gap-2 px-8"
               size="lg"
             >
               <Sparkles className="w-5 h-5" />
-              Optimize My Resume
+              Optimize Resume
               <ArrowRight className="w-4 h-4" />
             </Button>
           </motion.div>
@@ -368,14 +482,15 @@ const Optimizer = () => {
     );
   }
 
-  // Step 2: Loading
+  // Step 3: Loading
   if (step === "loading") {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
           <p className="text-lg font-medium text-foreground">Optimizing your resume</p>
-          <p className="text-primary font-semibold mt-1">{jobTitle || "Target Role"} at {company || "Company"}</p>
+          <p className="text-primary font-semibold mt-1">{jobTitle} at {company}</p>
+          <p className="text-xs text-muted-foreground mt-2">Using {getTemplate(selectedTemplate).name} template</p>
           <div className="mt-6 max-w-xs mx-auto space-y-2">
             <p className="text-xs text-muted-foreground">Analyzing job requirements...</p>
             <Progress value={50} className="h-1.5" />
@@ -385,34 +500,25 @@ const Optimizer = () => {
     );
   }
 
-  // Step 3: Results
-  if (!result || !templateData) return null;
+  // Step 4: Results
+  if (!result || !resumeData) return null;
 
   return (
     <div className="relative">
       <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow opacity-10" />
       
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Optimized Resume</h1>
             <p className="text-sm text-muted-foreground">
-              Tailored for {result.job_title} at {result.company_name}
+              {result.job_title} at {result.company_name} • {getTemplate(selectedTemplate).name} Template
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> New Optimization
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(!isEditing)}
-              className="gap-1.5"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              {isEditing ? "View Mode" : "Edit Mode"}
             </Button>
             <Button size="sm" onClick={handleDownloadPdf} className="gap-1.5">
               <Download className="w-3.5 h-3.5" /> Download PDF
@@ -458,11 +564,16 @@ const Optimizer = () => {
 
           <TabsContent value="preview">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <ResumeTemplatePreview
-                data={templateData}
-                editable={isEditing}
-                onChange={handleTemplateChange}
-              />
+              <div className="flex justify-center">
+                <div className="max-w-[800px] w-full">
+                  <StyledResume 
+                    ref={resumeRef}
+                    data={resumeData} 
+                    templateId={selectedTemplate}
+                    className="border border-border rounded-lg overflow-hidden"
+                  />
+                </div>
+              </div>
             </motion.div>
           </TabsContent>
 
@@ -543,13 +654,23 @@ const Optimizer = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="secondary" className="text-xs">Original</Badge>
                   </div>
-                  {originalTemplate && <ResumeTemplatePreview data={originalTemplate} />}
+                  {originalData && (
+                    <StyledResume 
+                      data={originalData} 
+                      templateId={selectedTemplate}
+                      className="border border-border rounded-lg overflow-hidden scale-90 origin-top"
+                    />
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge className="text-xs bg-primary/15 text-primary border-primary/30">Optimized</Badge>
                   </div>
-                  <ResumeTemplatePreview data={templateData} />
+                  <StyledResume 
+                    data={resumeData} 
+                    templateId={selectedTemplate}
+                    className="border border-border rounded-lg overflow-hidden scale-90 origin-top"
+                  />
                 </div>
               </div>
             </motion.div>
