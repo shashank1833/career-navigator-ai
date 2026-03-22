@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Brain, Settings } from "lucide-react";
+import { LayoutDashboard, FileText, Brain, Settings, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import careerLogo from "@/assets/career-logo.png";
 import {
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Analysis", url: "/analyze", icon: Brain },
+  { title: "Optimizer", url: "/optimizer", icon: Sparkles },
   { title: "Resumes", url: "/resumes", icon: FileText },
   { title: "Settings", url: "/settings", icon: Settings },
 ];

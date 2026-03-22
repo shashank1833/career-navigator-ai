@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/analyze": "Analysis",
+  "/optimizer": "Resume Optimizer",
   "/resumes": "Resumes",
   "/settings": "Settings",
 };

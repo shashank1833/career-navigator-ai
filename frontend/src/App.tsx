@@ -13,6 +13,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Resumes from "./pages/Resumes";
+import Optimizer from "./pages/Optimizer";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,7 @@ const AppRouter = () => {
       <Route path="/dashboard" element={<ProtectedWithLayout><Dashboard /></ProtectedWithLayout>} />
       <Route path="/settings" element={<ProtectedWithLayout><Settings /></ProtectedWithLayout>} />
       <Route path="/resumes" element={<ProtectedWithLayout><Resumes /></ProtectedWithLayout>} />
+      <Route path="/optimizer" element={<ProtectedWithLayout><Optimizer /></ProtectedWithLayout>} />
       <Route path="/analyze" element={<ProtectedWithLayout><Index /></ProtectedWithLayout>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -56,7 +58,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <AppRouter />
         </AuthProvider>
