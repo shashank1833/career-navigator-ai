@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
@@ -37,18 +37,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEmergentAuth, setIsEmergentAuth] = useState(false);
-  const initCompleted = useRef(false);
-  const emergentAuthRef = useRef(false);
 
   useEffect(() => {
-    // Prevent double initialization
-    if (initCompleted.current) return;
+    let isMounted = true;
     
     // CRITICAL: If returning from OAuth callback, skip the /me check.
     // AuthCallback will exchange the session_id and establish the session first.
     if (window.location.hash?.includes('session_id=')) {
       setLoading(false);
-      initCompleted.current = true;
       return;
     }
 
@@ -59,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           credentials: "include",
         });
         
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const userData = await response.json();
           setUser({
             id: userData.user_id,
@@ -68,36 +64,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             picture: userData.picture,
           });
           setIsEmergentAuth(true);
-          emergentAuthRef.current = true;
           setLoading(false);
-          initCompleted.current = true;
           return;
         }
       } catch (error) {
         // Emergent auth check failed, will fall back to Supabase
+        console.log("Emergent auth not available, checking Supabase");
       }
 
       // Fall back to Supabase auth
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setSession(session);
-        setUser({
-          id: session.user.id,
-          email: session.user.email || "",
-          name: session.user.user_metadata?.full_name,
-          picture: session.user.user_metadata?.avatar_url,
-        });
+      try {
+        const { data: { session: supaSession } } = await supabase.auth.getSession();
+        if (isMounted) {
+          if (supaSession?.user) {
+            setSession(supaSession);
+            setUser({
+              id: supaSession.user.id,
+              email: supaSession.user.email || "",
+              name: supaSession.user.user_metadata?.full_name,
+              picture: supaSession.user.user_metadata?.avatar_url,
+            });
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Supabase auth check failed:", error);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-      initCompleted.current = true;
     };
 
     initAuth();
 
     // Listen for Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!isMounted) return;
+      
       // Only handle Supabase auth changes if not using Emergent auth
-      if (!emergentAuthRef.current) {
+      if (!isEmergentAuth) {
         setSession(newSession);
         if (newSession?.user) {
           setUser({
@@ -112,7 +117,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
@@ -128,7 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setUser(null);
       setIsEmergentAuth(false);
-      emergentAuthRef.current = false;
     } else {
       // Logout from Supabase
       await supabase.auth.signOut();
