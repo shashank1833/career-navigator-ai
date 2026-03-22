@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import DashboardCard from "./DashboardCard";
 import JobCard from "./JobCard";
-import ResumeOptimizer from "./ResumeOptimizer";
+import ResumeAutoOptimizer from "./ResumeAutoOptimizer";
 import ApplicationTrackerTable from "./ApplicationTrackerTable";
 import { useJobApplications, type ApplicationStatus } from "@/hooks/useJobApplications";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
@@ -28,8 +28,6 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("us");
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
-  const [optimization, setOptimization] = useState<ResumeOptimization | null>(null);
-  const [optimizing, setOptimizing] = useState(false);
   const [useRealJobs, setUseRealJobs] = useState(true);
   const [activeTab, setActiveTab] = useState<"recommended" | "saved" | "tracker">(initialTab);
   const { toast } = useToast();
@@ -126,32 +124,6 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
 
   const handleOptimize = async (job: JobListing) => {
     setSelectedJob(job);
-    setOptimizing(true);
-    setOptimization(null);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/optimize-resume`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ profile, job }),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to optimize resume");
-      const data = await res.json();
-      setOptimization(data);
-
-      // Save the optimized version
-      await saveOptimizedVersion(profile, job.title, job.company, data);
-    } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Optimization failed", variant: "destructive" });
-      setSelectedJob(null);
-    } finally {
-      setOptimizing(false);
-    }
   };
 
   const handleSaveJob = async (job: JobListing) => {
@@ -174,14 +146,12 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
     toast({ title: "Application Tracked", description: `${job.title} at ${job.company} added to tracker` });
   };
 
-  if (selectedJob && (optimizing || optimization)) {
+  if (selectedJob) {
     return (
-      <ResumeOptimizer
-        job={selectedJob}
-        optimization={optimization}
-        loading={optimizing}
-        onBack={() => { setSelectedJob(null); setOptimization(null); }}
+      <ResumeAutoOptimizer
         profile={profile}
+        job={selectedJob}
+        onBack={() => { setSelectedJob(null); }}
       />
     );
   }

@@ -2,6 +2,10 @@ import jsPDF from "jspdf";
 import type { ResumeOptimization, JobListing } from "@/types/jobs";
 import type { AnalysisProfile } from "@/types/analysis";
 
+/**
+ * Export optimized resume using the consistent professional template.
+ * Template order: Name & Contact → Summary → Skills → Experience → Projects → Education
+ */
 export const exportOptimizedResume = (
   profile: AnalysisProfile | undefined,
   job: JobListing,
@@ -9,96 +13,137 @@ export const exportOptimizedResume = (
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 18;
   const contentWidth = pageWidth - margin * 2;
-  let y = 20;
+  let y = 18;
 
-  const addText = (text: string, size: number, style: "normal" | "bold" = "normal", color: [number, number, number] = [30, 30, 30]) => {
+  // Colors
+  const colorPrimary: [number, number, number] = [79, 70, 229];
+  const colorDark: [number, number, number] = [17, 24, 39];
+  const colorGray: [number, number, number] = [107, 114, 128];
+  const colorLightGray: [number, number, number] = [156, 163, 175];
+
+  const checkPageBreak = (needed: number) => {
+    if (y + needed > pageHeight - 20) {
+      doc.addPage();
+      y = 18;
+    }
+  };
+
+  const addText = (
+    text: string,
+    size: number,
+    style: "normal" | "bold" = "normal",
+    color: [number, number, number] = colorDark
+  ) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", style);
     doc.setTextColor(...color);
     const lines = doc.splitTextToSize(text, contentWidth);
-    if (y + lines.length * (size * 0.5) > 275) {
-      doc.addPage();
-      y = 20;
-    }
+    const lineHeight = size * 0.45;
+    checkPageBreak(lines.length * lineHeight + 4);
     doc.text(lines, margin, y);
-    y += lines.length * (size * 0.45) + 2;
+    y += lines.length * lineHeight + 2;
   };
 
-  const addSectionHeader = (title: string) => {
-    y += 4;
-    doc.setDrawColor(99, 102, 241);
-    doc.setLineWidth(0.5);
+  const addSectionDivider = (title: string) => {
+    y += 5;
+    checkPageBreak(14);
+    doc.setDrawColor(...colorPrimary);
+    doc.setLineWidth(0.6);
     doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...colorPrimary);
+    doc.text(title.toUpperCase(), margin, y);
     y += 6;
-    addText(title.toUpperCase(), 11, "bold", [99, 102, 241]);
-    y += 2;
   };
 
-  // Header
-  addText(profile?.name || "Candidate", 22, "bold", [17, 24, 39]);
-  y += 1;
-  addText(`Optimized for: ${job.title} at ${job.company}`, 10, "normal", [107, 114, 128]);
-  y += 2;
-  addText(`Application Strength: ${optimization.applicationStrength.score}/100`, 11, "bold", [99, 102, 241]);
+  // ═══ 1. NAME & CONTACT ═══
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...colorDark);
+  doc.text(profile?.name || "Candidate", margin, y);
+  y += 8;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...colorGray);
+  doc.text(`Optimized for: ${job.title} at ${job.company}`, margin, y);
   y += 4;
 
-  // Summary
-  addSectionHeader("Professional Summary");
+  // ═══ 2. SUMMARY ═══
+  addSectionDivider("Professional Summary");
   addText(optimization.optimizedSections.summary.optimized, 10);
 
-  // Skills
-  addSectionHeader("Skills");
+  // ═══ 3. SKILLS ═══
+  addSectionDivider("Skills");
   const skills = optimization.optimizedSections.skills.optimized;
-  addText(skills.join("  •  "), 10);
+  addText(skills.join("  \u2022  "), 9.5);
 
   if (optimization.optimizedSections.skills.added.length > 0) {
     y += 2;
-    addText("Suggested additions: " + optimization.optimizedSections.skills.added.join(", "), 9, "normal", [107, 114, 128]);
+    addText(
+      "Suggested additions: " + optimization.optimizedSections.skills.added.join(", "),
+      8.5,
+      "normal",
+      colorGray
+    );
   }
 
-  // Experience bullet points
+  // ═══ 4. EXPERIENCE ═══
   if (optimization.optimizedSections.bulletPoints.length > 0) {
-    addSectionHeader("Experience (Optimized)");
+    addSectionDivider("Experience");
     optimization.optimizedSections.bulletPoints.forEach((bp) => {
-      addText(`• ${bp.optimized}`, 10);
-      y += 1;
+      const bulletText = `\u2022  ${bp.optimized}`;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...colorDark);
+      const lines = doc.splitTextToSize(bulletText, contentWidth - 4);
+      checkPageBreak(lines.length * 4.5 + 2);
+      doc.text(lines, margin + 2, y);
+      y += lines.length * 4.2 + 1.5;
     });
   }
 
-  // Relevant Projects
+  // ═══ 5. PROJECTS ═══
   if (optimization.optimizedSections.projects.length > 0) {
-    addSectionHeader("Relevant Projects");
+    addSectionDivider("Projects");
     optimization.optimizedSections.projects.forEach((proj) => {
-      addText(proj.name, 10, "bold");
-      addText(proj.highlight, 9, "normal", [55, 65, 81]);
-      addText(`Relevance: ${proj.relevance}`, 8, "normal", [107, 114, 128]);
+      checkPageBreak(15);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...colorDark);
+      doc.text(proj.name, margin, y);
+      y += 5;
+      addText(proj.highlight, 9, "normal", colorDark);
+      if (proj.relevance) {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...colorGray);
+        doc.text(`Relevance: ${proj.relevance}`, margin, y);
+        y += 4;
+      }
       y += 2;
     });
   }
 
-  // Strong Areas
-  addSectionHeader("Strengths for This Role");
-  optimization.applicationStrength.strongAreas.forEach((s) => {
-    addText(`✓ ${s}`, 10, "normal", [16, 185, 129]);
-  });
-
-  // Missing Skills
-  if (optimization.missingSkills.length > 0) {
-    addSectionHeader("Skills Gap & Learning Paths");
-    optimization.missingSkills.forEach((ms) => {
-      addText(`${ms.skill} (${ms.importance})`, 10, "bold");
-      addText(ms.learningPath, 9, "normal", [107, 114, 128]);
-      y += 2;
-    });
+  // ═══ 6. EDUCATION ═══
+  if (profile?.education) {
+    addSectionDivider("Education");
+    addText(profile.education, 10);
   }
 
-  // Footer
-  y += 6;
+  // ── Footer ──
   doc.setFontSize(7);
-  doc.setTextColor(156, 163, 175);
-  doc.text("Generated by AI Career Intelligence Platform", margin, 285);
+  doc.setTextColor(...colorLightGray);
+  doc.text("Generated by Career Intelligence Platform", margin, pageHeight - 10);
+
+  const scoreText = `Match Score: ${optimization.applicationStrength.score}/100`;
+  const scoreWidth = doc.getTextWidth(scoreText);
+  doc.text(scoreText, pageWidth - margin - scoreWidth, pageHeight - 10);
 
   const fileName = `${(profile?.name || "Resume").replace(/\s+/g, "_")}_Optimized_${job.company.replace(/\s+/g, "_")}.pdf`;
   doc.save(fileName);
