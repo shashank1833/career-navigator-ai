@@ -38,7 +38,7 @@ const item = {
 };
 
 const Dashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isEmergentAuth } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({ resumeVersions: 0, savedJobs: 0, applications: 0, roadmapCompleted: 0 });
@@ -52,8 +52,18 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
-      .then(({ data }) => { if (data) setProfile(data); });
+    // For Emergent Auth users, use data from the user object directly
+    if (isEmergentAuth) {
+      setProfile({
+        display_name: user.name || null,
+        avatar_url: user.picture || null,
+      });
+    } else {
+      // For Supabase users, fetch from profiles table
+      supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
+        .then(({ data }) => { if (data) setProfile(data); })
+        .catch(() => { /* Ignore profile fetch errors */ });
+    }
 
     const sessionId = localStorage.getItem("career_platform_session_id");
     if (sessionId) {
@@ -70,17 +80,19 @@ const Dashboard = () => {
           roadmapCompleted: rp.count || 0,
         });
         setStatsLoading(false);
+      }).catch(() => {
+        setStatsLoading(false);
       });
     } else {
       setStatsLoading(false);
     }
-  }, [user]);
+  }, [user, isEmergentAuth]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
-  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = profile?.display_name || user?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const firstName = displayName.split(" ")[0];
   const quickAccessProfile = {
     name: displayName,
