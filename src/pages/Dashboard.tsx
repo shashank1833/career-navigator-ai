@@ -49,18 +49,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    // For Emergent Auth users, use data from the user object directly
-    if (isEmergentAuth) {
-      setProfile({
-        display_name: user.name || null,
-        avatar_url: user.picture || null,
-      });
-    } else {
-      // For Supabase users, fetch from profiles table
-      supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
-        .then(({ data }) => { if (data) setProfile(data); })
-        .then(() => {}, () => { /* Ignore profile fetch errors */ });
-    }
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
+      .then(({ data }) => { if (data) setProfile(data); })
+      .then(() => {}, () => { /* Ignore profile fetch errors */ });
 
     const sessionId = localStorage.getItem("career_platform_session_id");
     if (sessionId) {
@@ -83,7 +74,7 @@ const Dashboard = () => {
     } else {
       setStatsLoading(false);
     }
-  }, [user, isEmergentAuth]);
+  }, [user]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
