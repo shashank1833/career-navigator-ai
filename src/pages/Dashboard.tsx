@@ -85,7 +85,7 @@ const Dashboard = () => {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
-  const displayName = profile?.display_name || user?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const firstName = displayName.split(" ")[0];
   const quickAccessProfile = {
     name: displayName,

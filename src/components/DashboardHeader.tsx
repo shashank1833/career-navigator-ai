@@ -46,22 +46,12 @@ const DashboardHeader = () => {
 
   useEffect(() => {
     if (!user) return;
-    
-    // For Emergent Auth users, use data from the user object directly
-    if (isEmergentAuth) {
-      setProfile({
-        display_name: user.name || null,
-        avatar_url: user.picture || null,
-      });
-    } else {
-      // For Supabase users, fetch from profiles table
-      supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
-        .then(({ data }) => { if (data) setProfile(data); })
-        .then(() => {}, () => { /* Ignore profile fetch errors */ });
-    }
-  }, [user, isEmergentAuth]);
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
+      .then(({ data }) => { if (data) setProfile(data); })
+      .then(() => {}, () => { /* Ignore profile fetch errors */ });
+  }, [user]);
 
-  const displayName = profile?.display_name || user?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
 
