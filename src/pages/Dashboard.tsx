@@ -38,7 +38,7 @@ const item = {
 };
 
 const Dashboard = () => {
-  const { user, loading, isEmergentAuth } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({ resumeVersions: 0, savedJobs: 0, applications: 0, roadmapCompleted: 0 });
