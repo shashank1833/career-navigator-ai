@@ -57,7 +57,7 @@ const DashboardHeader = () => {
       // For Supabase users, fetch from profiles table
       supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single()
         .then(({ data }) => { if (data) setProfile(data); })
-        .catch(() => { /* Ignore profile fetch errors */ });
+        .then(() => {}, () => { /* Ignore profile fetch errors */ });
     }
   }, [user, isEmergentAuth]);
 
