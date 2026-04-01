@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS unique_original_per_session ON public.resume_versions (session_id) WHERE is_original = true;
