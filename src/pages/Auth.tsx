@@ -75,9 +75,25 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/dashboard';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+
+      if (result.error) {
+        toast.error("Google sign-in failed. Please try again.");
+        return;
+      }
+
+      if (result.redirected) {
+        return;
+      }
+
+      // Session set successfully
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast.error(err.message || "Google sign-in failed");
+    }
   };
 
   return (
