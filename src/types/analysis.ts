@@ -1,0 +1,98 @@
+// Types for AI analysis results
+export interface TechnologyCategory {
+  category: string;
+  items: string[];
+}
+
+export interface AnalysisProfile {
+  name: string;
+  education: string;
+  experience: string;
+  tagline: string;
+  skills: string[];
+  technologies: string[] | TechnologyCategory[];
+}
+
+export interface AnalysisSkillGap {
+  matching: string[];
+  missing: string[];
+  suggested: string[];
+}
+
+export interface AnalysisJobMatch {
+  skillMatch: number;
+  projectRelevance: number;
+  experienceMatch: number;
+  overall: number;
+}
+
+export interface AnalysisImprovement {
+  original: string;
+  improved: string;
+  alternatives?: string[];
+}
+
+export interface InterviewQuestionItem {
+  question: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+}
+
+export interface AnalysisInterviewQuestions {
+  technical: (string | InterviewQuestionItem)[];
+  conceptual: (string | InterviewQuestionItem)[];
+  behavioral: (string | InterviewQuestionItem)[];
+}
+
+export interface AnalysisCareerPath {
+  role: string;
+  match: number;
+  skills: string[];
+}
+
+export interface AnalysisWeakness {
+  issue: string;
+  fix: string;
+}
+
+export interface AnalysisProjectImpact {
+  name: string;
+  algorithm: number;
+  depth: number;
+  usefulness: number;
+  deployment: number;
+}
+
+export interface AnalysisRoadmapStep {
+  title: string;
+  desc: string;
+  done: boolean;
+  links?: { label: string; url: string }[];
+}
+
+export interface AnalysisRoadmap {
+  goal: string;
+  steps: AnalysisRoadmapStep[];
+}
+
+export interface AnalysisGitHub {
+  username: string;
+  repos: number;
+  languages: { name: string; pct: number }[];
+  devScore: number;
+  topProject: { name: string; stars: number; forks: number };
+  activity: string;
+}
+
+export interface AnalysisResult {
+  profile: AnalysisProfile;
+  skillGap: AnalysisSkillGap;
+  jobMatch: AnalysisJobMatch;
+  improvements: AnalysisImprovement[];
+  interviewQuestions: AnalysisInterviewQuestions;
+  careerTrajectory: AnalysisCareerPath[];
+  weaknesses: AnalysisWeakness[];
+  projectImpact: AnalysisProjectImpact[];
+  roadmap: AnalysisRoadmap;
+  github: AnalysisGitHub;
+  _jobDescription?: string;
+}
