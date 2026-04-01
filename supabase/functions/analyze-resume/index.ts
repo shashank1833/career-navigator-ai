@@ -1,0 +1,182 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const formData = await req.formData();
+    const file = formData.get("resume") as File | null;
+    const jobDescription = formData.get("jobDescription") as string | null;
+    const githubUsername = formData.get("githubUsername") as string | null;
+
+    if (!file) {
+      return new Response(JSON.stringify({ error: "No resume file provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Read file as base64 for the AI to process
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const mimeType = file.type || "application/pdf";
+
+    // Build the analysis prompt
+    const jobDescPart = jobDescription
+      ? `\n\nThe candidate is applying for this job:\n"""${jobDescription}"""`
+      : "\n\nNo specific job description was provided. Provide general career analysis.";
+
+    const githubPart = githubUsername
+      ? `\n\nThe candidate's GitHub username is: ${githubUsername}. Analyze their public profile if possible.`
+      : "";
+
+    const systemPrompt = `You are a career intelligence AI. Analyze the uploaded resume document thoroughly and return a comprehensive JSON analysis. Be accurate - extract real data from the document, don't make up information that isn't there.`;
+
+    const userPrompt = `Analyze this resume document and return a JSON object with this EXACT structure. Extract real information from the document. For scores, provide realistic assessments based on the actual content.${jobDescPart}${githubPart}
+
+Return ONLY valid JSON with this structure:
+{
+  "profile": {
+    "name": "Full name from resume",
+    "education": "Highest education (e.g. B.Tech Computer Science, Stanford University)",
+    "experience": "X years (or 'Undergraduate Student' / 'Recent Graduate' if no professional experience)",
+    "tagline": "A short professional descriptor (e.g. 'Computer Science Undergraduate • AI & Backend Development Enthusiast'). Do NOT say '0 years experience'. Instead describe the person's focus area.",
+    "skills": ["8-10 conceptual expertise areas ONLY — e.g. 'Backend Development', 'Machine Learning', 'Data Structures & Algorithms', 'REST API Development'. NO generic phrases like 'scalable software solutions' or 'practical software solutions'. NO specific tool names — those go in technologies."],
+    "technologies": [
+      { "category": "Languages", "items": ["C++", "Python", "Java"] },
+      { "category": "Frontend", "items": ["React.js", "HTML", "CSS"] },
+      { "category": "Backend", "items": ["Node.js", "FastAPI"] },
+      { "category": "Databases", "items": ["PostgreSQL", "MongoDB"] },
+      { "category": "ML / AI", "items": ["PyTorch", "TensorFlow"] },
+      { "category": "Tools", "items": ["Git", "Docker", "AWS"] }
+    ]
+  },
+  "skillGap": {
+    "matching": ["skills that match the job"],
+    "missing": ["required skills not in resume"],
+    "suggested": ["additional skills to learn"]
+  },
+  "jobMatch": {
+    "skillMatch": 0-100,
+    "projectRelevance": 0-100,
+    "experienceMatch": 0-100,
+    "overall": 0-100
+  },
+  "improvements": [
+    { "original": "weak bullet point from resume", "improved": "best rewritten version", "alternatives": ["second alternative rewrite with different angle or emphasis", "third alternative rewrite with different metrics or framing"] }
+  ],
+  NOTE: For each improvement, provide exactly 1 main 'improved' version plus 2 'alternatives' — all should sound natural and human, use simple direct language with real action verbs and specific metrics. Avoid corporate jargon, buzzwords, or AI-sounding phrases like 'leveraged', 'utilized', 'spearheaded'. Write like a real person would describe their work to a friend. Each alternative should take a different angle (e.g. different metric, different framing, different emphasis).
+  "interviewQuestions": {
+    "technical": ["5 most commonly asked technical interview questions for this specific role/job description — focus on real questions that top companies actually ask, relevant to the required skills and technologies"],
+    "conceptual": ["3 most frequently asked conceptual/system design questions for this role — the kind interviewers love to ask to test deep understanding"],
+    "behavioral": ["3 most popular behavioral/situational questions for this role — STAR-format friendly, commonly asked at top companies"]
+  },
+  "careerTrajectory": [
+    { "role": "Role Name", "match": 0-100, "skills": ["needed skill1", "needed skill2"] }
+  ],
+  "weaknesses": [
+    { "issue": "weakness description", "fix": "how to fix it" }
+  ],
+  "projectImpact": [
+    { "name": "Project Name", "algorithm": 0-100, "depth": 0-100, "usefulness": 0-100, "deployment": 0-100 }
+  ],
+  "roadmap": {
+    "goal": "Recommended career goal",
+    "steps": [
+      { "title": "Step title", "desc": "Step description", "done": false, "links": [{ "label": "Resource name", "url": "https://real-learning-resource-url.com" }] }
+    ]
+  },
+  "github": {
+    "username": "${githubUsername || "N/A"}",
+    "repos": 0,
+    "languages": [{ "name": "Lang", "pct": 0 }],
+    "devScore": 0,
+    "topProject": { "name": "project", "stars": 0, "forks": 0 },
+    "activity": "N/A"
+  }
+}`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: userPrompt },
+              {
+                type: "image_url",
+                image_url: { url: `data:${mimeType};base64,${base64}` },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const errText = await response.text();
+      console.error("AI gateway error:", status, errText);
+      return new Response(JSON.stringify({ error: "AI analysis failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const aiResult = await response.json();
+    const content = aiResult.choices?.[0]?.message?.content || "";
+
+    // Extract JSON from the response (handle markdown code blocks)
+    let jsonStr = content;
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1];
+    jsonStr = jsonStr.trim();
+
+    try {
+      const parsed = JSON.parse(jsonStr);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch {
+      console.error("Failed to parse AI response as JSON:", jsonStr.substring(0, 500));
+      return new Response(JSON.stringify({ error: "Failed to parse AI analysis", raw: content.substring(0, 1000) }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } catch (e) {
+    console.error("analyze-resume error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

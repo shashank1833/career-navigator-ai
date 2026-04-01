@@ -1,0 +1,1 @@
+ALTER TABLE public.resume_versions ADD COLUMN IF NOT EXISTS analysis_data jsonb;
