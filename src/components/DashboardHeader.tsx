@@ -25,7 +25,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 const DashboardHeader = () => {
   const { toggleSidebar } = useSidebar();
-  const { user, signOut, isEmergentAuth } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({ display_name: null, avatar_url: null });
