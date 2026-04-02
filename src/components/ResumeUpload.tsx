@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Upload, FileText, Sparkles, Loader2, ShieldCheck, Zap, Brain } from "lucide-react";
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -77,24 +76,13 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-card glow-border p-8 max-w-3xl mx-auto"
-    >
+    <div className="ed-card max-w-3xl mx-auto">
       <div className="text-center mb-8">
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="inline-block mb-4"
-        >
-          <div className="p-4 rounded-2xl bg-muted/50">
-            <Sparkles className="w-8 h-8 glow-text-primary" />
-          </div>
-        </motion.div>
-        <h2 className="text-2xl font-bold gradient-text mb-2">Upload Your Resume</h2>
-        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-[10px] bg-muted mb-4">
+          <Sparkles className="w-5 h-5 text-primary" strokeWidth={1.5} />
+        </div>
+        <h2 className="text-[22px] font-semibold text-foreground mb-2 tracking-tight">Upload Your Resume</h2>
+        <p className="text-[13px] text-muted-foreground max-w-md mx-auto">
           Our AI reads your resume, extracts skills and experience, then generates actionable insights to accelerate your job search.
         </p>
       </div>
@@ -103,42 +91,43 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 cursor-pointer mb-6 ${
-          isDragging ? "border-primary bg-primary/5" : file ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground/40"
+        className={`ed-upload-zone mb-6 ${
+          isDragging ? "border-primary bg-teal-light" : file ? "border-primary bg-teal-light" : ""
         }`}
         onClick={() => document.getElementById("resume-input")?.click()}
       >
         <input id="resume-input" type="file" accept=".pdf,.docx" className="hidden" onChange={handleFileChange} />
         {file ? (
           <div className="flex items-center justify-center gap-3">
-            <FileText className="w-6 h-6 glow-text-accent" />
-            <span className="font-medium text-foreground">{file.name}</span>
-            <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
+            <FileText className="w-5 h-5 text-primary" strokeWidth={1.5} />
+            <span className="font-medium text-foreground text-[13px]">{file.name}</span>
+            <span className="text-[11px] text-muted-foreground font-mono">({(file.size / 1024).toFixed(1)} KB)</span>
           </div>
         ) : (
           <div>
-            <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-foreground text-sm font-medium mb-1">Drag & drop your resume here</p>
-            <p className="text-muted-foreground/60 text-xs">Supports PDF and DOCX — up to 10 MB</p>
+            <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+            <p className="text-foreground text-[13px] font-medium mb-1">Drag & drop your resume here</p>
+            <p className="text-muted-foreground text-[11px]">
+              Supports PDF and DOCX — or <span className="text-primary cursor-pointer hover:underline">browse files</span>
+            </p>
           </div>
         )}
       </div>
 
       <div className="mb-6">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Target Job Description <span className="normal-case font-normal">(optional)</span></label>
+        <label className="ed-label mb-2 block">Target Job Description <span className="normal-case font-normal">(optional)</span></label>
         <Textarea
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
           placeholder="Paste a job listing here and we'll score your resume against its requirements…"
-          className="bg-muted/30 border-border/50 text-foreground placeholder:text-muted-foreground/50 min-h-[80px] resize-none"
+          className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 min-h-[80px] resize-none text-[13px]"
         />
       </div>
 
-      {/* Feature highlights */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         {FEATURES.map((f) => (
-          <div key={f.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <f.icon className="w-3.5 h-3.5 text-primary" />
+          <div key={f.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <f.icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
             <span>{f.label}</span>
           </div>
         ))}
@@ -147,7 +136,7 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
       <Button
         onClick={handleAnalyze}
         disabled={!file || loading}
-        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 disabled:opacity-30"
+        className="w-full h-11 text-[13px] font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-150 disabled:opacity-30"
       >
         {loading ? (
           <>
@@ -156,12 +145,12 @@ const ResumeUpload = ({ onAnalyze }: ResumeUploadProps) => {
           </>
         ) : (
           <>
-            <Sparkles className="w-4 h-4 mr-2" />
+            <Sparkles className="w-4 h-4 mr-2" strokeWidth={1.5} />
             Analyze with AI
           </>
         )}
       </Button>
-    </motion.div>
+    </div>
   );
 };
 

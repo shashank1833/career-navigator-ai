@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
-import ThemeCustomizer from "@/components/ThemeCustomizer";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -22,7 +21,6 @@ const ProtectedWithLayout = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <AppLayout>
       {children}
-      <ThemeCustomizer />
     </AppLayout>
   </ProtectedRoute>
 );
