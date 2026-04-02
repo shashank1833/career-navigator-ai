@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Brain, Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles, BarChart3, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/ThemeToggle";
 import BrandedLoader from "@/components/BrandedLoader";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -83,8 +85,11 @@ const Auth = () => {
         return;
       }
 
-      if (result.redirected) return;
+      if (result.redirected) {
+        return;
+      }
 
+      // Session set successfully
       navigate("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Google sign-in failed");
@@ -92,14 +97,25 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-full max-w-md mx-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+      <div className="floating-orb w-96 h-96 bg-primary -top-48 -right-48 animate-pulse-glow" />
+      <div className="floating-orb w-80 h-80 bg-secondary top-1/3 -left-40 animate-pulse-glow" style={{ animationDelay: "1s" }} />
+
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-md mx-4"
+      >
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2.5 mb-3">
-            <Brain className="w-6 h-6 text-primary" strokeWidth={1.5} />
-            <h1 className="text-[22px] font-semibold text-foreground tracking-tight">Career Intelligence</h1>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <Brain className="w-10 h-10 glow-text-primary" />
+            <h1 className="text-3xl font-extrabold gradient-text">Career Intelligence</h1>
           </div>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {isForgot
               ? "Enter your email and we'll send a reset link"
               : isLogin
@@ -109,11 +125,11 @@ const Auth = () => {
           </p>
         </div>
 
-        <div className="ed-card">
+        <div className="p-6 rounded-2xl bg-card/80 backdrop-blur border border-border shadow-xl">
           {!isForgot && (
             <Button
               variant="outline"
-              className="w-full mb-4 h-11 text-[13px] border-border hover:bg-muted transition-colors duration-150"
+              className="w-full mb-4 h-11"
               onClick={handleGoogleSignIn}
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -129,64 +145,64 @@ const Auth = () => {
           {!isForgot && (
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center text-[11px]"><span className="bg-card px-2 text-muted-foreground uppercase tracking-wider">or continue with email</span></div>
+              <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or continue with email</span></div>
             </div>
           )}
 
           <form onSubmit={handleEmailAuth} className="space-y-4">
             {!isLogin && !isForgot && (
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Full Name</Label>
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-                  <Input id="name" placeholder="Jane Smith" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 text-[13px] border-border" required />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="name" placeholder="Jane Smith" value={name} onChange={(e) => setName(e.target.value)} className="pl-10" required />
                 </div>
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 text-[13px] border-border" required />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
               </div>
             </div>
 
             {!isForgot && (
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Password</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 text-[13px] border-border"
+                    className="pl-10 pr-10"
                     required
                     minLength={6}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-150">
-                    {showPassword ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
             )}
 
             {isLogin && !isForgot && (
-              <button type="button" onClick={() => setIsForgot(true)} className="text-[11px] text-primary hover:underline">
+              <button type="button" onClick={() => setIsForgot(true)} className="text-xs text-primary hover:underline">
                 Forgot password?
               </button>
             )}
 
-            <Button type="submit" className="w-full h-11 text-[13px] bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-150" disabled={submitting}>
+            <Button type="submit" className="w-full h-11" disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isForgot ? "Send Reset Link" : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-[13px] text-muted-foreground">
+          <div className="mt-4 text-center text-sm text-muted-foreground">
             {isForgot ? (
               <button onClick={() => setIsForgot(false)} className="text-primary hover:underline">Back to sign in</button>
             ) : isLogin ? (
@@ -197,17 +213,23 @@ const Auth = () => {
           </div>
         </div>
 
+        {/* Trust points */}
         {!isForgot && (
-          <div className="flex flex-wrap justify-center gap-4 mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-4 mt-6"
+          >
             {TRUST_POINTS.map((tp) => (
-              <div key={tp.text} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <tp.icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
+              <div key={tp.text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <tp.icon className="w-3.5 h-3.5 text-primary" />
                 <span>{tp.text}</span>
               </div>
             ))}
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

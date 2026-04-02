@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, Brain, Settings, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import careerLogo from "@/assets/career-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -29,21 +31,25 @@ export function AppSidebar() {
   const navigate = useNavigate();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar w-[220px]">
-      <SidebarHeader className="p-5 pb-3">
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-2.5 overflow-hidden">
-          <Brain className="w-5 h-5 text-primary shrink-0" strokeWidth={2} />
+          <img src={careerLogo} alt="Career Intelligence" className="w-8 h-8 shrink-0" />
           {!collapsed && (
-            <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-sm font-bold gradient-text whitespace-nowrap"
+            >
               Career Intelligence
-            </span>
+            </motion.span>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator className="bg-border" />
+      <SidebarSeparator />
 
-      <SidebarContent className="px-3 py-3">
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -59,17 +65,22 @@ export function AppSidebar() {
                       <button
                         onClick={() => navigate(item.url)}
                         className={cn(
-                          "flex items-center gap-3 w-full px-3 py-2 rounded-lg transition-all duration-150 relative text-[13px]",
+                          "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                           isActive
-                            ? "bg-teal-light text-foreground font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                       >
                         {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-primary" />
+                          <motion.div
+                            layoutId="sidebar-active"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary"
+                            style={{ boxShadow: "0 0 8px hsl(var(--primary) / 0.5)" }}
+                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                          />
                         )}
-                        <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary" : "")} strokeWidth={1.5} />
-                        {!collapsed && <span>{item.title}</span>}
+                        <item.icon className={cn("w-[18px] h-[18px] shrink-0", isActive && "text-primary")} />
+                        {!collapsed && <span className="text-sm">{item.title}</span>}
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
