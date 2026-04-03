@@ -49,7 +49,9 @@ interface OptimizeResult {
 const Optimizer = () => {
   const { toast } = useToast();
   const resumeRef = useRef<HTMLDivElement>(null);
+  const { saveOptimizedVersion } = useResumeVersions();
   const [step, setStep] = useState<"template" | "input" | "loading" | "result">("template");
+  const [saved, setSaved] = useState(false);
   
   // Template selection
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>("modern");
