@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { 
   Sparkles, FileText, Loader2, ArrowRight, 
   Target, Key, BarChart3, Edit3, Download, CheckCircle,
-  ChevronRight, Upload, Palette
+  ChevronRight, Upload, Palette, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import TemplateSelector from "@/components/TemplateSelector";
 import StyledResume, { type ResumeData } from "@/components/StyledResume";
 import { type TemplateStyle, getTemplate } from "@/lib/resume-templates";
 import { useToast } from "@/hooks/use-toast";
+import { useResumeVersions } from "@/hooks/useResumeVersions";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
