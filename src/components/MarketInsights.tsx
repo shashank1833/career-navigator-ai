@@ -40,10 +40,11 @@ const DEMAND_COLORS: Record<string, string> = {
 };
 
 const tooltipStyle = {
-  background: "hsl(217,33%,14%)",
-  border: "1px solid hsl(217,33%,20%)",
+  background: "hsl(0,0%,100%)",
+  border: "1px solid hsl(0,0%,85%)",
   borderRadius: 8,
   fontSize: 12,
+  color: "hsl(0,0%,0%)",
 };
 
 const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
