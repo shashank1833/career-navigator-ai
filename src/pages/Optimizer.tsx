@@ -562,6 +562,16 @@ const Optimizer = () => {
             <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> New Optimization
             </Button>
+            <Button
+              variant={saved ? "secondary" : "outline"}
+              size="sm"
+              onClick={handleSaveVersion}
+              disabled={saved}
+              className="gap-1.5"
+            >
+              {saved ? <CheckCircle className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+              {saved ? "Saved" : "Save Version"}
+            </Button>
             <Button size="sm" onClick={handleDownloadPdf} className="gap-1.5">
               <Download className="w-3.5 h-3.5" /> Download PDF
             </Button>
