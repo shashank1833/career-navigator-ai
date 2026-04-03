@@ -181,9 +181,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
                   </div>
                   <ResponsiveContainer width="100%" height={160}>
                     <BarChart data={data.salaryInsights.distribution}>
-                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(0,0%,0%)" }} />
                       <Bar dataKey="count" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
