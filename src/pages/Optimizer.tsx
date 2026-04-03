@@ -259,6 +259,45 @@ const Optimizer = () => {
     setResult(null);
     setResumeData(null);
     setOriginalData(null);
+    setSaved(false);
+  };
+
+  const handleSaveVersion = async () => {
+    if (!result || !resumeData) return;
+    try {
+      const profile = {
+        name: resumeData.name,
+        education: resumeData.education || "",
+        experience: resumeText,
+        tagline: resumeData.summary,
+        skills: resumeData.skills,
+        technologies: resumeData.skills,
+      };
+      const optimization = {
+        applicationStrength: {
+          score: result.application_strength.score,
+          strongAreas: result.application_strength.strong_areas,
+          weakAreas: result.application_strength.weak_areas,
+          suggestions: result.application_strength.suggestions,
+        },
+        optimizedSections: {
+          summary: { original: originalData?.summary || "", optimized: resumeData.summary },
+          skills: { original: originalData?.skills || [], optimized: resumeData.skills, added: result.keyword_analysis.injected_keywords || [] },
+          bulletPoints: resumeData.experiences.flatMap(exp => exp.bullets.map(b => ({ original: "", optimized: b }))),
+          projects: (resumeData.projects || []).map(p => ({ name: p.name, relevance: "High", highlight: p.description })),
+        },
+        missingSkills: (result.keyword_analysis.missing_keywords || []).map(kw => ({
+          skill: kw,
+          importance: "recommended" as const,
+          learningPath: `Consider learning ${kw}`,
+        })),
+      };
+      await saveOptimizedVersion(profile, result.job_title || jobTitle, result.company_name || company, optimization);
+      setSaved(true);
+      toast({ title: "Version Saved!", description: "You can find it in the Resumes page." });
+    } catch (err) {
+      toast({ title: "Save failed", description: "Could not save version.", variant: "destructive" });
+    }
   };
 
   const scoreColor = (score: number) =>
