@@ -64,7 +64,10 @@ export const exportCareerReport = (
   y += 2;
 
   addText("Technologies:", 10, "bold");
-  addText(analysis.profile.technologies.join("  •  "), 9, "normal", [55, 65, 81]);
+  const techList = analysis.profile.technologies.map((t) =>
+    typeof t === "string" ? t : `${t.category}: ${t.items.join(", ")}`
+  );
+  addText(techList.join("  •  "), 9, "normal", [55, 65, 81]);
   y += 4;
 
   // Job Match Score
