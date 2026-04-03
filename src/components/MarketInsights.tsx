@@ -119,9 +119,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
             </div>
             <ResponsiveContainer width="100%" height={Math.max(300, data.skillDemand.slice(0, 15).length * 32)}>
               <BarChart data={data.skillDemand.slice(0, 15)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <YAxis type="category" dataKey="skill" tick={{ fontSize: 11, fill: "hsl(210,40%,98%)" }} axisLine={false} tickLine={false} width={75} />
-                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} formatter={(val: number) => [`${val}%`, "Demand"]} />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                <YAxis type="category" dataKey="skill" tick={{ fontSize: 11, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} width={75} />
+                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(0,0%,0%)" }} formatter={(val: number) => [`${val}%`, "Demand"]} />
                 <Bar dataKey="percentage" fill="hsl(217,91%,60%)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
