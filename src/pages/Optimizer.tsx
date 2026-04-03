@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { 
   Sparkles, FileText, Loader2, ArrowRight, 
   Target, Key, BarChart3, Edit3, Download, CheckCircle,
-  ChevronRight, Upload, Palette
+  ChevronRight, Upload, Palette, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import TemplateSelector from "@/components/TemplateSelector";
 import StyledResume, { type ResumeData } from "@/components/StyledResume";
 import { type TemplateStyle, getTemplate } from "@/lib/resume-templates";
 import { useToast } from "@/hooks/use-toast";
+import { useResumeVersions } from "@/hooks/useResumeVersions";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -48,7 +49,9 @@ interface OptimizeResult {
 const Optimizer = () => {
   const { toast } = useToast();
   const resumeRef = useRef<HTMLDivElement>(null);
+  const { saveOptimizedVersion } = useResumeVersions();
   const [step, setStep] = useState<"template" | "input" | "loading" | "result">("template");
+  const [saved, setSaved] = useState(false);
   
   // Template selection
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>("modern");
@@ -256,6 +259,45 @@ const Optimizer = () => {
     setResult(null);
     setResumeData(null);
     setOriginalData(null);
+    setSaved(false);
+  };
+
+  const handleSaveVersion = async () => {
+    if (!result || !resumeData) return;
+    try {
+      const profile = {
+        name: resumeData.name,
+        education: resumeData.education || "",
+        experience: resumeText,
+        tagline: resumeData.summary,
+        skills: resumeData.skills,
+        technologies: resumeData.skills,
+      };
+      const optimization = {
+        applicationStrength: {
+          score: result.application_strength.score,
+          strongAreas: result.application_strength.strong_areas,
+          weakAreas: result.application_strength.weak_areas,
+          suggestions: result.application_strength.suggestions,
+        },
+        optimizedSections: {
+          summary: { original: originalData?.summary || "", optimized: resumeData.summary },
+          skills: { original: originalData?.skills || [], optimized: resumeData.skills, added: result.keyword_analysis.injected_keywords || [] },
+          bulletPoints: resumeData.experiences.flatMap(exp => exp.bullets.map(b => ({ original: "", optimized: b }))),
+          projects: (resumeData.projects || []).map(p => ({ name: p.name, relevance: "High", highlight: p.description })),
+        },
+        missingSkills: (result.keyword_analysis.missing_keywords || []).map(kw => ({
+          skill: kw,
+          importance: "recommended" as const,
+          learningPath: `Consider learning ${kw}`,
+        })),
+      };
+      await saveOptimizedVersion(profile, result.job_title || jobTitle, result.company_name || company, optimization);
+      setSaved(true);
+      toast({ title: "Version Saved!", description: "You can find it in the Resumes page." });
+    } catch (err) {
+      toast({ title: "Save failed", description: "Could not save version.", variant: "destructive" });
+    }
   };
 
   const scoreColor = (score: number) =>
@@ -519,6 +561,16 @@ const Optimizer = () => {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> New Optimization
+            </Button>
+            <Button
+              variant={saved ? "secondary" : "outline"}
+              size="sm"
+              onClick={handleSaveVersion}
+              disabled={saved}
+              className="gap-1.5"
+            >
+              {saved ? <CheckCircle className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+              {saved ? "Saved" : "Save Version"}
             </Button>
             <Button size="sm" onClick={handleDownloadPdf} className="gap-1.5">
               <Download className="w-3.5 h-3.5" /> Download PDF
