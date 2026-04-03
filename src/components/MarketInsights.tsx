@@ -40,10 +40,11 @@ const DEMAND_COLORS: Record<string, string> = {
 };
 
 const tooltipStyle = {
-  background: "hsl(217,33%,14%)",
-  border: "1px solid hsl(217,33%,20%)",
+  background: "hsl(0,0%,100%)",
+  border: "1px solid hsl(0,0%,85%)",
   borderRadius: 8,
   fontSize: 12,
+  color: "hsl(0,0%,0%)",
 };
 
 const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
@@ -118,9 +119,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
             </div>
             <ResponsiveContainer width="100%" height={Math.max(300, data.skillDemand.slice(0, 15).length * 32)}>
               <BarChart data={data.skillDemand.slice(0, 15)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <YAxis type="category" dataKey="skill" tick={{ fontSize: 11, fill: "hsl(210,40%,98%)" }} axisLine={false} tickLine={false} width={75} />
-                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} formatter={(val: number) => [`${val}%`, "Demand"]} />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                <YAxis type="category" dataKey="skill" tick={{ fontSize: 11, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} width={75} />
+                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(0,0%,0%)" }} formatter={(val: number) => [`${val}%`, "Demand"]} />
                 <Bar dataKey="percentage" fill="hsl(217,91%,60%)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -180,9 +181,9 @@ const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
                   </div>
                   <ResponsiveContainer width="100%" height={160}>
                     <BarChart data={data.salaryInsights.distribution}>
-                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(0,0%,0%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(0,0%,0%)" }} />
                       <Bar dataKey="count" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
