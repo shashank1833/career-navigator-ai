@@ -317,7 +317,7 @@ const Optimizer = () => {
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Choose Your Template</h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-              Select a professional template for your optimized resume. Each template is designed for different industries and roles.
+              Select a professional template or continue with your current one. Each template is designed for different industries and roles.
             </p>
           </motion.div>
 
@@ -327,7 +327,7 @@ const Optimizer = () => {
             transition={{ delay: 0.1 }}
             className="mb-8"
           >
-            <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
+            <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} currentTemplate={selectedTemplate} />
           </motion.div>
 
           <motion.div 
