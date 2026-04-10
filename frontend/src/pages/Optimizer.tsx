@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   Sparkles, FileText, Loader2, ArrowRight, 
   Target, Key, BarChart3, Edit3, Download, CheckCircle,
-  ChevronRight, Upload, Palette
+  ChevronRight, Upload, Palette, Save, Code2, Eye, Columns
 } from "lucide-react";
+import ResumeLatexEditor from "@/components/ResumeLatexEditor";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import TemplateSelector from "@/components/TemplateSelector";
 import StyledResume, { type ResumeData } from "@/components/StyledResume";
 import { type TemplateStyle, getTemplate } from "@/lib/resume-templates";
 import { useToast } from "@/hooks/use-toast";
+import { useResumeVersions } from "@/hooks/useResumeVersions";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -48,7 +50,10 @@ interface OptimizeResult {
 const Optimizer = () => {
   const { toast } = useToast();
   const resumeRef = useRef<HTMLDivElement>(null);
+  const { saveOptimizedVersion } = useResumeVersions();
   const [step, setStep] = useState<"template" | "input" | "loading" | "result">("template");
+  const [saved, setSaved] = useState(false);
+  const [editorMode, setEditorMode] = useState<"preview" | "editor" | "split">("split");
   
   // Template selection
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>("modern");
@@ -256,6 +261,45 @@ const Optimizer = () => {
     setResult(null);
     setResumeData(null);
     setOriginalData(null);
+    setSaved(false);
+  };
+
+  const handleSaveVersion = async () => {
+    if (!result || !resumeData) return;
+    try {
+      const profile = {
+        name: resumeData.name,
+        education: resumeData.education || "",
+        experience: resumeText,
+        tagline: resumeData.summary,
+        skills: resumeData.skills,
+        technologies: resumeData.skills,
+      };
+      const optimization = {
+        applicationStrength: {
+          score: result.application_strength.score,
+          strongAreas: result.application_strength.strong_areas,
+          weakAreas: result.application_strength.weak_areas,
+          suggestions: result.application_strength.suggestions,
+        },
+        optimizedSections: {
+          summary: { original: originalData?.summary || "", optimized: resumeData.summary },
+          skills: { original: originalData?.skills || [], optimized: resumeData.skills, added: result.keyword_analysis.injected_keywords || [] },
+          bulletPoints: resumeData.experiences.flatMap(exp => exp.bullets.map(b => ({ original: "", optimized: b }))),
+          projects: (resumeData.projects || []).map(p => ({ name: p.name, relevance: "High", highlight: p.description })),
+        },
+        missingSkills: (result.keyword_analysis.missing_keywords || []).map(kw => ({
+          skill: kw,
+          importance: "recommended" as const,
+          learningPath: `Consider learning ${kw}`,
+        })),
+      };
+      await saveOptimizedVersion(profile, result.job_title || jobTitle, result.company_name || company, optimization);
+      setSaved(true);
+      toast({ title: "Version Saved!", description: "You can find it in the Resumes page." });
+    } catch (err) {
+      toast({ title: "Save failed", description: "Could not save version.", variant: "destructive" });
+    }
   };
 
   const scoreColor = (score: number) =>
@@ -275,7 +319,7 @@ const Optimizer = () => {
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Choose Your Template</h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-              Select a professional template for your optimized resume. Each template is designed for different industries and roles.
+              Select a professional template or continue with your current one. Each template is designed for different industries and roles.
             </p>
           </motion.div>
 
@@ -285,7 +329,7 @@ const Optimizer = () => {
             transition={{ delay: 0.1 }}
             className="mb-8"
           >
-            <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
+            <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} currentTemplate={selectedTemplate} />
           </motion.div>
 
           <motion.div 
@@ -520,6 +564,16 @@ const Optimizer = () => {
             <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> New Optimization
             </Button>
+            <Button
+              variant={saved ? "secondary" : "outline"}
+              size="sm"
+              onClick={handleSaveVersion}
+              disabled={saved}
+              className="gap-1.5"
+            >
+              {saved ? <CheckCircle className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+              {saved ? "Saved" : "Save Version"}
+            </Button>
             <Button size="sm" onClick={handleDownloadPdf} className="gap-1.5">
               <Download className="w-3.5 h-3.5" /> Download PDF
             </Button>
@@ -552,7 +606,7 @@ const Optimizer = () => {
         <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)}>
           <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
             <TabsTrigger value="preview" className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <FileText className="w-4 h-4" /> Resume Preview
+              <Code2 className="w-4 h-4" /> Editor & Preview
             </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <BarChart3 className="w-4 h-4" /> Analysis
@@ -564,15 +618,59 @@ const Optimizer = () => {
 
           <TabsContent value="preview">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex justify-center">
-                <div className="max-w-[800px] w-full">
-                  <StyledResume 
-                    ref={resumeRef}
-                    data={resumeData} 
-                    templateId={selectedTemplate}
-                    className="border border-border rounded-lg overflow-hidden"
-                  />
-                </div>
+              {/* Editor mode toggle */}
+              <div className="flex items-center gap-1.5 mb-3">
+                <Button
+                  variant={editorMode === "editor" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("editor")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Code2 className="w-3.5 h-3.5" /> Code
+                </Button>
+                <Button
+                  variant={editorMode === "split" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("split")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Columns className="w-3.5 h-3.5" /> Split
+                </Button>
+                <Button
+                  variant={editorMode === "preview" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("preview")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Preview
+                </Button>
+              </div>
+
+              <div className={`grid gap-4 ${
+                editorMode === "split" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+              }`}>
+                {/* Editor */}
+                {(editorMode === "editor" || editorMode === "split") && (
+                  <div className="border border-border rounded-lg overflow-hidden" style={{ height: editorMode === "split" ? "700px" : "600px" }}>
+                    <ResumeLatexEditor
+                      data={resumeData}
+                      onChange={(updated) => setResumeData(updated)}
+                      className="h-full"
+                    />
+                  </div>
+                )}
+
+                {/* Preview */}
+                {(editorMode === "preview" || editorMode === "split") && (
+                  <div className={editorMode === "split" ? "max-h-[700px] overflow-auto" : ""}>
+                    <StyledResume 
+                      ref={resumeRef}
+                      data={resumeData} 
+                      templateId={selectedTemplate}
+                      className="border border-border rounded-lg overflow-hidden"
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
           </TabsContent>
