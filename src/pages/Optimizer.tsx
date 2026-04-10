@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   Sparkles, FileText, Loader2, ArrowRight, 
   Target, Key, BarChart3, Edit3, Download, CheckCircle,
-  ChevronRight, Upload, Palette, Save
+  ChevronRight, Upload, Palette, Save, Code2, Eye, Columns
 } from "lucide-react";
+import ResumeLatexEditor from "@/components/ResumeLatexEditor";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
