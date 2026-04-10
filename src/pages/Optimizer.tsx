@@ -606,7 +606,7 @@ const Optimizer = () => {
         <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)}>
           <TabsList className="w-full flex justify-start gap-1 bg-muted/30 border border-border rounded-lg p-1 mb-4">
             <TabsTrigger value="preview" className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <FileText className="w-4 h-4" /> Resume Preview
+              <Code2 className="w-4 h-4" /> Editor & Preview
             </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <BarChart3 className="w-4 h-4" /> Analysis
@@ -618,15 +618,59 @@ const Optimizer = () => {
 
           <TabsContent value="preview">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex justify-center">
-                <div className="max-w-[800px] w-full">
-                  <StyledResume 
-                    ref={resumeRef}
-                    data={resumeData} 
-                    templateId={selectedTemplate}
-                    className="border border-border rounded-lg overflow-hidden"
-                  />
-                </div>
+              {/* Editor mode toggle */}
+              <div className="flex items-center gap-1.5 mb-3">
+                <Button
+                  variant={editorMode === "editor" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("editor")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Code2 className="w-3.5 h-3.5" /> Code
+                </Button>
+                <Button
+                  variant={editorMode === "split" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("split")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Columns className="w-3.5 h-3.5" /> Split
+                </Button>
+                <Button
+                  variant={editorMode === "preview" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditorMode("preview")}
+                  className="gap-1.5 text-xs"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Preview
+                </Button>
+              </div>
+
+              <div className={`grid gap-4 ${
+                editorMode === "split" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+              }`}>
+                {/* Editor */}
+                {(editorMode === "editor" || editorMode === "split") && (
+                  <div className="border border-border rounded-lg overflow-hidden" style={{ height: editorMode === "split" ? "700px" : "600px" }}>
+                    <ResumeLatexEditor
+                      data={resumeData}
+                      onChange={(updated) => setResumeData(updated)}
+                      className="h-full"
+                    />
+                  </div>
+                )}
+
+                {/* Preview */}
+                {(editorMode === "preview" || editorMode === "split") && (
+                  <div className={editorMode === "split" ? "max-h-[700px] overflow-auto" : ""}>
+                    <StyledResume 
+                      ref={resumeRef}
+                      data={resumeData} 
+                      templateId={selectedTemplate}
+                      className="border border-border rounded-lg overflow-hidden"
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
           </TabsContent>
