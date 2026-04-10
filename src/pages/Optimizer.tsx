@@ -53,6 +53,7 @@ const Optimizer = () => {
   const { saveOptimizedVersion } = useResumeVersions();
   const [step, setStep] = useState<"template" | "input" | "loading" | "result">("template");
   const [saved, setSaved] = useState(false);
+  const [editorMode, setEditorMode] = useState<"preview" | "editor" | "split">("split");
   
   // Template selection
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>("modern");
