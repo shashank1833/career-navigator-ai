@@ -1,48 +1,67 @@
-# Career Intelligence Platform - PRD
+# Career Navigation Platform - PRD
 
 ## Overview
-AI-powered career intelligence platform that analyzes resumes, provides job matching, and automatically optimizes resumes for specific job descriptions.
-
-## Key Features
-
-### 1. Resume Upload & Analysis
-- Upload PDF/DOCX resumes
-- AI-powered extraction of skills, experience, education
-- Skill gap analysis, job match scoring, interview prep
-
-### 2. Job Matching
-- Real job search via Adzuna API (Supabase Edge Function)
-- AI-generated job matches
-- Job saving and application tracking
-
-### 3. Auto Resume Modification (NEW - v2)
-- **Primary**: FastAPI backend with Claude (Anthropic) LLM via Emergent Integrations
-- **Fallback**: Supabase Edge Functions
-- Flow: Structured Parsing → Keyword Extraction → Skill Matching → LLM Optimization → Version Storage → PDF Download
-- Modification rules: Summary rewrite, skill reordering, experience bullet improvement, keyword injection
-- Fixed template: Name & Contact → Summary → Skills → Experience → Projects → Education
-
-### 4. Version Management
-- Original resume + multiple job-specific optimized versions
-- Stored in Supabase (existing) and MongoDB (new backend versions)
-- View, compare, edit, re-optimize, download
-
-### 5. PDF Export
-- Consistent professional template across all exports
-- Fixed section order, clean formatting
-- Match score display
+A modern, dynamic Career Navigation website that guides users through career paths, skills, and learning resources. Features AI-powered recommendations, interactive roadmaps, and a glassmorphism UI design.
 
 ## Architecture
-- **Frontend**: React + TypeScript + Vite + Tailwind + shadcn/ui
-- **Backend**: FastAPI (Python)
-- **Database**: Supabase (primary), MongoDB (backend versions)
-- **Auth**: Supabase Auth
-- **LLM**: Claude 4 Sonnet via Emergent Integrations
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS + shadcn/ui + framer-motion
+- **Backend**: FastAPI + MongoDB
+- **Auth**: Emergent OAuth + Supabase
+- **AI**: Claude LLM (via Emergent Integrations) for resume optimization + career recommendations
 
-## API Endpoints (Backend)
-- `POST /api/optimize-resume` - LLM-powered resume optimization
-- `POST /api/extract-keywords` - Job keyword extraction
-- `POST /api/resume-versions` - Save version
-- `GET /api/resume-versions/{session_id}` - List versions
-- `PUT /api/resume-versions/{version_id}` - Update version
-- `DELETE /api/resume-versions/{version_id}` - Delete version
+## Pages & Routes
+
+### Public Pages (no auth required)
+- `/` - Homepage (hero, trending careers, features, CTA)
+- `/explore` - Career Exploration (search, domain filters, expandable career cards)
+- `/skills` - Skills Library (categorized skills with popularity metrics)
+- `/roadmaps` - Career Roadmaps (list + detail view with visual timeline)
+- `/resources` - Learning Resources (curated platforms, tools, certifications)
+- `/auth` - Sign In / Sign Up
+
+### Protected Pages (auth required)
+- `/dashboard` - Personalized dashboard with stats, AI recommendations, charts
+- `/analyze` - Resume analysis (upload + AI analysis)
+- `/optimizer` - Resume auto-optimizer (LLM-powered)
+- `/resumes` - Resume version management
+- `/settings` - User settings
+
+## Backend API Endpoints
+
+### Career Navigation
+- `GET /api/careers` - List careers (filters: domain, trending, search)
+- `GET /api/careers/{id}` - Single career details
+- `GET /api/roadmaps` - List roadmaps (filter: domain)
+- `GET /api/roadmaps/{id}` - Single roadmap with steps
+- `GET /api/skills-categories` - All skill categories
+- `POST /api/user-progress` - Save/update progress
+- `GET /api/user-progress/{user_id}` - Get user progress
+- `POST /api/ai-recommend` - AI career recommendations
+
+### Resume
+- `POST /api/optimize-resume` - LLM resume optimization
+- `POST /api/extract-keywords` - Keyword extraction
+- `CRUD /api/resume-versions` - Version management
+
+### Auth
+- `POST /api/auth/session` - OAuth session exchange
+- `GET /api/auth/me` - Current user
+- `POST /api/auth/logout` - Logout
+
+## Key Components
+- **TopNavbar** - Responsive sticky navbar with dark/light toggle, mobile hamburger
+- **AIRecommendations** - AI-powered career suggestions component
+- **HomePage** - Public landing with hero, trending careers, features
+- **ExploreCareers** - Filterable career grid with expandable details
+- **RoadmapView** - Visual timeline with progress tracking
+- **SkillsPage** - Categorized skills with demand indicators
+- **ResourcesPage** - Curated learning resources
+
+## Database Collections
+- `careers` - Career data (12 seeded)
+- `roadmaps` - Roadmap data (5 seeded)
+- `skills_categories` - Skill categories (5 seeded)
+- `user_progress` - User roadmap progress
+- `resume_versions` - Saved resume versions
+- `users` - User profiles
+- `user_sessions` - Auth sessions
