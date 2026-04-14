@@ -146,7 +146,7 @@ const TopNavbar = () => {
                 <AnimatePresence mode="wait">
                   {isDark ? (
                     <motion.div key="sun" initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 90 }} transition={{ duration: 0.2 }}>
-                      <Sun className="w-4.5 h-4.5 text-amber-400" />
+                      <Sun className="w-4.5 h-4.5 text-emerald-300" />
                     </motion.div>
                   ) : (
                     <motion.div key="moon" initial={{ scale: 0, rotate: 90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: -90 }} transition={{ duration: 0.2 }}>

@@ -6,98 +6,100 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Cool Greens — Dark Mode */
+    --background: 158 30% 7%;
+    --foreground: 150 20% 96%;
 
-    --card: 217 33% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 158 25% 11%;
+    --card-foreground: 150 20% 96%;
 
-    --popover: 217 33% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 158 25% 11%;
+    --popover-foreground: 150 20% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 160 30% 4%;
 
-    --secondary: 263 70% 50%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 175 65% 42%;
+    --secondary-foreground: 150 20% 96%;
 
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 158 20% 16%;
+    --muted-foreground: 155 15% 58%;
 
-    --accent: 187 92% 49%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 142 70% 50%;
+    --accent-foreground: 158 30% 4%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 150 20% 96%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
+    --border: 158 18% 18%;
+    --input: 158 18% 18%;
+    --ring: 160 84% 39%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 158 30% 5%;
+    --sidebar-foreground: 150 20% 96%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 150 20% 96%;
+    --sidebar-accent: 158 20% 16%;
+    --sidebar-accent-foreground: 150 20% 96%;
+    --sidebar-border: 158 18% 18%;
+    --sidebar-ring: 160 84% 39%;
 
     /* Custom tokens */
-    --glow-primary: 217 91% 60%;
-    --glow-secondary: 263 70% 50%;
-    --glow-accent: 187 92% 49%;
-    --surface-glass: 217 33% 16%;
-    --gradient-start: 222 47% 6%;
-    --gradient-end: 217 33% 15%;
+    --glow-primary: 160 84% 39%;
+    --glow-secondary: 175 65% 42%;
+    --glow-accent: 142 70% 50%;
+    --surface-glass: 158 22% 13%;
+    --gradient-start: 158 30% 4%;
+    --gradient-end: 158 22% 12%;
   }
 
   .light {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Cool Greens — Light Mode */
+    --background: 148 30% 97%;
+    --foreground: 158 35% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 158 35% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 158 35% 10%;
 
-    --primary: 217 91% 50%;
+    --primary: 160 84% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 263 70% 55%;
+    --secondary: 175 65% 32%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 93%;
-    --muted-foreground: 215 20% 40%;
+    --muted: 148 22% 92%;
+    --muted-foreground: 155 15% 42%;
 
-    --accent: 187 92% 39%;
+    --accent: 142 60% 36%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 85%;
-    --input: 214 32% 85%;
-    --ring: 217 91% 50%;
+    --border: 150 18% 85%;
+    --input: 150 18% 85%;
+    --ring: 160 84% 32%;
 
-    --sidebar-background: 210 40% 96%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 217 91% 50%;
+    --sidebar-background: 148 25% 95%;
+    --sidebar-foreground: 158 35% 10%;
+    --sidebar-primary: 160 84% 32%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 93%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 85%;
-    --sidebar-ring: 217 91% 50%;
+    --sidebar-accent: 148 22% 92%;
+    --sidebar-accent-foreground: 158 35% 10%;
+    --sidebar-border: 150 18% 85%;
+    --sidebar-ring: 160 84% 32%;
 
-    --glow-primary: 217 91% 50%;
-    --glow-secondary: 263 70% 55%;
-    --glow-accent: 187 92% 39%;
-    --surface-glass: 210 40% 96%;
-    --gradient-start: 210 40% 98%;
-    --gradient-end: 210 40% 93%;
+    --glow-primary: 160 84% 32%;
+    --glow-secondary: 175 65% 32%;
+    --glow-accent: 142 60% 36%;
+    --surface-glass: 148 20% 95%;
+    --gradient-start: 148 30% 97%;
+    --gradient-end: 148 22% 92%;
   }
 }
 
