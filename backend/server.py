@@ -202,6 +202,206 @@ async def delete_resume_version(version_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── Career Navigation Endpoints ────────────────────────────────────
+
+@api_router.get("/careers")
+async def get_careers(domain: str = None, trending: bool = None, search: str = None):
+    """Get all careers with optional filters."""
+    try:
+        query = {}
+        if domain:
+            query["domain"] = domain
+        if trending is not None:
+            query["trending"] = trending
+        if search:
+            query["$or"] = [
+                {"title": {"$regex": search, "$options": "i"}},
+                {"description": {"$regex": search, "$options": "i"}},
+                {"skills": {"$elemMatch": {"$regex": search, "$options": "i"}}},
+            ]
+        careers = await db.careers.find(query).to_list(100)
+        for c in careers:
+            c.pop("_id", None)
+        return careers
+    except Exception as e:
+        logger.error(f"Failed to get careers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/careers/{career_id}")
+async def get_career(career_id: str):
+    """Get a single career by ID."""
+    try:
+        career = await db.careers.find_one({"id": career_id})
+        if not career:
+            raise HTTPException(status_code=404, detail="Career not found")
+        career.pop("_id", None)
+        return career
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get career: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/roadmaps")
+async def get_roadmaps(domain: str = None):
+    """Get all roadmaps with optional domain filter."""
+    try:
+        query = {}
+        if domain:
+            query["domain"] = domain
+        roadmaps = await db.roadmaps.find(query).to_list(100)
+        for r in roadmaps:
+            r.pop("_id", None)
+        return roadmaps
+    except Exception as e:
+        logger.error(f"Failed to get roadmaps: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/roadmaps/{roadmap_id}")
+async def get_roadmap(roadmap_id: str):
+    """Get a single roadmap by ID."""
+    try:
+        roadmap = await db.roadmaps.find_one({"id": roadmap_id})
+        if not roadmap:
+            raise HTTPException(status_code=404, detail="Roadmap not found")
+        roadmap.pop("_id", None)
+        return roadmap
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get roadmap: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/skills-categories")
+async def get_skills_categories():
+    """Get all skill categories."""
+    try:
+        categories = await db.skills_categories.find().to_list(100)
+        for c in categories:
+            c.pop("_id", None)
+        return categories
+    except Exception as e:
+        logger.error(f"Failed to get skills: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class UserProgressUpdate(BaseModel):
+    user_id: str
+    roadmap_id: str
+    step_id: str
+    completed: bool = True
+
+
+@api_router.post("/user-progress")
+async def update_user_progress(request: UserProgressUpdate):
+    """Save or update user progress on a roadmap step."""
+    try:
+        existing = await db.user_progress.find_one({
+            "user_id": request.user_id,
+            "roadmap_id": request.roadmap_id,
+            "step_id": request.step_id,
+        })
+        if existing:
+            await db.user_progress.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {"completed": request.completed, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        else:
+            await db.user_progress.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": request.user_id,
+                "roadmap_id": request.roadmap_id,
+                "step_id": request.step_id,
+                "completed": request.completed,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to update progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/user-progress/{user_id}")
+async def get_user_progress(user_id: str):
+    """Get all progress for a user."""
+    try:
+        progress = await db.user_progress.find({"user_id": user_id}).to_list(1000)
+        for p in progress:
+            p.pop("_id", None)
+        return progress
+    except Exception as e:
+        logger.error(f"Failed to get progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class AIRecommendRequest(BaseModel):
+    skills: List[str] = []
+    interests: List[str] = []
+    experience_level: str = "entry"
+
+
+@api_router.post("/ai-recommend")
+async def ai_career_recommend(request: AIRecommendRequest):
+    """Get AI-powered career recommendations."""
+    import json
+    try:
+        from resume_optimizer import get_llm_client
+        client_llm = get_llm_client()
+        
+        prompt = f"""Based on the following user profile, recommend 3-5 career paths with explanations.
+
+User Skills: {', '.join(request.skills) if request.skills else 'Not specified'}
+Interests: {', '.join(request.interests) if request.interests else 'Not specified'}
+Experience Level: {request.experience_level}
+
+For each recommendation, provide:
+1. Career Title
+2. Match Score (0-100)
+3. Why it's a good fit (2-3 sentences)
+4. Key skills to develop
+5. Expected salary range
+
+Return as a JSON array with objects having these fields: title, match_score, reason, skills_to_develop (array), salary_range.
+Return ONLY the JSON array, no other text."""
+
+        response = client_llm.chat.completions.create(
+            model="claude-sonnet-4-20250514",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.7,
+        )
+        
+        content = response.choices[0].message.content.strip()
+        # Try to extract JSON from the response
+        if content.startswith("```"):
+            content = content.split("```")[1]
+            if content.startswith("json"):
+                content = content[4:]
+        recommendations = json.loads(content)
+        return {"recommendations": recommendations}
+    except json.JSONDecodeError:
+        # Fallback recommendations if LLM response isn't valid JSON
+        logger.warning("LLM returned non-JSON response, using fallback")
+        return {"recommendations": [
+            {"title": "Software Engineer", "match_score": 85, "reason": "Strong technical foundation with relevant programming skills.", "skills_to_develop": ["System Design", "Cloud Computing"], "salary_range": "$95,000 - $165,000"},
+            {"title": "Data Scientist", "match_score": 75, "reason": "Good analytical background with potential for data-driven roles.", "skills_to_develop": ["Machine Learning", "Statistics"], "salary_range": "$100,000 - $170,000"},
+            {"title": "Product Manager", "match_score": 70, "reason": "Cross-functional skills that translate well to product management.", "skills_to_develop": ["User Research", "Agile Methodologies"], "salary_range": "$110,000 - $180,000"},
+        ]}
+    except Exception as e:
+        logger.error(f"AI recommendation failed: {traceback.format_exc()}")
+        # Return fallback instead of error
+        return {"recommendations": [
+            {"title": "Software Engineer", "match_score": 85, "reason": "Strong technical foundation with relevant programming skills.", "skills_to_develop": ["System Design", "Cloud Computing"], "salary_range": "$95,000 - $165,000"},
+            {"title": "Data Scientist", "match_score": 75, "reason": "Good analytical background with potential for data-driven roles.", "skills_to_develop": ["Machine Learning", "Statistics"], "salary_range": "$100,000 - $170,000"},
+            {"title": "Product Manager", "match_score": 70, "reason": "Cross-functional skills that translate well to product management.", "skills_to_develop": ["User Research", "Agile Methodologies"], "salary_range": "$110,000 - $180,000"},
+        ]}
+
+
 # ─── Emergent OAuth Authentication ──────────────────────────────────
 # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
 

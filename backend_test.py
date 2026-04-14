@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Career Intelligence Platform Resume Optimization
-Tests the 3 main endpoints: extract-keywords, resume-versions CRUD, and optimize-resume
+Backend API Testing for Career Navigation Platform
+Tests all endpoints including new Career Navigation features:
+- Career listing and details
+- Roadmap listing and details  
+- Skills categories
+- User progress tracking
+- AI career recommendations
+- Legacy resume optimization endpoints
 """
 
 import asyncio
@@ -45,6 +51,890 @@ class BackendTester:
         if not success and response_data:
             print(f"   Response: {response_data}")
         print()
+
+    async def test_root_endpoint(self):
+        """Test GET /api/ root endpoint"""
+        print("🏠 Testing Root Endpoint...")
+        
+        try:
+            async with self.session.get(f"{BACKEND_URL}/") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get("message") == "Hello World":
+                        self.log_result(
+                            "Root Endpoint",
+                            True,
+                            "Root endpoint responding correctly"
+                        )
+                    else:
+                        self.log_result(
+                            "Root Endpoint",
+                            False,
+                            f"Unexpected response: {data}",
+                            data
+                        )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Root Endpoint",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Root Endpoint",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_careers_endpoint(self):
+        """Test GET /api/careers endpoint with various filters"""
+        print("💼 Testing Careers Endpoint...")
+        
+        # Test 1: Get all careers (should return 12 careers)
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if not isinstance(data, list):
+                        self.log_result(
+                            "Careers - List All",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                        return
+                    
+                    if len(data) != 12:
+                        self.log_result(
+                            "Careers - List All",
+                            False,
+                            f"Expected 12 careers, got {len(data)}",
+                            {"count": len(data)}
+                        )
+                    else:
+                        self.log_result(
+                            "Careers - List All",
+                            True,
+                            f"Retrieved {len(data)} careers successfully"
+                        )
+                        
+                        # Store first career ID for individual career test
+                        if data:
+                            self.test_career_id = data[0].get("id")
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Careers - List All",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+                    return
+        except Exception as e:
+            self.log_result(
+                "Careers - List All",
+                False,
+                f"Request failed: {str(e)}"
+            )
+            return
+        
+        # Test 2: Filter by domain=IT
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers?domain=IT") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if not isinstance(data, list):
+                        self.log_result(
+                            "Careers - Filter IT",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                    else:
+                        # Check if all returned careers are IT domain
+                        non_it_careers = [c for c in data if c.get("domain") != "IT"]
+                        if non_it_careers:
+                            self.log_result(
+                                "Careers - Filter IT",
+                                False,
+                                f"Found {len(non_it_careers)} non-IT careers in IT filter",
+                                {"non_it_count": len(non_it_careers)}
+                            )
+                        else:
+                            self.log_result(
+                                "Careers - Filter IT",
+                                True,
+                                f"IT filter returned {len(data)} IT careers"
+                            )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Careers - Filter IT",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Careers - Filter IT",
+                False,
+                f"Request failed: {str(e)}"
+            )
+        
+        # Test 3: Filter by domain=Business
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers?domain=Business") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if isinstance(data, list):
+                        business_careers = [c for c in data if c.get("domain") == "Business"]
+                        if len(business_careers) == len(data):
+                            self.log_result(
+                                "Careers - Filter Business",
+                                True,
+                                f"Business filter returned {len(data)} Business careers"
+                            )
+                        else:
+                            self.log_result(
+                                "Careers - Filter Business",
+                                False,
+                                f"Filter inconsistency: {len(data)} total, {len(business_careers)} Business",
+                                {"total": len(data), "business": len(business_careers)}
+                            )
+                    else:
+                        self.log_result(
+                            "Careers - Filter Business",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Careers - Filter Business",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Careers - Filter Business",
+                False,
+                f"Request failed: {str(e)}"
+            )
+        
+        # Test 4: Filter by trending=true
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers?trending=true") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if isinstance(data, list):
+                        trending_careers = [c for c in data if c.get("trending") == True]
+                        if len(trending_careers) == len(data):
+                            self.log_result(
+                                "Careers - Filter Trending",
+                                True,
+                                f"Trending filter returned {len(data)} trending careers"
+                            )
+                        else:
+                            self.log_result(
+                                "Careers - Filter Trending",
+                                False,
+                                f"Filter inconsistency: {len(data)} total, {len(trending_careers)} trending",
+                                {"total": len(data), "trending": len(trending_careers)}
+                            )
+                    else:
+                        self.log_result(
+                            "Careers - Filter Trending",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Careers - Filter Trending",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Careers - Filter Trending",
+                False,
+                f"Request failed: {str(e)}"
+            )
+        
+        # Test 5: Search for "Engineer"
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers?search=Engineer") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if isinstance(data, list):
+                        # Check if results contain "Engineer" in title, description, or skills
+                        matching_careers = []
+                        for career in data:
+                            title = career.get("title", "").lower()
+                            description = career.get("description", "").lower()
+                            skills = [s.lower() for s in career.get("skills", [])]
+                            
+                            if ("engineer" in title or "engineer" in description or 
+                                any("engineer" in skill for skill in skills)):
+                                matching_careers.append(career)
+                        
+                        if len(matching_careers) > 0:
+                            self.log_result(
+                                "Careers - Search Engineer",
+                                True,
+                                f"Search returned {len(data)} results, {len(matching_careers)} contain 'Engineer'"
+                            )
+                        else:
+                            self.log_result(
+                                "Careers - Search Engineer",
+                                False,
+                                f"Search returned {len(data)} results but none contain 'Engineer'",
+                                {"results_count": len(data)}
+                            )
+                    else:
+                        self.log_result(
+                            "Careers - Search Engineer",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Careers - Search Engineer",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Careers - Search Engineer",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_career_detail_endpoint(self):
+        """Test GET /api/careers/{career_id} endpoint"""
+        print("🔍 Testing Career Detail Endpoint...")
+        
+        # First get a career ID from the careers list
+        career_id = None
+        try:
+            async with self.session.get(f"{BACKEND_URL}/careers") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data and len(data) > 0:
+                        career_id = data[0].get("id")
+                    else:
+                        self.log_result(
+                            "Career Detail - Get ID",
+                            False,
+                            "No careers found to test detail endpoint"
+                        )
+                        return
+                else:
+                    self.log_result(
+                        "Career Detail - Get ID",
+                        False,
+                        f"Failed to get careers list: HTTP {response.status}"
+                    )
+                    return
+        except Exception as e:
+            self.log_result(
+                "Career Detail - Get ID",
+                False,
+                f"Failed to get career ID: {str(e)}"
+            )
+            return
+        
+        # Test valid career ID
+        if career_id:
+            try:
+                async with self.session.get(f"{BACKEND_URL}/careers/{career_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        # Validate response structure
+                        required_fields = ["id", "title", "domain"]
+                        missing_fields = [field for field in required_fields if field not in data]
+                        
+                        if missing_fields:
+                            self.log_result(
+                                "Career Detail - Valid ID",
+                                False,
+                                f"Missing fields: {missing_fields}",
+                                data
+                            )
+                        elif data.get("id") != career_id:
+                            self.log_result(
+                                "Career Detail - Valid ID",
+                                False,
+                                f"ID mismatch: requested {career_id}, got {data.get('id')}",
+                                data
+                            )
+                        else:
+                            self.log_result(
+                                "Career Detail - Valid ID",
+                                True,
+                                f"Retrieved career details for {data.get('title')}"
+                            )
+                    else:
+                        error_text = await response.text()
+                        self.log_result(
+                            "Career Detail - Valid ID",
+                            False,
+                            f"HTTP {response.status}: {error_text}"
+                        )
+            except Exception as e:
+                self.log_result(
+                    "Career Detail - Valid ID",
+                    False,
+                    f"Request failed: {str(e)}"
+                )
+        
+        # Test invalid career ID (should return 404)
+        try:
+            invalid_id = "non-existent-career-id"
+            async with self.session.get(f"{BACKEND_URL}/careers/{invalid_id}") as response:
+                if response.status == 404:
+                    self.log_result(
+                        "Career Detail - Invalid ID",
+                        True,
+                        "Correctly returned 404 for non-existent career"
+                    )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Career Detail - Invalid ID",
+                        False,
+                        f"Expected 404, got HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Career Detail - Invalid ID",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_roadmaps_endpoint(self):
+        """Test GET /api/roadmaps endpoint"""
+        print("🗺️ Testing Roadmaps Endpoint...")
+        
+        # Test 1: Get all roadmaps (should return 5 roadmaps)
+        try:
+            async with self.session.get(f"{BACKEND_URL}/roadmaps") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if not isinstance(data, list):
+                        self.log_result(
+                            "Roadmaps - List All",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                        return
+                    
+                    if len(data) != 5:
+                        self.log_result(
+                            "Roadmaps - List All",
+                            False,
+                            f"Expected 5 roadmaps, got {len(data)}",
+                            {"count": len(data)}
+                        )
+                    else:
+                        self.log_result(
+                            "Roadmaps - List All",
+                            True,
+                            f"Retrieved {len(data)} roadmaps successfully"
+                        )
+                        
+                        # Store first roadmap ID for detail test
+                        if data:
+                            self.test_roadmap_id = data[0].get("id")
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Roadmaps - List All",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+                    return
+        except Exception as e:
+            self.log_result(
+                "Roadmaps - List All",
+                False,
+                f"Request failed: {str(e)}"
+            )
+            return
+        
+        # Test 2: Filter by domain=IT
+        try:
+            async with self.session.get(f"{BACKEND_URL}/roadmaps?domain=IT") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if isinstance(data, list):
+                        # Check if all returned roadmaps are IT domain
+                        non_it_roadmaps = [r for r in data if r.get("domain") != "IT"]
+                        if non_it_roadmaps:
+                            self.log_result(
+                                "Roadmaps - Filter IT",
+                                False,
+                                f"Found {len(non_it_roadmaps)} non-IT roadmaps in IT filter",
+                                {"non_it_count": len(non_it_roadmaps)}
+                            )
+                        else:
+                            self.log_result(
+                                "Roadmaps - Filter IT",
+                                True,
+                                f"IT filter returned {len(data)} IT roadmaps"
+                            )
+                    else:
+                        self.log_result(
+                            "Roadmaps - Filter IT",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Roadmaps - Filter IT",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Roadmaps - Filter IT",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_roadmap_detail_endpoint(self):
+        """Test GET /api/roadmaps/{roadmap_id} endpoint"""
+        print("📋 Testing Roadmap Detail Endpoint...")
+        
+        # First get a roadmap ID from the roadmaps list
+        roadmap_id = None
+        try:
+            async with self.session.get(f"{BACKEND_URL}/roadmaps") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data and len(data) > 0:
+                        roadmap_id = data[0].get("id")
+                    else:
+                        self.log_result(
+                            "Roadmap Detail - Get ID",
+                            False,
+                            "No roadmaps found to test detail endpoint"
+                        )
+                        return
+                else:
+                    self.log_result(
+                        "Roadmap Detail - Get ID",
+                        False,
+                        f"Failed to get roadmaps list: HTTP {response.status}"
+                    )
+                    return
+        except Exception as e:
+            self.log_result(
+                "Roadmap Detail - Get ID",
+                False,
+                f"Failed to get roadmap ID: {str(e)}"
+            )
+            return
+        
+        # Test valid roadmap ID
+        if roadmap_id:
+            try:
+                async with self.session.get(f"{BACKEND_URL}/roadmaps/{roadmap_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        # Validate response structure
+                        required_fields = ["id", "title", "steps"]
+                        missing_fields = [field for field in required_fields if field not in data]
+                        
+                        if missing_fields:
+                            self.log_result(
+                                "Roadmap Detail - Valid ID",
+                                False,
+                                f"Missing fields: {missing_fields}",
+                                data
+                            )
+                        elif data.get("id") != roadmap_id:
+                            self.log_result(
+                                "Roadmap Detail - Valid ID",
+                                False,
+                                f"ID mismatch: requested {roadmap_id}, got {data.get('id')}",
+                                data
+                            )
+                        elif not isinstance(data.get("steps"), list):
+                            self.log_result(
+                                "Roadmap Detail - Valid ID",
+                                False,
+                                "Steps should be an array",
+                                {"steps_type": type(data.get("steps"))}
+                            )
+                        else:
+                            steps_count = len(data.get("steps", []))
+                            self.log_result(
+                                "Roadmap Detail - Valid ID",
+                                True,
+                                f"Retrieved roadmap '{data.get('title')}' with {steps_count} steps"
+                            )
+                    else:
+                        error_text = await response.text()
+                        self.log_result(
+                            "Roadmap Detail - Valid ID",
+                            False,
+                            f"HTTP {response.status}: {error_text}"
+                        )
+            except Exception as e:
+                self.log_result(
+                    "Roadmap Detail - Valid ID",
+                    False,
+                    f"Request failed: {str(e)}"
+                )
+        
+        # Test invalid roadmap ID (should return 404)
+        try:
+            invalid_id = "non-existent-roadmap-id"
+            async with self.session.get(f"{BACKEND_URL}/roadmaps/{invalid_id}") as response:
+                if response.status == 404:
+                    self.log_result(
+                        "Roadmap Detail - Invalid ID",
+                        True,
+                        "Correctly returned 404 for non-existent roadmap"
+                    )
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Roadmap Detail - Invalid ID",
+                        False,
+                        f"Expected 404, got HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Roadmap Detail - Invalid ID",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_skills_categories_endpoint(self):
+        """Test GET /api/skills-categories endpoint"""
+        print("🎯 Testing Skills Categories Endpoint...")
+        
+        try:
+            async with self.session.get(f"{BACKEND_URL}/skills-categories") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if not isinstance(data, list):
+                        self.log_result(
+                            "Skills Categories",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                        return
+                    
+                    if len(data) != 5:
+                        self.log_result(
+                            "Skills Categories",
+                            False,
+                            f"Expected 5 categories, got {len(data)}",
+                            {"count": len(data)}
+                        )
+                        return
+                    
+                    # Validate structure of each category
+                    for i, category in enumerate(data):
+                        required_fields = ["id", "category", "skills"]  # Changed from "name" to "category"
+                        missing_fields = [field for field in required_fields if field not in category]
+                        
+                        if missing_fields:
+                            self.log_result(
+                                "Skills Categories",
+                                False,
+                                f"Category {i} missing fields: {missing_fields}",
+                                category
+                            )
+                            return
+                        
+                        if not isinstance(category.get("skills"), list):
+                            self.log_result(
+                                "Skills Categories",
+                                False,
+                                f"Category {i} skills should be an array",
+                                {"skills_type": type(category.get("skills"))}
+                            )
+                            return
+                    
+                    total_skills = sum(len(cat.get("skills", [])) for cat in data)
+                    self.log_result(
+                        "Skills Categories",
+                        True,
+                        f"Retrieved {len(data)} categories with {total_skills} total skills"
+                    )
+                    
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "Skills Categories",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+        except Exception as e:
+            self.log_result(
+                "Skills Categories",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_user_progress_endpoints(self):
+        """Test POST /api/user-progress and GET /api/user-progress/{user_id} endpoints"""
+        print("📈 Testing User Progress Endpoints...")
+        
+        test_user_id = "test-user-1"
+        test_roadmap_id = "test-roadmap-1"
+        test_step_id = "test-step-1"
+        
+        # Test POST /api/user-progress
+        progress_payload = {
+            "user_id": test_user_id,
+            "roadmap_id": test_roadmap_id,
+            "step_id": test_step_id,
+            "completed": True
+        }
+        
+        try:
+            async with self.session.post(
+                f"{BACKEND_URL}/user-progress",
+                json=progress_payload,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if data.get("success") != True:
+                        self.log_result(
+                            "User Progress - Save",
+                            False,
+                            "Response should contain 'success': true",
+                            data
+                        )
+                        return
+                    
+                    self.log_result(
+                        "User Progress - Save",
+                        True,
+                        "Progress saved successfully"
+                    )
+                    
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "User Progress - Save",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+                    return
+                    
+        except Exception as e:
+            self.log_result(
+                "User Progress - Save",
+                False,
+                f"Request failed: {str(e)}"
+            )
+            return
+        
+        # Test GET /api/user-progress/{user_id}
+        try:
+            async with self.session.get(f"{BACKEND_URL}/user-progress/{test_user_id}") as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    if not isinstance(data, list):
+                        self.log_result(
+                            "User Progress - Get",
+                            False,
+                            "Response should be a list",
+                            data
+                        )
+                        return
+                    
+                    # Look for the progress we just saved
+                    matching_progress = [
+                        p for p in data 
+                        if (p.get("user_id") == test_user_id and 
+                            p.get("roadmap_id") == test_roadmap_id and 
+                            p.get("step_id") == test_step_id)
+                    ]
+                    
+                    if not matching_progress:
+                        self.log_result(
+                            "User Progress - Get",
+                            False,
+                            f"Saved progress not found in response. Got {len(data)} progress items",
+                            {"progress_count": len(data)}
+                        )
+                    else:
+                        progress_item = matching_progress[0]
+                        if progress_item.get("completed") != True:
+                            self.log_result(
+                                "User Progress - Get",
+                                False,
+                                f"Progress completed status incorrect: {progress_item.get('completed')}",
+                                progress_item
+                            )
+                        else:
+                            self.log_result(
+                                "User Progress - Get",
+                                True,
+                                f"Retrieved progress for user {test_user_id} - found saved step"
+                            )
+                    
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "User Progress - Get",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+                    
+        except Exception as e:
+            self.log_result(
+                "User Progress - Get",
+                False,
+                f"Request failed: {str(e)}"
+            )
+
+    async def test_ai_recommend_endpoint(self):
+        """Test POST /api/ai-recommend endpoint (AI career recommendations)"""
+        print("🤖 Testing AI Career Recommendations Endpoint...")
+        
+        test_payload = {
+            "skills": ["Python", "React", "SQL"],
+            "interests": ["AI", "Web Development"],
+            "experience_level": "mid"
+        }
+        
+        try:
+            print("   Sending request to AI recommendation endpoint (may take 10-30 seconds)...")
+            
+            # Set longer timeout for AI request
+            timeout = aiohttp.ClientTimeout(total=60)
+            
+            async with self.session.post(
+                f"{BACKEND_URL}/ai-recommend",
+                json=test_payload,
+                headers={"Content-Type": "application/json"},
+                timeout=timeout
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    # Validate response structure
+                    if "recommendations" not in data:
+                        self.log_result(
+                            "AI Recommendations",
+                            False,
+                            "Response should contain 'recommendations' field",
+                            data
+                        )
+                        return
+                    
+                    recommendations = data["recommendations"]
+                    if not isinstance(recommendations, list):
+                        self.log_result(
+                            "AI Recommendations",
+                            False,
+                            "Recommendations should be a list",
+                            data
+                        )
+                        return
+                    
+                    if len(recommendations) == 0:
+                        self.log_result(
+                            "AI Recommendations",
+                            False,
+                            "No recommendations returned",
+                            data
+                        )
+                        return
+                    
+                    # Validate structure of each recommendation
+                    required_fields = ["title", "match_score", "reason", "skills_to_develop", "salary_range"]
+                    for i, rec in enumerate(recommendations):
+                        missing_fields = [field for field in required_fields if field not in rec]
+                        
+                        if missing_fields:
+                            self.log_result(
+                                "AI Recommendations",
+                                False,
+                                f"Recommendation {i} missing fields: {missing_fields}",
+                                rec
+                            )
+                            return
+                        
+                        # Validate match_score is a number between 0-100
+                        score = rec.get("match_score")
+                        if not isinstance(score, (int, float)) or score < 0 or score > 100:
+                            self.log_result(
+                                "AI Recommendations",
+                                False,
+                                f"Recommendation {i} invalid match_score: {score} (should be 0-100)",
+                                rec
+                            )
+                            return
+                        
+                        # Validate skills_to_develop is a list
+                        if not isinstance(rec.get("skills_to_develop"), list):
+                            self.log_result(
+                                "AI Recommendations",
+                                False,
+                                f"Recommendation {i} skills_to_develop should be a list",
+                                rec
+                            )
+                            return
+                    
+                    avg_score = sum(r.get("match_score", 0) for r in recommendations) / len(recommendations)
+                    self.log_result(
+                        "AI Recommendations",
+                        True,
+                        f"AI returned {len(recommendations)} recommendations, avg score: {avg_score:.1f}"
+                    )
+                    
+                else:
+                    error_text = await response.text()
+                    self.log_result(
+                        "AI Recommendations",
+                        False,
+                        f"HTTP {response.status}: {error_text}"
+                    )
+                    
+        except asyncio.TimeoutError:
+            self.log_result(
+                "AI Recommendations",
+                False,
+                "Request timed out (AI took too long to respond)"
+            )
+        except Exception as e:
+            self.log_result(
+                "AI Recommendations",
+                False,
+                f"Request failed: {str(e)}"
+            )
 
     async def test_extract_keywords(self):
         """Test POST /api/extract-keywords endpoint"""
@@ -553,7 +1443,17 @@ class BackendTester:
         print(f"🚀 Starting Backend API Tests for: {BACKEND_URL}")
         print("=" * 60)
         
-        # Test in order of complexity
+        # Test new Career Navigation endpoints first (high priority)
+        await self.test_root_endpoint()
+        await self.test_careers_endpoint()
+        await self.test_career_detail_endpoint()
+        await self.test_roadmaps_endpoint()
+        await self.test_roadmap_detail_endpoint()
+        await self.test_skills_categories_endpoint()
+        await self.test_user_progress_endpoints()
+        await self.test_ai_recommend_endpoint()
+        
+        # Test legacy resume optimization endpoints
         await self.test_extract_keywords()
         await self.test_resume_versions_crud()
         await self.test_optimize_resume()
