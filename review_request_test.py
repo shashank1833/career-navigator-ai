@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 
 # Use the production backend URL from frontend/.env
-BASE_URL = "https://workflow-execute.preview.emergentagent.com"
+BASE_URL = "https://career-compass-1048.preview.emergentagent.com"
 
 async def test_specific_endpoints():
     """Test the specific endpoints mentioned in the review request"""
