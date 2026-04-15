@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Map, ChevronRight, Clock, Award, BookOpen, CheckCircle2, Circle,
-  Loader2, ArrowLeft, Sparkles, ExternalLink, ChevronDown, Star
+  Loader2, ArrowLeft, Sparkles, ExternalLink, ChevronDown, Star, Wifi, WifiOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoadmapProgress } from "@/hooks/useRoadmapProgress";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
 
@@ -48,10 +49,23 @@ const RoadmapView = () => {
   const { user } = useAuth();
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [selectedRoadmap, setSelectedRoadmap] = useState<Roadmap | null>(null);
-  const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [restProgress, setRestProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
+  // Real-time WebSocket progress for the selected roadmap
+  const {
+    completedSteps: wsCompletedSteps,
+    connected: wsConnected,
+    toggleStep: wsToggleStep,
+    isStepCompleted: wsIsStepCompleted,
+  } = useRoadmapProgress({
+    roadmapId: selectedRoadmap?.id || null,
+    userId: user?.id || null,
+    enabled: !!selectedRoadmap && !!user,
+  });
+
+  // Fetch roadmaps
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/roadmaps`)
       .then((r) => r.json())
@@ -62,64 +76,68 @@ const RoadmapView = () => {
       .catch(() => setLoading(false));
   }, []);
 
+  // Fetch REST progress for the roadmap list view (overview)
   useEffect(() => {
     if (user) {
       fetch(`${BACKEND_URL}/api/user-progress/${user.id}`)
         .then((r) => r.json())
-        .then(setProgress)
+        .then(setRestProgress)
         .catch(() => {});
     }
   }, [user]);
 
-  const isStepCompleted = (roadmapId: string, stepId: string) => {
-    return progress.some(
+  // When WS updates come in for the selected roadmap, also update restProgress for the list view
+  useEffect(() => {
+    if (selectedRoadmap && wsCompletedSteps) {
+      setRestProgress((prev) => {
+        // Remove old entries for this roadmap
+        const filtered = prev.filter((p) => p.roadmap_id !== selectedRoadmap.id);
+        // Add current WS completed steps
+        const newEntries = wsCompletedSteps.map((stepId) => ({
+          roadmap_id: selectedRoadmap.id,
+          step_id: stepId,
+          completed: true,
+        }));
+        return [...filtered, ...newEntries];
+      });
+    }
+  }, [wsCompletedSteps, selectedRoadmap]);
+
+  // REST-based helpers for the list view
+  const isStepCompletedRest = (roadmapId: string, stepId: string) => {
+    return restProgress.some(
       (p) => p.roadmap_id === roadmapId && p.step_id === stepId && p.completed
     );
   };
 
-  const getProgress = (roadmap: Roadmap) => {
+  const getProgressPercent = (roadmap: Roadmap) => {
     if (!roadmap.steps.length) return 0;
     const completed = roadmap.steps.filter((s) =>
-      isStepCompleted(roadmap.id, s.id)
+      isStepCompletedRest(roadmap.id, s.id)
     ).length;
     return Math.round((completed / roadmap.steps.length) * 100);
   };
 
-  const toggleStep = async (roadmapId: string, stepId: string) => {
-    if (!user) return;
-    const isCompleted = isStepCompleted(roadmapId, stepId);
-    const newCompleted = !isCompleted;
-
-    // Optimistic update
-    if (newCompleted) {
-      setProgress((prev) => [...prev, { roadmap_id: roadmapId, step_id: stepId, completed: true }]);
-    } else {
-      setProgress((prev) =>
-        prev.filter((p) => !(p.roadmap_id === roadmapId && p.step_id === stepId))
-      );
+  // For the detail view: use WS when connected, or fall back to REST data
+  const isStepCompletedDetail = (stepId: string) => {
+    if (user && selectedRoadmap) {
+      return wsIsStepCompleted(stepId);
     }
+    return false;
+  };
 
-    try {
-      await fetch(`${BACKEND_URL}/api/user-progress`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          roadmap_id: roadmapId,
-          step_id: stepId,
-          completed: newCompleted,
-        }),
-      });
-    } catch {
-      // Revert on error
-      if (newCompleted) {
-        setProgress((prev) =>
-          prev.filter((p) => !(p.roadmap_id === roadmapId && p.step_id === stepId))
-        );
-      } else {
-        setProgress((prev) => [...prev, { roadmap_id: roadmapId, step_id: stepId, completed: true }]);
-      }
-    }
+  const getDetailProgress = () => {
+    if (!selectedRoadmap) return 0;
+    const total = selectedRoadmap.steps.length;
+    if (!total) return 0;
+    const completed = selectedRoadmap.steps.filter((s) => isStepCompletedDetail(s.id)).length;
+    return Math.round((completed / total) * 100);
+  };
+
+  const handleToggleStep = (stepId: string) => {
+    if (!user || !selectedRoadmap) return;
+    const isCompleted = isStepCompletedDetail(stepId);
+    wsToggleStep(stepId, !isCompleted);
   };
 
   if (loading) {
@@ -156,7 +174,7 @@ const RoadmapView = () => {
               {/* Roadmap Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {roadmaps.map((roadmap, i) => {
-                  const prog = getProgress(roadmap);
+                  const prog = getProgressPercent(roadmap);
                   return (
                     <motion.button
                       key={roadmap.id}
@@ -202,14 +220,30 @@ const RoadmapView = () => {
           ) : (
             <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               {/* Back button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedRoadmap(null)}
-                className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="w-4 h-4" /> All Roadmaps
-              </Button>
+              <div className="flex items-center justify-between mb-6">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedRoadmap(null)}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4" /> All Roadmaps
+                </Button>
+                {/* Real-time connection indicator */}
+                {user && (
+                  <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
+                    wsConnected
+                      ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                      : "text-muted-foreground bg-muted/30 border-border/50"
+                  }`}>
+                    {wsConnected ? (
+                      <><Wifi className="w-3 h-3" /> Live sync</>
+                    ) : (
+                      <><WifiOff className="w-3 h-3" /> Connecting...</>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Roadmap Header */}
               <div className="glass-card p-6 sm:p-8 mb-8">
@@ -231,9 +265,9 @@ const RoadmapView = () => {
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Your Progress</span>
-                      <span className="text-primary font-semibold">{getProgress(selectedRoadmap)}%</span>
+                      <span className="text-primary font-semibold">{getDetailProgress()}%</span>
                     </div>
-                    <Progress value={getProgress(selectedRoadmap)} className="h-2" />
+                    <Progress value={getDetailProgress()} className="h-2" />
                   </div>
                 )}
               </div>
@@ -245,7 +279,7 @@ const RoadmapView = () => {
 
                 <div className="space-y-0">
                   {selectedRoadmap.steps.map((step, i) => {
-                    const completed = isStepCompleted(selectedRoadmap.id, step.id);
+                    const completed = isStepCompletedDetail(step.id);
                     const isExpanded2 = expandedStep === step.id;
                     return (
                       <motion.div
@@ -258,7 +292,7 @@ const RoadmapView = () => {
                         {/* Timeline node */}
                         <div className="absolute left-4 top-0">
                           <motion.button
-                            onClick={() => toggleStep(selectedRoadmap.id, step.id)}
+                            onClick={() => handleToggleStep(step.id)}
                             whileHover={{ scale: 1.2 }}
                             whileTap={{ scale: 0.9 }}
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -344,12 +378,12 @@ const RoadmapView = () => {
                                       size="sm"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        toggleStep(selectedRoadmap.id, step.id);
+                                        handleToggleStep(step.id);
                                       }}
                                       className="gap-2"
                                     >
                                       {completed ? (
-                                        <>Mark as Incomplete</>  
+                                        <>Mark as Incomplete</>
                                       ) : (
                                         <><CheckCircle2 className="w-3.5 h-3.5" /> Mark Complete</>
                                       )}

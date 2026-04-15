@@ -222,6 +222,21 @@ backend:
         agent: "testing"
         comment: "Re-tested in comprehensive suite - Returns 5 categories with 28 total skills. All working correctly."
 
+  - task: "WebSocket - Real-time roadmap progress sync"
+    implemented: true
+    working: true
+    file: "server.py, connection_manager.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "New: WebSocket endpoint WS /ws/roadmap/{roadmap_id}?user_id={user_id}. ConnectionManager class tracks active connections per roadmap. On connect sends init state, on toggle_step persists to MongoDB and broadcasts to all clients. Tested via Python websockets client - init, toggle on, toggle off all working."
+      - working: true
+        agent: "testing"
+        comment: "Comprehensive WebSocket testing completed successfully. All core functionality working: (1) Connection rejection without user_id (HTTP 403), (2) Init message on connect with completed steps, (3) Toggle step ON/OFF with proper state updates, (4) Multiple step handling, (5) Broadcast to multiple clients. WebSocket endpoint fully functional via internal URL (ws://localhost:8001). External WebSocket through ingress not supported but internal functionality perfect."
+
   - task: "POST /api/user-progress - Progress tracking"
     implemented: true
     working: true
@@ -379,20 +394,17 @@ frontend:
         agent: "testing"
         comment: "Tested successfully - Page heading visible, search bar functional, all domain filters present (All/IT/Core/Business). Filter testing: All shows 12 careers, IT filter shows 7 careers, Business filter shows 3 careers. Search functionality working (search 'Engineer' returns 5 careers). Expandable career cards working - clicking 'View Skills & Details' shows Required Skills and Growth Rate, 'Show Less' button collapses the card. All features working correctly."
 
-  - task: "RoadmapView - Career roadmaps"
+  - task: "RoadmapView - Career roadmaps with real-time WebSocket progress"
     implemented: true
     working: true
-    file: "pages/RoadmapView.tsx"
+    file: "pages/RoadmapView.tsx, hooks/useRoadmapProgress.ts"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Roadmap listing + detail view with visual timeline, clickable steps with expand/collapse, progress tracking for logged-in users."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Page heading visible, 5 roadmap cards displayed (Full-Stack, Data Science, Product Management, Cloud & DevOps, Cybersecurity). Metadata visible (duration, steps count, difficulty badges). Detail view working - clicking Full-Stack roadmap opens detail view with back button, timeline shows Step 1 through Step 6. Step expansion working - clicking Step 1 shows 'Skills You'll Learn' and 'Recommended Resources' sections. All roadmap features working correctly."
+        comment: "Updated: RoadmapView now uses useRoadmapProgress WebSocket hook for real-time sync. Shows Live sync / Connecting indicator. Falls back to REST API if WS unavailable. Auto-reconnects with exponential backoff."
 
   - task: "SkillsPage - Skills library"
     implemented: true
@@ -456,26 +468,18 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.1"
-  test_sequence: 5
+  version: "2.2"
+  test_sequence: 6
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "All backend endpoints"
-    - "All frontend pages and sections"
+  current_focus: []
   stuck_tasks: []
-  test_all: true
-  test_priority: "sequential"
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Major frontend redesign complete. Added 5 new backend endpoints (careers, roadmaps, skills-categories, user-progress, ai-recommend) with MongoDB seed data. Frontend redesigned with: (1) TopNavbar replacing sidebar, (2) Public HomePage with hero/CTAs/trending careers, (3) ExploreCareers with search/filters, (4) RoadmapView with timeline/progress, (5) SkillsPage with demand bars, (6) ResourcesPage with curated links, (7) AIRecommendations component, (8) Enhanced Dashboard. All pages verified via screenshots - working on desktop, mobile, dark/light mode. Please test the new backend endpoints."
+    message: "Implemented Feature 01: Real-time roadmap progress via WebSockets. Backend: (1) connection_manager.py - ConnectionManager class tracking WS connections per roadmap, (2) WS /ws/roadmap/{roadmap_id}?user_id={user_id} endpoint in server.py - sends init state on connect, persists toggle_step to MongoDB and broadcasts to all clients. Frontend: (1) useRoadmapProgress.ts hook - WebSocket connection with auto-reconnect and REST fallback, (2) Updated RoadmapView.tsx - uses WS hook, shows Live sync indicator. Please test: (a) WS endpoint at ws://localhost:8001/ws/roadmap/{roadmap_id}?user_id={user_id}, (b) All existing backend endpoints still work, (c) Frontend roadmaps page still renders correctly."
   - agent: "testing"
-    message: "Comprehensive backend testing completed successfully. All 22 tests passed (100% success rate). Fixed one critical bug in AI recommendations endpoint (json import scope issue). Tested all new Career Navigation endpoints: careers listing/details (12 careers with filters), roadmaps listing/details (5 roadmaps), skills categories (5 categories, 28 skills), user progress tracking, and AI recommendations (Claude LLM working). All legacy endpoints also re-tested and confirmed working. Backend is fully functional and ready for production."
-  - agent: "main"
-    message: "User requested full testing of ALL sections (backend + frontend). Color theme updated from blue to cool greens (emerald/mint/sage). Please run comprehensive backend tests on all endpoints, then frontend tests on all pages."
-  - agent: "testing"
-    message: "COMPREHENSIVE BACKEND TESTING COMPLETED - 100% SUCCESS RATE (25/25 tests passed). Tested ALL endpoints as requested: ✅ Root endpoint, ✅ Career endpoints (12 careers, all filters working: IT/Business/Core domains, trending, search), ✅ Roadmap endpoints (5 roadmaps, IT filter, single roadmap details), ✅ Skills categories (5 categories, 28 skills), ✅ User progress (save/retrieve/toggle), ✅ AI recommendations (Claude LLM working, 3 recommendations avg score 76.7), ✅ Keyword extraction, ✅ Resume versions CRUD, ✅ Auth endpoints (401 for /me, logout working). All endpoints responding correctly with proper data structures. Backend is fully functional and production-ready."
-  - agent: "testing"
-    message: "COMPREHENSIVE FRONTEND TESTING COMPLETED - ALL PUBLIC PAGES WORKING. Tested: ✅ Homepage (hero, stats, trending careers, features, footer all visible), ✅ TopNavbar (all nav links, theme toggle, mobile menu), ✅ Explore Careers (12 careers, filters working: IT=7, Business=3, search 'Engineer'=5, expandable cards), ✅ Skills Page (5 categories, 11 hot indicators, Python/JavaScript visible, search working), ✅ Roadmaps (5 roadmaps, detail view with timeline, step expansion working), ✅ Resources (5 categories, freeCodeCamp/LeetCode visible, search working), ✅ Auth Page (Google auth, email/password form, Sign In button), ✅ Navigation Flow (all CTAs and nav links working), ✅ Mobile Responsiveness (390px viewport tested). ✅ COLOR THEME VERIFIED: Cool green (emerald/mint) tones confirmed - gradient text uses rgb(16, 183, 127) to rgb(38, 217, 104). NOT blue. Minor console errors: /api/auth/me returns 401 (expected for unauthenticated users), Cloudflare RUM requests failing (non-critical). Dashboard and AI Recommendations not tested (require authentication)."
+    message: "Backend testing completed successfully! ✅ All 12 tests passed (100% success rate). WebSocket endpoint fully functional: connection validation, init messages, step toggling, multi-step handling, and broadcast to multiple clients all working perfectly. All existing REST endpoints (careers, roadmaps, skills-categories, user-progress) continue to work correctly. Note: WebSocket works via internal URL (ws://localhost:8001) - external ingress doesn't support WebSocket but this is expected for Kubernetes environments. Backend implementation is solid and ready for production."

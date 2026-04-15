@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Cookie
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Cookie, WebSocket, WebSocketDisconnect
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import traceback
 import httpx
+from connection_manager import manager as ws_manager
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -337,6 +338,113 @@ async def get_user_progress(user_id: str):
     except Exception as e:
         logger.error(f"Failed to get progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── WebSocket: Real-time Roadmap Progress ──────────────────────────
+
+@app.websocket("/ws/roadmap/{roadmap_id}")
+async def websocket_roadmap_progress(websocket: WebSocket, roadmap_id: str):
+    """
+    WebSocket endpoint for real-time roadmap progress synchronization.
+    Connect: ws://host/ws/roadmap/{roadmap_id}?user_id={user_id}
+    
+    Client → Server messages:
+      { "action": "toggle_step", "step_id": "...", "completed": true }
+    
+    Server → Client broadcasts:
+      { "user_id": "...", "roadmap_id": "...", "completed_steps": [...], "updated_at": "ISO" }
+    """
+    # Extract user_id from query params
+    user_id = websocket.query_params.get("user_id")
+    if not user_id:
+        await websocket.close(code=4001, reason="user_id query parameter required")
+        return
+
+    await ws_manager.connect(websocket, roadmap_id, user_id)
+
+    try:
+        # On connect: send current progress state from MongoDB
+        progress_docs = await db.user_progress.find({
+            "user_id": user_id,
+            "roadmap_id": roadmap_id,
+            "completed": True,
+        }).to_list(500)
+        completed_steps = [doc["step_id"] for doc in progress_docs]
+
+        await ws_manager.send_personal(websocket, {
+            "type": "init",
+            "user_id": user_id,
+            "roadmap_id": roadmap_id,
+            "completed_steps": completed_steps,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+        # Listen for messages
+        while True:
+            data = await websocket.receive_json()
+            action = data.get("action")
+
+            if action == "toggle_step":
+                step_id = data.get("step_id")
+                completed = data.get("completed", True)
+
+                if not step_id:
+                    await ws_manager.send_personal(websocket, {
+                        "type": "error",
+                        "message": "step_id is required",
+                    })
+                    continue
+
+                # Persist to MongoDB
+                existing = await db.user_progress.find_one({
+                    "user_id": user_id,
+                    "roadmap_id": roadmap_id,
+                    "step_id": step_id,
+                })
+                if existing:
+                    await db.user_progress.update_one(
+                        {"_id": existing["_id"]},
+                        {"$set": {
+                            "completed": completed,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }}
+                    )
+                else:
+                    await db.user_progress.insert_one({
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "roadmap_id": roadmap_id,
+                        "step_id": step_id,
+                        "completed": completed,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    })
+
+                # Fetch updated completed_steps list
+                updated_docs = await db.user_progress.find({
+                    "user_id": user_id,
+                    "roadmap_id": roadmap_id,
+                    "completed": True,
+                }).to_list(500)
+                updated_steps = [doc["step_id"] for doc in updated_docs]
+                now = datetime.now(timezone.utc).isoformat()
+
+                # Broadcast to ALL clients watching this roadmap
+                await ws_manager.broadcast_to_roadmap(roadmap_id, {
+                    "type": "progress_update",
+                    "user_id": user_id,
+                    "roadmap_id": roadmap_id,
+                    "completed_steps": updated_steps,
+                    "step_id": step_id,
+                    "completed": completed,
+                    "updated_at": now,
+                })
+
+    except WebSocketDisconnect:
+        ws_manager.disconnect(roadmap_id, user_id)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        ws_manager.disconnect(roadmap_id, user_id)
 
 
 class AIRecommendRequest(BaseModel):

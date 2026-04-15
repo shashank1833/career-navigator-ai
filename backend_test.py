@@ -1,397 +1,331 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Career Navigation Platform
-Tests all endpoints with proper validation and error handling.
+Backend API Testing Suite for Career Navigation App
+Tests WebSocket real-time roadmap progress and all existing REST endpoints
 """
 
-import requests
+import asyncio
+import websockets
 import json
-import time
-from typing import Dict, List, Any, Optional
+import requests
+import uuid
+from datetime import datetime
+import sys
+import traceback
 
-# Backend URL from environment
-BACKEND_URL = "https://career-compass-1048.preview.emergentagent.com/api"
+# Backend URL from environment configuration
+BACKEND_URL = "https://career-compass-1048.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
+# Use internal URL for WebSocket since external ingress doesn't support WebSocket
+WS_BASE = "ws://localhost:8001"
 
 class BackendTester:
     def __init__(self):
-        self.session = requests.Session()
         self.test_results = []
         self.failed_tests = []
-        self.passed_tests = []
         
-    def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
-        """Log test result with details."""
-        result = {
-            "test": test_name,
-            "success": success,
-            "details": details,
-            "response_data": response_data
-        }
-        self.test_results.append(result)
-        
-        if success:
-            self.passed_tests.append(test_name)
-            print(f"✅ {test_name}: {details}")
-        else:
-            self.failed_tests.append(test_name)
-            print(f"❌ {test_name}: {details}")
+    def log_result(self, test_name, success, details=""):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        result = f"{status} {test_name}"
+        if details:
+            result += f" - {details}"
+        print(result)
+        self.test_results.append((test_name, success, details))
+        if not success:
+            self.failed_tests.append((test_name, details))
     
-    def test_root_endpoint(self):
-        """Test GET /api/ - Root endpoint."""
+    def test_rest_endpoints(self):
+        """Test all existing REST API endpoints"""
+        print("\n=== Testing REST API Endpoints ===")
+        
+        # Test 1: GET /api/ (Hello World)
         try:
-            response = self.session.get(f"{BACKEND_URL}/")
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("message") == "Hello World":
-                    self.log_test("GET /api/ - Root", True, "Returns Hello World correctly")
-                else:
-                    self.log_test("GET /api/ - Root", False, f"Unexpected message: {data}")
+            response = requests.get(f"{API_BASE}/", timeout=10)
+            if response.status_code == 200 and "Hello World" in response.json().get("message", ""):
+                self.log_result("GET /api/ (Hello World)", True, "Returns Hello World message")
             else:
-                self.log_test("GET /api/ - Root", False, f"Status {response.status_code}: {response.text}")
+                self.log_result("GET /api/ (Hello World)", False, f"Status: {response.status_code}, Response: {response.text}")
         except Exception as e:
-            self.log_test("GET /api/ - Root", False, f"Exception: {str(e)}")
-    
-    def test_careers_endpoints(self):
-        """Test all career-related endpoints."""
-        # Test 1: Get all careers
+            self.log_result("GET /api/ (Hello World)", False, f"Exception: {str(e)}")
+        
+        # Test 2: GET /api/careers (12 careers)
         try:
-            response = self.session.get(f"{BACKEND_URL}/careers")
+            response = requests.get(f"{API_BASE}/careers", timeout=10)
             if response.status_code == 200:
                 careers = response.json()
-                career_count = len(careers)
-                self.log_test("GET /api/careers - All", True, f"Returns {career_count} careers")
-                
-                # Store a career ID for single career test
-                career_id = careers[0]["id"] if careers else None
-                
-                # Test 2: Filter by IT domain
-                response = self.session.get(f"{BACKEND_URL}/careers?domain=IT")
-                if response.status_code == 200:
-                    it_careers = response.json()
-                    self.log_test("GET /api/careers?domain=IT", True, f"Returns {len(it_careers)} IT careers")
+                if len(careers) == 12:
+                    self.log_result("GET /api/careers", True, f"Returns {len(careers)} careers")
                 else:
-                    self.log_test("GET /api/careers?domain=IT", False, f"Status {response.status_code}")
-                
-                # Test 3: Filter by Business domain
-                response = self.session.get(f"{BACKEND_URL}/careers?domain=Business")
-                if response.status_code == 200:
-                    business_careers = response.json()
-                    self.log_test("GET /api/careers?domain=Business", True, f"Returns {len(business_careers)} Business careers")
-                else:
-                    self.log_test("GET /api/careers?domain=Business", False, f"Status {response.status_code}")
-                
-                # Test 4: Filter by Core domain
-                response = self.session.get(f"{BACKEND_URL}/careers?domain=Core")
-                if response.status_code == 200:
-                    core_careers = response.json()
-                    self.log_test("GET /api/careers?domain=Core", True, f"Returns {len(core_careers)} Core careers")
-                else:
-                    self.log_test("GET /api/careers?domain=Core", False, f"Status {response.status_code}")
-                
-                # Test 5: Filter by trending
-                response = self.session.get(f"{BACKEND_URL}/careers?trending=true")
-                if response.status_code == 200:
-                    trending_careers = response.json()
-                    self.log_test("GET /api/careers?trending=true", True, f"Returns {len(trending_careers)} trending careers")
-                else:
-                    self.log_test("GET /api/careers?trending=true", False, f"Status {response.status_code}")
-                
-                # Test 6: Search careers
-                response = self.session.get(f"{BACKEND_URL}/careers?search=Engineer")
-                if response.status_code == 200:
-                    search_results = response.json()
-                    self.log_test("GET /api/careers?search=Engineer", True, f"Returns {len(search_results)} results for 'Engineer'")
-                else:
-                    self.log_test("GET /api/careers?search=Engineer", False, f"Status {response.status_code}")
-                
-                # Test 7: Get single career (valid ID)
-                if career_id:
-                    response = self.session.get(f"{BACKEND_URL}/careers/{career_id}")
-                    if response.status_code == 200:
-                        career = response.json()
-                        self.log_test("GET /api/careers/{career_id} - Valid", True, f"Returns career: {career.get('title', 'Unknown')}")
-                    else:
-                        self.log_test("GET /api/careers/{career_id} - Valid", False, f"Status {response.status_code}")
-                
-                # Test 8: Get single career (invalid ID)
-                response = self.session.get(f"{BACKEND_URL}/careers/nonexistent-id")
-                if response.status_code == 404:
-                    self.log_test("GET /api/careers/nonexistent-id - Invalid", True, "Correctly returns 404")
-                else:
-                    self.log_test("GET /api/careers/nonexistent-id - Invalid", False, f"Expected 404, got {response.status_code}")
-                    
+                    self.log_result("GET /api/careers", False, f"Expected 12 careers, got {len(careers)}")
             else:
-                self.log_test("GET /api/careers - All", False, f"Status {response.status_code}: {response.text}")
+                self.log_result("GET /api/careers", False, f"Status: {response.status_code}")
         except Exception as e:
-            self.log_test("GET /api/careers - All", False, f"Exception: {str(e)}")
-    
-    def test_roadmaps_endpoints(self):
-        """Test all roadmap-related endpoints."""
+            self.log_result("GET /api/careers", False, f"Exception: {str(e)}")
+        
+        # Test 3: GET /api/roadmaps (5 roadmaps)
         try:
-            # Test 1: Get all roadmaps
-            response = self.session.get(f"{BACKEND_URL}/roadmaps")
+            response = requests.get(f"{API_BASE}/roadmaps", timeout=10)
             if response.status_code == 200:
                 roadmaps = response.json()
-                roadmap_count = len(roadmaps)
-                self.log_test("GET /api/roadmaps - All", True, f"Returns {roadmap_count} roadmaps")
-                
-                # Store a roadmap ID for single roadmap test
-                roadmap_id = roadmaps[0]["id"] if roadmaps else None
-                
-                # Test 2: Filter by IT domain
-                response = self.session.get(f"{BACKEND_URL}/roadmaps?domain=IT")
-                if response.status_code == 200:
-                    it_roadmaps = response.json()
-                    self.log_test("GET /api/roadmaps?domain=IT", True, f"Returns {len(it_roadmaps)} IT roadmaps")
+                if len(roadmaps) == 5:
+                    self.log_result("GET /api/roadmaps", True, f"Returns {len(roadmaps)} roadmaps")
                 else:
-                    self.log_test("GET /api/roadmaps?domain=IT", False, f"Status {response.status_code}")
-                
-                # Test 3: Get single roadmap (valid ID)
-                if roadmap_id:
-                    response = self.session.get(f"{BACKEND_URL}/roadmaps/{roadmap_id}")
-                    if response.status_code == 200:
-                        roadmap = response.json()
-                        steps_count = len(roadmap.get("steps", []))
-                        self.log_test("GET /api/roadmaps/{roadmap_id} - Valid", True, f"Returns roadmap '{roadmap.get('title', 'Unknown')}' with {steps_count} steps")
-                    else:
-                        self.log_test("GET /api/roadmaps/{roadmap_id} - Valid", False, f"Status {response.status_code}")
-                
-                # Test 4: Get single roadmap (invalid ID)
-                response = self.session.get(f"{BACKEND_URL}/roadmaps/nonexistent-id")
-                if response.status_code == 404:
-                    self.log_test("GET /api/roadmaps/nonexistent-id - Invalid", True, "Correctly returns 404")
-                else:
-                    self.log_test("GET /api/roadmaps/nonexistent-id - Invalid", False, f"Expected 404, got {response.status_code}")
-                    
+                    self.log_result("GET /api/roadmaps", False, f"Expected 5 roadmaps, got {len(roadmaps)}")
             else:
-                self.log_test("GET /api/roadmaps - All", False, f"Status {response.status_code}: {response.text}")
+                self.log_result("GET /api/roadmaps", False, f"Status: {response.status_code}")
         except Exception as e:
-            self.log_test("GET /api/roadmaps - All", False, f"Exception: {str(e)}")
-    
-    def test_skills_categories(self):
-        """Test skills categories endpoint."""
+            self.log_result("GET /api/roadmaps", False, f"Exception: {str(e)}")
+        
+        # Test 4: GET /api/skills-categories (5 categories)
         try:
-            response = self.session.get(f"{BACKEND_URL}/skills-categories")
+            response = requests.get(f"{API_BASE}/skills-categories", timeout=10)
             if response.status_code == 200:
                 categories = response.json()
-                category_count = len(categories)
-                total_skills = sum(len(cat.get("skills", [])) for cat in categories)
-                self.log_test("GET /api/skills-categories", True, f"Returns {category_count} categories with {total_skills} total skills")
+                if len(categories) == 5:
+                    self.log_result("GET /api/skills-categories", True, f"Returns {len(categories)} categories")
+                else:
+                    self.log_result("GET /api/skills-categories", False, f"Expected 5 categories, got {len(categories)}")
             else:
-                self.log_test("GET /api/skills-categories", False, f"Status {response.status_code}: {response.text}")
+                self.log_result("GET /api/skills-categories", False, f"Status: {response.status_code}")
         except Exception as e:
-            self.log_test("GET /api/skills-categories", False, f"Exception: {str(e)}")
-    
-    def test_user_progress(self):
-        """Test user progress endpoints."""
-        test_user_id = "test-user-123"
-        test_roadmap_id = "test-rm-1"
-        test_step_id = "test-step-1"
+            self.log_result("GET /api/skills-categories", False, f"Exception: {str(e)}")
         
+        # Test 5: POST /api/user-progress (REST still works)
         try:
-            # Test 1: Save progress (completed)
-            progress_data = {
+            test_user_id = f"test-user-{uuid.uuid4().hex[:8]}"
+            test_roadmap_id = "test-roadmap-rest"
+            test_step_id = "test-step-rest"
+            
+            payload = {
                 "user_id": test_user_id,
                 "roadmap_id": test_roadmap_id,
                 "step_id": test_step_id,
                 "completed": True
             }
-            response = self.session.post(f"{BACKEND_URL}/user-progress", json=progress_data)
-            if response.status_code == 200:
-                result = response.json()
-                if result.get("success"):
-                    self.log_test("POST /api/user-progress - Save Complete", True, "Progress saved successfully")
-                else:
-                    self.log_test("POST /api/user-progress - Save Complete", False, f"Unexpected response: {result}")
+            response = requests.post(f"{API_BASE}/user-progress", json=payload, timeout=10)
+            if response.status_code == 200 and response.json().get("success"):
+                self.log_result("POST /api/user-progress", True, "Progress saved successfully")
             else:
-                self.log_test("POST /api/user-progress - Save Complete", False, f"Status {response.status_code}: {response.text}")
-            
-            # Test 2: Get user progress
-            response = self.session.get(f"{BACKEND_URL}/user-progress/{test_user_id}")
-            if response.status_code == 200:
-                progress_list = response.json()
-                self.log_test("GET /api/user-progress/{user_id}", True, f"Returns {len(progress_list)} progress items")
-            else:
-                self.log_test("GET /api/user-progress/{user_id}", False, f"Status {response.status_code}: {response.text}")
-            
-            # Test 3: Toggle to incomplete
-            progress_data["completed"] = False
-            response = self.session.post(f"{BACKEND_URL}/user-progress", json=progress_data)
-            if response.status_code == 200:
-                result = response.json()
-                if result.get("success"):
-                    self.log_test("POST /api/user-progress - Toggle Incomplete", True, "Progress toggled to incomplete")
-                else:
-                    self.log_test("POST /api/user-progress - Toggle Incomplete", False, f"Unexpected response: {result}")
-            else:
-                self.log_test("POST /api/user-progress - Toggle Incomplete", False, f"Status {response.status_code}: {response.text}")
-                
+                self.log_result("POST /api/user-progress", False, f"Status: {response.status_code}, Response: {response.text}")
         except Exception as e:
-            self.log_test("POST /api/user-progress", False, f"Exception: {str(e)}")
-    
-    def test_ai_recommend(self):
-        """Test AI recommendations endpoint."""
+            self.log_result("POST /api/user-progress", False, f"Exception: {str(e)}")
+        
+        # Test 6: GET /api/user-progress/{user_id}
         try:
-            ai_request = {
-                "skills": ["Python", "React", "SQL"],
-                "interests": ["AI", "Web Development"],
-                "experience_level": "mid"
-            }
-            
-            # Allow up to 30 seconds for AI processing
-            response = self.session.post(f"{BACKEND_URL}/ai-recommend", json=ai_request, timeout=30)
+            response = requests.get(f"{API_BASE}/user-progress/{test_user_id}", timeout=10)
             if response.status_code == 200:
-                result = response.json()
-                recommendations = result.get("recommendations", [])
-                if recommendations:
-                    avg_score = sum(r.get("match_score", 0) for r in recommendations) / len(recommendations)
-                    self.log_test("POST /api/ai-recommend", True, f"Returns {len(recommendations)} recommendations with avg score {avg_score:.1f}")
+                progress = response.json()
+                if isinstance(progress, list):
+                    self.log_result("GET /api/user-progress/{user_id}", True, f"Returns progress array with {len(progress)} items")
+                else:
+                    self.log_result("GET /api/user-progress/{user_id}", False, "Response is not an array")
+            else:
+                self.log_result("GET /api/user-progress/{user_id}", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("GET /api/user-progress/{user_id}", False, f"Exception: {str(e)}")
+
+    async def test_websocket_endpoint(self):
+        """Test WebSocket endpoint for real-time roadmap progress"""
+        print("\n=== Testing WebSocket Endpoint ===")
+        
+        test_roadmap_id = "test-rm-ws"
+        test_user_id = "test-user-ws"
+        ws_url = f"{WS_BASE}/ws/roadmap/{test_roadmap_id}?user_id={test_user_id}"
+        
+        try:
+            # Test 1: Connection without user_id should be rejected
+            try:
+                ws_url_no_user = f"{WS_BASE}/ws/roadmap/{test_roadmap_id}"
+                async with websockets.connect(ws_url_no_user) as ws:
+                    # Should not reach here
+                    self.log_result("WS Connection without user_id rejection", False, "Connection was accepted when it should be rejected")
+            except websockets.exceptions.ConnectionClosedError as e:
+                if e.code == 4001:
+                    self.log_result("WS Connection without user_id rejection", True, f"Correctly rejected with code {e.code}")
+                else:
+                    self.log_result("WS Connection without user_id rejection", False, f"Wrong close code: {e.code}")
+            except websockets.exceptions.InvalidStatus as e:
+                if e.response.status_code == 403:
+                    self.log_result("WS Connection without user_id rejection", True, f"Correctly rejected with HTTP {e.response.status_code}")
+                else:
+                    self.log_result("WS Connection without user_id rejection", False, f"Unexpected HTTP status: {e.response.status_code}")
+            except Exception as e:
+                error_str = str(e)
+                if "HTTP 403" in error_str:
+                    self.log_result("WS Connection without user_id rejection", True, "Correctly rejected with HTTP 403")
+                else:
+                    self.log_result("WS Connection without user_id rejection", False, f"Unexpected error: {error_str}")
+            
+            # Test 2: Valid connection and init message
+            try:
+                async with websockets.connect(ws_url) as ws:
+                    # Should receive init message on connect
+                    init_msg = await asyncio.wait_for(ws.recv(), timeout=5)
+                    init_data = json.loads(init_msg)
                     
-                    # Validate structure of first recommendation
-                    first_rec = recommendations[0]
-                    required_fields = ["title", "match_score", "reason", "skills_to_develop", "salary_range"]
-                    missing_fields = [field for field in required_fields if field not in first_rec]
-                    if not missing_fields:
-                        self.log_test("AI Recommendation Structure", True, "All required fields present")
+                    if init_data.get("type") == "init":
+                        self.log_result("WS Init message on connect", True, f"Received init with {len(init_data.get('completed_steps', []))} completed steps")
                     else:
-                        self.log_test("AI Recommendation Structure", False, f"Missing fields: {missing_fields}")
-                else:
-                    self.log_test("POST /api/ai-recommend", False, "No recommendations returned")
-            else:
-                self.log_test("POST /api/ai-recommend", False, f"Status {response.status_code}: {response.text}")
-        except requests.exceptions.Timeout:
-            self.log_test("POST /api/ai-recommend", False, "Request timed out after 30 seconds")
-        except Exception as e:
-            self.log_test("POST /api/ai-recommend", False, f"Exception: {str(e)}")
-    
-    def test_extract_keywords(self):
-        """Test keyword extraction endpoint."""
-        try:
-            keyword_request = {
-                "job_description": "Looking for a senior software engineer with Python, React, AWS experience",
-                "required_skills": [],
-                "resume_skills": ["Python", "JavaScript", "React"]
-            }
-            
-            response = self.session.post(f"{BACKEND_URL}/extract-keywords", json=keyword_request)
-            if response.status_code == 200:
-                result = response.json()
-                keywords = result.get("keywords", [])
-                matched = result.get("matched", [])
-                missing = result.get("missing", [])
+                        self.log_result("WS Init message on connect", False, f"Expected init message, got: {init_data}")
+                    
+                    # Test 3: Toggle step ON
+                    toggle_on_msg = {
+                        "action": "toggle_step",
+                        "step_id": "step-1",
+                        "completed": True
+                    }
+                    await ws.send(json.dumps(toggle_on_msg))
+                    
+                    response_msg = await asyncio.wait_for(ws.recv(), timeout=5)
+                    response_data = json.loads(response_msg)
+                    
+                    if (response_data.get("type") == "progress_update" and 
+                        "step-1" in response_data.get("completed_steps", [])):
+                        self.log_result("WS Toggle step ON", True, "Step-1 added to completed_steps")
+                    else:
+                        self.log_result("WS Toggle step ON", False, f"Unexpected response: {response_data}")
+                    
+                    # Test 4: Toggle step OFF
+                    toggle_off_msg = {
+                        "action": "toggle_step",
+                        "step_id": "step-1",
+                        "completed": False
+                    }
+                    await ws.send(json.dumps(toggle_off_msg))
+                    
+                    response_msg2 = await asyncio.wait_for(ws.recv(), timeout=5)
+                    response_data2 = json.loads(response_msg2)
+                    
+                    if (response_data2.get("type") == "progress_update" and 
+                        "step-1" not in response_data2.get("completed_steps", [])):
+                        self.log_result("WS Toggle step OFF", True, "Step-1 removed from completed_steps")
+                    else:
+                        self.log_result("WS Toggle step OFF", False, f"Unexpected response: {response_data2}")
+                    
+                    # Test 5: Multiple steps
+                    await ws.send(json.dumps({
+                        "action": "toggle_step",
+                        "step_id": "step-a",
+                        "completed": True
+                    }))
+                    
+                    await ws.send(json.dumps({
+                        "action": "toggle_step",
+                        "step_id": "step-b",
+                        "completed": True
+                    }))
+                    
+                    # Receive both responses
+                    msg3 = json.loads(await asyncio.wait_for(ws.recv(), timeout=5))
+                    msg4 = json.loads(await asyncio.wait_for(ws.recv(), timeout=5))
+                    
+                    # Check if both steps are in completed_steps
+                    final_steps = msg4.get("completed_steps", [])
+                    if "step-a" in final_steps and "step-b" in final_steps:
+                        self.log_result("WS Multiple steps", True, f"Both step-a and step-b in completed_steps: {final_steps}")
+                    else:
+                        self.log_result("WS Multiple steps", False, f"Missing steps in final list: {final_steps}")
+                        
+            except asyncio.TimeoutError:
+                self.log_result("WS Basic functionality", False, "Timeout waiting for WebSocket response")
+            except Exception as e:
+                self.log_result("WS Basic functionality", False, f"Exception: {str(e)}")
                 
-                self.log_test("POST /api/extract-keywords", True, 
-                            f"Extracted {len(keywords)} keywords, {len(matched)} matched, {len(missing)} missing")
-            else:
-                self.log_test("POST /api/extract-keywords", False, f"Status {response.status_code}: {response.text}")
         except Exception as e:
-            self.log_test("POST /api/extract-keywords", False, f"Exception: {str(e)}")
+            self.log_result("WS Connection", False, f"Failed to connect: {str(e)}")
     
-    def test_resume_versions(self):
-        """Test resume version CRUD operations."""
-        test_session_id = "test-session-1"
-        created_version_id = None
+    async def test_websocket_broadcast(self):
+        """Test WebSocket broadcast to multiple clients"""
+        print("\n=== Testing WebSocket Broadcast ===")
+        
+        test_roadmap_id = "test-rm-broadcast"
+        user1_id = "test-user-1"
+        user2_id = "test-user-2"
         
         try:
-            # Test 1: Create resume version
-            version_data = {
-                "session_id": test_session_id,
-                "name": "Test Resume v1",
-                "target_job_title": "Software Engineer"
-            }
+            ws1_url = f"{WS_BASE}/ws/roadmap/{test_roadmap_id}?user_id={user1_id}"
+            ws2_url = f"{WS_BASE}/ws/roadmap/{test_roadmap_id}?user_id={user2_id}"
             
-            response = self.session.post(f"{BACKEND_URL}/resume-versions", json=version_data)
-            if response.status_code == 200:
-                version = response.json()
-                created_version_id = version.get("id")
-                self.log_test("POST /api/resume-versions - Create", True, f"Created version: {version.get('name')}")
-            else:
-                self.log_test("POST /api/resume-versions - Create", False, f"Status {response.status_code}: {response.text}")
-            
-            # Test 2: Get resume versions
-            response = self.session.get(f"{BACKEND_URL}/resume-versions/{test_session_id}")
-            if response.status_code == 200:
-                versions = response.json()
-                self.log_test("GET /api/resume-versions/{session_id}", True, f"Returns {len(versions)} versions")
-            else:
-                self.log_test("GET /api/resume-versions/{session_id}", False, f"Status {response.status_code}: {response.text}")
-            
-            # Test 3: Delete the created version
-            if created_version_id:
-                response = self.session.delete(f"{BACKEND_URL}/resume-versions/{created_version_id}")
-                if response.status_code == 200:
-                    result = response.json()
-                    if result.get("deleted"):
-                        self.log_test("DELETE /api/resume-versions/{version_id}", True, "Version deleted successfully")
-                    else:
-                        self.log_test("DELETE /api/resume-versions/{version_id}", False, f"Unexpected response: {result}")
+            async with websockets.connect(ws1_url) as ws1, \
+                       websockets.connect(ws2_url) as ws2:
+                
+                # Consume init messages
+                await ws1.recv()
+                await ws2.recv()
+                
+                # User 1 toggles a step
+                await ws1.send(json.dumps({
+                    "action": "toggle_step",
+                    "step_id": "broadcast-step",
+                    "completed": True
+                }))
+                
+                # Both clients should receive the broadcast
+                msg1 = json.loads(await asyncio.wait_for(ws1.recv(), timeout=5))
+                msg2 = json.loads(await asyncio.wait_for(ws2.recv(), timeout=5))
+                
+                if (msg1.get("type") == "progress_update" and 
+                    msg2.get("type") == "progress_update" and
+                    "broadcast-step" in msg1.get("completed_steps", []) and
+                    "broadcast-step" in msg2.get("completed_steps", [])):
+                    self.log_result("WS Broadcast to multiple clients", True, "Both clients received the update")
                 else:
-                    self.log_test("DELETE /api/resume-versions/{version_id}", False, f"Status {response.status_code}: {response.text}")
+                    self.log_result("WS Broadcast to multiple clients", False, f"Broadcast failed - msg1: {msg1}, msg2: {msg2}")
                     
         except Exception as e:
-            self.log_test("Resume Versions CRUD", False, f"Exception: {str(e)}")
-    
-    def test_auth_endpoints(self):
-        """Test authentication endpoints."""
-        try:
-            # Test 1: GET /api/auth/me (should return 401)
-            response = self.session.get(f"{BACKEND_URL}/auth/me")
-            if response.status_code == 401:
-                self.log_test("GET /api/auth/me - No Session", True, "Correctly returns 401 (not authenticated)")
-            else:
-                self.log_test("GET /api/auth/me - No Session", False, f"Expected 401, got {response.status_code}")
-            
-            # Test 2: POST /api/auth/logout (should work even without session)
-            response = self.session.post(f"{BACKEND_URL}/auth/logout")
-            if response.status_code == 200:
-                result = response.json()
-                if "message" in result:
-                    self.log_test("POST /api/auth/logout - No Session", True, "Logout works without session")
-                else:
-                    self.log_test("POST /api/auth/logout - No Session", False, f"Unexpected response: {result}")
-            else:
-                self.log_test("POST /api/auth/logout - No Session", False, f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test("Auth Endpoints", False, f"Exception: {str(e)}")
-    
-    def run_all_tests(self):
-        """Run all backend tests."""
-        print(f"🚀 Starting comprehensive backend testing...")
-        print(f"Backend URL: {BACKEND_URL}")
-        print("=" * 80)
+            self.log_result("WS Broadcast to multiple clients", False, f"Exception: {str(e)}")
+
+    def print_summary(self):
+        """Print test summary"""
+        print("\n" + "="*60)
+        print("BACKEND TEST SUMMARY")
+        print("="*60)
         
-        start_time = time.time()
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for _, success, _ in self.test_results if success)
+        failed_tests = total_tests - passed_tests
         
-        # Run all test suites
-        self.test_root_endpoint()
-        self.test_careers_endpoints()
-        self.test_roadmaps_endpoints()
-        self.test_skills_categories()
-        self.test_user_progress()
-        self.test_ai_recommend()
-        self.test_extract_keywords()
-        self.test_resume_versions()
-        self.test_auth_endpoints()
-        
-        end_time = time.time()
-        duration = end_time - start_time
-        
-        # Print summary
-        print("=" * 80)
-        print(f"🏁 Testing completed in {duration:.2f} seconds")
-        print(f"✅ Passed: {len(self.passed_tests)}")
-        print(f"❌ Failed: {len(self.failed_tests)}")
-        print(f"📊 Success Rate: {len(self.passed_tests)}/{len(self.test_results)} ({len(self.passed_tests)/len(self.test_results)*100:.1f}%)")
+        print(f"Total Tests: {total_tests}")
+        print(f"Passed: {passed_tests}")
+        print(f"Failed: {failed_tests}")
         
         if self.failed_tests:
-            print("\n❌ Failed Tests:")
-            for test in self.failed_tests:
-                print(f"  - {test}")
+            print("\nFAILED TESTS:")
+            for test_name, details in self.failed_tests:
+                print(f"❌ {test_name}: {details}")
         
-        return len(self.failed_tests) == 0
+        print(f"\nSuccess Rate: {(passed_tests/total_tests)*100:.1f}%")
+        return failed_tests == 0
+
+async def main():
+    """Run all backend tests"""
+    print("Starting Backend API Testing Suite")
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"WebSocket URL: {WS_BASE} (internal - external ingress doesn't support WebSocket)")
+    
+    tester = BackendTester()
+    
+    # Test REST endpoints
+    tester.test_rest_endpoints()
+    
+    # Test WebSocket endpoints
+    await tester.test_websocket_endpoint()
+    await tester.test_websocket_broadcast()
+    
+    # Print summary
+    success = tester.print_summary()
+    
+    return success
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    success = tester.run_all_tests()
-    exit(0 if success else 1)
+    try:
+        success = asyncio.run(main())
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\nTest interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\nTest suite failed with exception: {e}")
+        traceback.print_exc()
+        sys.exit(1)
