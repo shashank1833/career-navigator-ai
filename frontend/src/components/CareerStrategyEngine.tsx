@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import DashboardCard from "./DashboardCard";
-import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
 import { toast } from "sonner";
+
+const BACKEND_URL_STRATEGY = import.meta.env.REACT_APP_BACKEND_URL || "";
 
 interface MonthlyStep {
   month: number;
@@ -40,17 +40,40 @@ const CareerStrategyEngine = ({ targetRole, currentSkills, missingSkills, experi
   const [strategy, setStrategy] = useState<CareerStrategy | null>(null);
   const [loading, setLoading] = useState(false);
   const [completedMonths, setCompletedMonths] = useState<Set<number>>(new Set());
-  const sessionId = getSessionId();
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-career-strategy", {
-        body: { targetRole, currentSkills, missingSkills, experience, education },
+      // Use our backend simulate-trajectory endpoint as a proxy
+      const res = await fetch(`${BACKEND_URL_STRATEGY}/api/simulate-trajectory`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "anon",
+          current_role: experience || "Current Role",
+          target_role: targetRole,
+          timeline_months: 12,
+        }),
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setStrategy(data);
+      if (!res.ok) throw new Error("Failed to generate strategy");
+      const data = await res.json();
+      // Convert to CareerStrategy format
+      const converted: CareerStrategy = {
+        overview: `Transition to ${targetRole} in 12 months`,
+        targetRole,
+        timelineMonths: 12,
+        monthlyPlan: (data.milestones || []).map((m: any) => ({
+          month: m.milestone,
+          title: m.title,
+          objective: m.month_range,
+          tasks: m.actions || [],
+          resources: [],
+          milestone: m.job_tier,
+        })),
+        successMetrics: data.target_skills?.slice(0, 3) || [],
+      };
+      setStrategy(converted);
       toast.success("Career strategy generated!");
     } catch (err: any) {
       console.error(err);
@@ -65,23 +88,6 @@ const CareerStrategyEngine = ({ targetRole, currentSkills, missingSkills, experi
     if (newSet.has(month)) newSet.delete(month);
     else newSet.add(month);
     setCompletedMonths(newSet);
-
-    // Save to roadmap_progress
-    const stepIndex = month - 1;
-    if (newSet.has(month)) {
-      supabase.from("roadmap_progress").upsert({
-        session_id: sessionId,
-        target_role: `strategy-${targetRole}`,
-        step_index: stepIndex,
-        completed: true,
-        completed_at: new Date().toISOString(),
-      }, { onConflict: "session_id,target_role,step_index" });
-    } else {
-      supabase.from("roadmap_progress").delete()
-        .eq("session_id", sessionId)
-        .eq("target_role", `strategy-${targetRole}`)
-        .eq("step_index", stepIndex);
-    }
   };
 
   const completionPct = strategy

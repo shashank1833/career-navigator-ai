@@ -26,3 +26,4 @@ typer>=0.9.0
 emergentintegrations==0.1.0
 httpx
 websockets
+apscheduler>=3.10.0

@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DashboardCard from "./DashboardCard";
 import type { ResumeVersion } from "@/hooks/useResumeVersions";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Json } from "@/integrations/supabase/types";
+
+const BACKEND_URL_EDITOR = import.meta.env.REACT_APP_BACKEND_URL || "";
+const API_EDITOR = `${BACKEND_URL_EDITOR}/api`;
 
 interface ResumeEditorProps {
   version: ResumeVersion;
@@ -58,17 +59,18 @@ const ResumeEditor = ({ version, open, onClose, onSaved }: ResumeEditorProps) =>
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("resume_versions")
-        .update({
+      const res = await fetch(`${API_EDITOR}/resume-versions/${version.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name,
           optimized_summary: summary || null,
           optimized_skills: skills,
-          optimized_bullet_points: JSON.parse(JSON.stringify(bulletPoints)) as Json,
-        })
-        .eq("id", version.id);
-
-      if (error) throw error;
+          optimized_bullet_points: bulletPoints,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
 
       const updated: ResumeVersion = {
         ...version,

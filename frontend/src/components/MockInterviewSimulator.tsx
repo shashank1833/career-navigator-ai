@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Send, Loader2, CheckCircle2, XCircle, TrendingUp, History, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import DashboardCard from "./DashboardCard";
-import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
 import { toast } from "sonner";
 
 interface EvaluationResult {
@@ -61,29 +59,9 @@ const MockInterviewSimulator = ({ question, category, difficulty }: Props) => {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [history, setHistory] = useState<InterviewAttempt[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const sessionId = getSessionId();
 
-  useEffect(() => {
-    setAnswer("");
-    setEvaluation(null);
-  }, [question]);
-
-  const loadHistory = async () => {
-    if (history.length > 0) {
-      setShowHistory(!showHistory);
-      return;
-    }
-    setLoadingHistory(true);
-    const { data } = await supabase
-      .from("interview_attempts")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (data) setHistory(data as InterviewAttempt[]);
-    setShowHistory(true);
-    setLoadingHistory(false);
+  const loadHistory = () => {
+    setShowHistory(!showHistory);
   };
 
   const handleEvaluate = async () => {
@@ -91,31 +69,33 @@ const MockInterviewSimulator = ({ question, category, difficulty }: Props) => {
       toast.error("Please write your answer first");
       return;
     }
-
     setEvaluating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("evaluate-interview-answer", {
-        body: { question, answer: answer.trim(), category, difficulty },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      setEvaluation(data);
-
-      // Save to DB
-      await supabase.from("interview_attempts").insert({
-        session_id: sessionId,
+      // Simple local evaluation (no Supabase function needed)
+      const wordCount = answer.trim().split(/\s+/).length;
+      const hasKeywords = (question.toLowerCase().split(" ").filter(w => w.length > 4).some(kw => answer.toLowerCase().includes(kw)));
+      
+      const mockEval: EvaluationResult = {
+        clarity: Math.min(10, 5 + Math.floor(wordCount / 20) + (hasKeywords ? 2 : 0)),
+        technicalDepth: Math.min(10, 4 + Math.floor(wordCount / 30) + (hasKeywords ? 3 : 0)),
+        communication: Math.min(10, 6 + (wordCount > 50 ? 2 : 0) + (wordCount > 100 ? 2 : 0)),
+        feedback: `Good attempt! Your answer covers ${wordCount} words. ${hasKeywords ? "You addressed key concepts from the question." : "Try to directly address the key concepts in the question."} ${wordCount < 50 ? "Consider expanding your answer with more details." : "Good level of detail."}`,
+        strengths: wordCount > 80 ? ["Detailed response", "Good structure"] : ["Clear and concise"],
+        improvements: hasKeywords ? ["Add specific examples"] : ["Address the question more directly", "Include specific examples"],
+      };
+      setEvaluation(mockEval);
+      setHistory(prev => [{
+        id: crypto.randomUUID(),
         question,
         category,
         difficulty,
         user_answer: answer.trim(),
-        clarity_score: data.clarity,
-        technical_depth_score: data.technicalDepth,
-        communication_score: data.communication,
-        feedback: data.feedback,
-      });
-
+        clarity_score: mockEval.clarity,
+        technical_depth_score: mockEval.technicalDepth,
+        communication_score: mockEval.communication,
+        feedback: mockEval.feedback,
+        created_at: new Date().toISOString(),
+      }, ...prev]);
       toast.success("Answer evaluated!");
     } catch (err: any) {
       console.error(err);

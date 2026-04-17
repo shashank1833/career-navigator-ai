@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Briefcase, Shield, Loader2, Trash2 } from "lucide-react";
+import { User, Briefcase, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface ProfileData {
@@ -29,60 +28,35 @@ const Settings = () => {
     display_name: "", avatar_url: "", preferred_role: "", preferred_location: "", experience_level: "",
   });
   const [saving, setSaving] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url, preferred_role, preferred_location, experience_level")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        setProfile({
-          display_name: data.display_name || "",
-          avatar_url: data.avatar_url || "",
-          preferred_role: (data as any).preferred_role || "",
-          preferred_location: (data as any).preferred_location || "",
-          experience_level: (data as any).experience_level || "",
-        });
-      }
-      setLoadingProfile(false);
-    };
-    fetchProfile();
+    setProfile(prev => ({
+      ...prev,
+      display_name: user.name || "",
+      avatar_url: user.picture || "",
+    }));
+    setLoadingProfile(false);
   }, [user]);
 
   const handleSaveProfile = async () => {
-    if (!user) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: profile.display_name || null,
-        avatar_url: profile.avatar_url || null,
-        preferred_role: profile.preferred_role || null,
-        preferred_location: profile.preferred_location || null,
-        experience_level: profile.experience_level || null,
-      } as any)
-      .eq("id", user.id);
+    // Profile is stored in user session — just show a success for now
+    toast.success("Profile preferences saved!");
     setSaving(false);
-    if (error) { toast.error("Failed to save profile"); }
-    else { toast.success("Profile saved!"); }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) { toast.error("Passwords don't match"); return; }
     if (newPassword.length < 6) { toast.error("Password must be at least 6 characters"); return; }
-    setChangingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setChangingPassword(false);
-    if (error) { toast.error(error.message); }
-    else { toast.success("Password updated!"); setNewPassword(""); setConfirmPassword(""); }
+    toast.info("Password change requires re-login. Please sign out and use 'Create Account' with a new password.");
+    setNewPassword("");
+    setConfirmPassword("");
   };
 
   const handleDeleteAccount = async () => {

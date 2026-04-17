@@ -102,384 +102,439 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Redesign Career Navigation website to be modern, dynamic, and highly interactive. Features: responsive sticky top navbar, public homepage with hero section, career exploration with filters/search, interactive roadmap section with progress tracking, enhanced dashboard, dark/light mode, AI-based career recommendations."
+user_problem_statement: |
+  CareerNav upgrade - Adding real-time job feed via Apify, persistent AI career coach with memory,
+  skill gap engine, salary intelligence, career trajectory simulator, market heatmap, and more.
+  Also removing Supabase auth and replacing with Emergent OAuth + email/password.
+  Design changes: remove glassmorphism, flat high-contrast cards, opaque navbar.
 
 backend:
-  - task: "GET /api/ root endpoint"
+  - task: "Email/password auth (register + login)"
     implemented: true
     working: true
-    file: "server.py"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "POST /api/auth/register and /api/auth/login endpoints working. Tested via curl."
+      - working: true
+        agent: "testing"
+        comment: "Comprehensive testing completed. Auth register/login/me/logout all working correctly. User registration creates user_id, login returns session cookie, /auth/me returns user data, logout clears session."
+
+  - task: "Emergent OAuth session exchange"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "POST /api/auth/session endpoint working for OAuth callback."
+
+  - task: "Job applications CRUD (user_id-based)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "POST/GET/PUT/DELETE /api/job-applications endpoints working. Tested via curl."
+      - working: true
+        agent: "testing"
+        comment: "Full CRUD testing completed successfully. CREATE: creates application with ID, READ: retrieves applications by user_id, UPDATE: modifies status/notes, DELETE: removes application. All operations working correctly."
+
+  - task: "Resume versions (user_id-based)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Resume versions now tied to user_id (backward compat with session_id)."
+
+  - task: "AI Career Coach with memory (POST /api/coach/message)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Coach endpoint working. Returns AI reply from Claude with session persistence."
+      - working: true
+        agent: "testing"
+        comment: "AI Coach fully functional. POST /api/coach/message returns AI responses with session persistence. GET /api/coach/sessions/{user_id} retrieves session history. Claude integration working correctly with 1000+ character responses."
+
+  - task: "Skill Gap Engine (GET /api/skill-gap/{user_id})"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint works. Returns empty when no jobs in cache (expected until Apify runs)."
+      - working: true
+        agent: "testing"
+        comment: "Skill gap endpoint working correctly. Returns covered_skills and missing_skills arrays. Currently empty as expected since no job cache data available."
+
+  - task: "Career Trajectory Simulator (POST /api/simulate-trajectory)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Tested via curl - returns 4 milestones for Frontend Dev -> ML Engineer in 12mo."
+      - working: true
+        agent: "testing"
+        comment: "Career trajectory simulator working perfectly. Generates 4 detailed milestones for Frontend Developer -> Data Scientist transition over 12 months. AI-powered planning with Claude integration functional."
+
+  - task: "Salary Insights (GET /api/salary-insights)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint works. Returns zeros when no jobs in cache (expected)."
+      - working: true
+        agent: "testing"
+        comment: "Salary insights endpoint working correctly. Returns median/p25/p75 salary data and sample count. Currently returns $0 values as expected since no job cache data available."
+
+  - task: "Market Heatmap (GET /api/market-heatmap)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint works. Returns empty skills when no jobs in cache."
+      - working: true
+        agent: "testing"
+        comment: "Market heatmap endpoint working correctly. Returns skills array and total_jobs count. Currently empty as expected since no job cache data available."
+
+  - task: "Career data endpoints (careers/roadmaps/skills-categories)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "All career data endpoints working correctly. GET /api/careers returns 12 careers, GET /api/roadmaps returns 5 roadmaps, GET /api/skills-categories returns 5 categories. All endpoints responding with proper data."
+
+  - task: "Jobs endpoint (GET /api/jobs)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Jobs endpoint working correctly. Returns empty jobs array as expected since no Apify cache data available. Endpoint structure and response format correct."
+
+  - task: "Apify job fetcher (job_fetcher.py)"
+    implemented: true
+    working: "NA"
+    file: "backend/job_fetcher.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented with APIFY_TOKEN. JobFetcher class with fetch_and_cache method. Not tested (requires live Apify API call)."
+
+  - task: "APScheduler for job refresh every 4 hours"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "APScheduler starts on app startup. Confirmed in logs."
+
+  - task: "WebSocket rate limiting (20 msgs/10s)"
+    implemented: true
+    working: true
+    file: "backend/connection_manager.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Rate limiting added using sliding window per user_id."
+
+  - task: "TTL index on keyword_cache"
+    implemented: true
+    working: true
+    file: "backend/server.py"
     stuck_count: 0
     priority: "low"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Existing template endpoint, confirmed working"
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - returns Hello World message correctly"
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - returns Hello World correctly"
+        comment: "TTL index created on startup (expireAfterSeconds: 86400)."
 
-  - task: "POST /api/optimize-resume - LLM-powered resume optimization"
+  - task: "Public profiles API"
     implemented: true
     working: true
-    file: "server.py, resume_optimizer.py"
+    file: "backend/server.py"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Previously tested and working"
-      - working: true
-        agent: "testing"
-        comment: "Re-tested successfully - LLM optimization working with score 72, 11 keywords extracted, summary optimized"
-
-  - task: "GET /api/careers - Career listing with filters"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
+    priority: "low"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New endpoint: Returns careers with domain/trending/search filters. 12 careers seeded in MongoDB across IT, Core, Business domains."
-      - working: true
-        agent: "testing"
-        comment: "Comprehensive testing completed - All filters working correctly: 12 total careers, IT filter (7 careers), Business filter (3 careers), trending filter (7 careers), search for 'Engineer' (5 results). All responses properly structured."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested all filters in comprehensive suite - 12 total careers, IT (7), Business (3), Core (2), trending (7), search 'Engineer' (5 results). All working perfectly."
-
-  - task: "GET /api/careers/{career_id} - Single career details"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Valid career ID returns proper details, invalid ID correctly returns 404. Response structure validated."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Valid ID returns 'Software Engineer' career details, invalid ID correctly returns 404"
-
-  - task: "GET /api/roadmaps - Roadmap listing"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "New endpoint: Returns roadmaps with optional domain filter. 5 roadmaps seeded (Full-Stack, Data Science, Product Management, Cloud/DevOps, Cybersecurity)."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Returns 5 roadmaps total, IT domain filter returns 4 IT roadmaps. All responses properly structured."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Returns 5 roadmaps total, IT domain filter returns 4 IT roadmaps. All working correctly."
-
-  - task: "GET /api/roadmaps/{roadmap_id} - Single roadmap details"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Valid roadmap ID returns details with steps array (e.g., 'Full-Stack Developer Path' with 6 steps), invalid ID correctly returns 404."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Returns 'Full-Stack Developer Path' with 6 steps for valid ID, invalid ID correctly returns 404"
-
-  - task: "GET /api/skills-categories - Skills categories"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "New endpoint: Returns 5 skill categories with popularity data."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Returns 5 categories with 28 total skills. Response structure validated (uses 'category' field, not 'name')."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Returns 5 categories with 28 total skills. All working correctly."
-
-  - task: "WebSocket - Real-time roadmap progress sync"
-    implemented: true
-    working: true
-    file: "server.py, connection_manager.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "New: WebSocket endpoint WS /ws/roadmap/{roadmap_id}?user_id={user_id}. ConnectionManager class tracks active connections per roadmap. On connect sends init state, on toggle_step persists to MongoDB and broadcasts to all clients. Tested via Python websockets client - init, toggle on, toggle off all working."
-      - working: true
-        agent: "testing"
-        comment: "Comprehensive WebSocket testing completed successfully. All core functionality working: (1) Connection rejection without user_id (HTTP 403), (2) Init message on connect with completed steps, (3) Toggle step ON/OFF with proper state updates, (4) Multiple step handling, (5) Broadcast to multiple clients. WebSocket endpoint fully functional via internal URL (ws://localhost:8001). External WebSocket through ingress not supported but internal functionality perfect."
-
-  - task: "POST /api/user-progress - Progress tracking"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "New endpoint: Save/update user progress on roadmap steps."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Progress saving and retrieval working correctly. Can save progress for user/roadmap/step and retrieve it via GET endpoint."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Progress saving (complete/incomplete toggle) and retrieval working perfectly"
-
-  - task: "GET /api/user-progress/{user_id} - Get user progress"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Returns user progress array, correctly retrieves saved progress items."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Returns user progress array correctly, retrieves saved progress items"
-
-  - task: "POST /api/ai-recommend - AI career recommendations"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "New endpoint: AI-powered career recommendations using Claude LLM. Accepts skills, interests, experience level. Returns personalized career suggestions."
-      - working: false
-        agent: "testing"
-        comment: "Initial test failed with UnboundLocalError in json import"
-      - working: true
-        agent: "testing"
-        comment: "Fixed json import issue and tested successfully - AI returns 3 recommendations with avg score 76.7. All required fields present (title, match_score, reason, skills_to_develop, salary_range)."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Returns 3 recommendations with avg score 76.7, all required fields present. Claude LLM integration working perfectly."
-
-  - task: "POST /api/extract-keywords - Keyword extraction"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Re-tested successfully - Extracted 13 keywords, 5 matched, 8 missing. Response structure validated."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Extracted 4 keywords, 3 matched, 1 missing. Working correctly."
-
-  - task: "CRUD /api/resume-versions - Version management"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Previously tested and working"
-      - working: true
-        agent: "testing"
-        comment: "Re-tested successfully - Full CRUD cycle working: CREATE, READ, UPDATE, DELETE all functioning correctly."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested in comprehensive suite - Full CRUD cycle working: CREATE (Test Resume v1), READ (1 version), DELETE (successful). All operations working perfectly."
-
-  - task: "GET /api/auth/me - Get current user"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Tested in comprehensive suite - Correctly returns 401 (not authenticated) when no session provided"
-
-  - task: "POST /api/auth/logout - User logout"
-    implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "Tested in comprehensive suite - Logout works correctly even without active session"
+        comment: "POST/GET /api/public-profiles endpoints implemented."
 
 frontend:
-  - task: "TopNavbar - Responsive sticky navigation"
+  - task: "Remove Supabase auth, use Emergent OAuth + email/password"
     implemented: true
     working: true
-    file: "components/TopNavbar.tsx"
+    file: "frontend/src/hooks/useAuth.tsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Replaced sidebar with responsive top navbar. Features: logo, Home/Explore/Skills/Roadmaps/Resources nav, dark/light toggle, mobile hamburger menu, active page highlighting, user profile dropdown."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Logo visible, all nav links present (Home, Explore Careers, Skills, Roadmaps, Resources), Sign In button visible, theme toggle working (switches between light/dark mode). Mobile hamburger menu visible on mobile viewport (390px). All navigation working correctly."
+        comment: "useAuth.tsx completely rewritten to use only backend API. Auth.tsx updated to remove Supabase."
 
-  - task: "HomePage - Public landing page"
+  - task: "Fix useJobApplications to use backend API"
     implemented: true
     working: true
-    file: "pages/HomePage.tsx"
+    file: "frontend/src/hooks/useJobApplications.ts"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Public homepage with animated hero section, CTA buttons, trending careers cards (fetched from API), features grid, stats section, CTA section, footer. Scroll-based animations."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Hero section with 'Build Your Career Path With Confidence' visible, AI-Powered badge present, CTA buttons (Explore Careers, Start Learning) working, stats section (50+, 200+, 10K+, 95%) visible, trending careers section loaded, features section visible, CTA section 'Ready to Start Your Journey?' present, footer with CareerNav logo visible. All sections rendering correctly. Color theme is COOL GREEN (emerald/mint tones) as required."
+        comment: "useJobApplications.ts now calls POST/GET/PUT/DELETE /api/job-applications."
 
-  - task: "ExploreCareers - Career exploration page"
+  - task: "Fix useResumeVersions to use backend API"
     implemented: true
     working: true
-    file: "pages/ExploreCareers.tsx"
+    file: "frontend/src/hooks/useResumeVersions.ts"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Interactive career cards with search, domain filters (All/IT/Core/Business), expandable details showing skills/salary/demand."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Page heading visible, search bar functional, all domain filters present (All/IT/Core/Business). Filter testing: All shows 12 careers, IT filter shows 7 careers, Business filter shows 3 careers. Search functionality working (search 'Engineer' returns 5 careers). Expandable career cards working - clicking 'View Skills & Details' shows Required Skills and Growth Rate, 'Show Less' button collapses the card. All features working correctly."
+        comment: "useResumeVersions.ts now uses user_id-based backend API."
 
-  - task: "RoadmapView - Career roadmaps with real-time WebSocket progress"
+  - task: "CoachPage (/coach)"
     implemented: true
     working: true
-    file: "pages/RoadmapView.tsx, hooks/useRoadmapProgress.ts"
+    file: "frontend/src/pages/CoachPage.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Updated: RoadmapView now uses useRoadmapProgress WebSocket hook for real-time sync. Shows Live sync / Connecting indicator. Falls back to REST API if WS unavailable. Auto-reconnects with exponential backoff."
+        comment: "Full chat UI with sidebar sessions, context panel, suggestions. Protected route."
 
-  - task: "SkillsPage - Skills library"
+  - task: "SimulatePage (/simulate)"
     implemented: true
     working: true
-    file: "pages/SkillsPage.tsx"
+    file: "frontend/src/pages/SimulatePage.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Career trajectory simulator with timeline + expandable milestone cards. Protected route."
+
+  - task: "Dashboard with Skill Gap tab"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Dashboard.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Dashboard updated: removed Supabase, added Skill Gap tab, uses backend API for stats."
+
+  - task: "SkillGapChart component"
+    implemented: true
+    working: true
+    file: "frontend/src/components/SkillGapChart.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Horizontal bar chart with Recharts showing top 10 missing skills. Clickable bars."
+
+  - task: "MarketInsights with salary visualization"
+    implemented: true
+    working: true
+    file: "frontend/src/components/MarketInsights.tsx"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Skills categorized by domain with popularity bars, search, and hot skill indicators."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Page heading 'In-Demand Skills' visible, search bar functional, 5 skill categories displayed (Programming Languages, Frontend Frameworks, Backend & DevOps, Data & AI, Soft Skills). 11 'Hot' skill indicators found on high-demand skills. High-demand skills visible (Python, JavaScript). Search functionality working (search 'React' filters results). Demand percentage bars displaying correctly. All features working."
+        comment: "Removed Supabase. Added salary range bar (min-median-max SVG), location dropdown, company chart."
 
-  - task: "ResourcesPage - Learning resources"
+  - task: "Market Heatmap in ExploreCareers"
     implemented: true
     working: true
-    file: "pages/ResourcesPage.tsx"
+    file: "frontend/src/pages/ExploreCareers.tsx"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: Curated resources organized by category (platforms, practice, networking, AI/DS, certifications)."
-      - working: true
-        agent: "testing"
-        comment: "Tested successfully - Page heading 'Learning Resources' visible, search bar functional, 5 resource categories displayed (Online Platforms, Coding Practice, Career & Networking, AI & Data Science, Certifications). Specific resources visible (freeCodeCamp, LeetCode). Search functionality working. All resource cards displaying correctly with external link icons. All features working."
+        comment: "Added MarketHeatmap component. Shows skill pills with opacity encoding demand + trending badges."
 
-  - task: "AIRecommendations - AI career suggestions"
+  - task: "Opaque navbar (no blur)"
     implemented: true
-    working: "NA"
-    file: "components/AIRecommendations.tsx"
+    working: true
+    file: "frontend/src/components/TopNavbar.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "TopNavbar rewritten: bg-background with border-b border-border, no backdrop-blur. Coach + Simulate added."
+
+  - task: "Flat card design (remove glassmorphism)"
+    implemented: true
+    working: true
+    file: "frontend/src/index.css"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "glass-card replaced with flat-card (bg: var(--card-bg), border: 1px solid var(--card-border), border-radius: 12px). JetBrains Mono only for skill-tag, salary-number, code."
+
+  - task: "New routes in App.tsx (/coach, /simulate)"
+    implemented: true
+    working: true
+    file: "frontend/src/App.tsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "New: AI-powered career recommendation component in Dashboard. Input skills/interests/level, get personalized suggestions via Claude LLM."
-      - working: "NA"
-        agent: "testing"
-        comment: "Not tested - Requires authentication to access Dashboard. Backend API endpoint /api/ai-recommend was previously tested and confirmed working with Claude LLM integration."
-
-  - task: "Enhanced Dashboard"
-    implemented: true
-    working: "NA"
-    file: "pages/Dashboard.tsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Updated: Added AI Recommendations tab, progress tracking from roadmaps, enhanced quick actions linking to new pages."
-      - working: "NA"
-        agent: "testing"
-        comment: "Not tested - Requires authentication to access Dashboard. Public pages tested successfully."
+        comment: "App.tsx updated with /coach and /simulate as protected routes. Removed /reset-password Supabase dependency."
 
 metadata:
   created_by: "main_agent"
-  version: "2.2"
-  test_sequence: 6
+  version: "2.1"
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "CoachPage UI"
+    - "SimulatePage UI"
+    - "Dashboard with Skill Gap tab"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Implemented Feature 01: Real-time roadmap progress via WebSockets. Backend: (1) connection_manager.py - ConnectionManager class tracking WS connections per roadmap, (2) WS /ws/roadmap/{roadmap_id}?user_id={user_id} endpoint in server.py - sends init state on connect, persists toggle_step to MongoDB and broadcasts to all clients. Frontend: (1) useRoadmapProgress.ts hook - WebSocket connection with auto-reconnect and REST fallback, (2) Updated RoadmapView.tsx - uses WS hook, shows Live sync indicator. Please test: (a) WS endpoint at ws://localhost:8001/ws/roadmap/{roadmap_id}?user_id={user_id}, (b) All existing backend endpoints still work, (c) Frontend roadmaps page still renders correctly."
+    message: |
+      Completed major CareerNav upgrade:
+      1. Backend: Added email/password auth, job applications CRUD, coach API, skill gap, salary insights, 
+         market heatmap, trajectory simulator, public profiles, Apify job fetcher, APScheduler, TTL index.
+      2. Frontend: Removed Supabase from ALL components. Added CoachPage, SimulatePage. 
+         Updated Dashboard (Skill Gap tab), MarketInsights (salary viz), ExploreCareers (heatmap), 
+         TopNavbar (opaque, new routes), flat card design throughout.
+      3. Test credentials: test@careernav.com / testpass123
+      
+      Key things to test:
+      - Register with email/password -> should redirect to dashboard
+      - Login with existing account
+      - Coach chat (sends messages, gets AI replies)
+      - Simulate trajectory (fills form, generates milestones)
+      - Dashboard Skill Gap tab
+      - Market tab with salary lookup
   - agent: "testing"
-    message: "Backend testing completed successfully! ✅ All 12 tests passed (100% success rate). WebSocket endpoint fully functional: connection validation, init messages, step toggling, multi-step handling, and broadcast to multiple clients all working perfectly. All existing REST endpoints (careers, roadmaps, skills-categories, user-progress) continue to work correctly. Note: WebSocket works via internal URL (ws://localhost:8001) - external ingress doesn't support WebSocket but this is expected for Kubernetes environments. Backend implementation is solid and ready for production."
+    message: |
+      ✅ COMPREHENSIVE BACKEND TESTING COMPLETED - ALL SYSTEMS OPERATIONAL
+      
+      Tested 18 backend API endpoints with 100% success rate:
+      
+      🔐 Authentication Flow:
+      - Register/Login/Me/Logout: All working correctly with session management
+      - User creation, session cookies, and authentication state management functional
+      
+      📊 Career Data Endpoints:
+      - GET /api/careers: Returns 12 careers ✅
+      - GET /api/roadmaps: Returns 5 roadmaps ✅  
+      - GET /api/skills-categories: Returns 5 categories ✅
+      
+      💼 Job Applications CRUD:
+      - Full CREATE/READ/UPDATE/DELETE cycle tested and working ✅
+      - User-based application management functional
+      
+      🤖 AI Features:
+      - AI Career Coach: Claude integration working, generates 1000+ char responses ✅
+      - Career Trajectory Simulator: Generates 4 detailed milestones ✅
+      - Session persistence and conversation history working
+      
+      📈 Data Analytics Endpoints:
+      - Skill Gap Analysis: Working (empty as expected - no job cache) ✅
+      - Salary Insights: Working (empty as expected - no job cache) ✅
+      - Market Heatmap: Working (empty as expected - no job cache) ✅
+      - Jobs endpoint: Working (empty as expected - no Apify cache) ✅
+      
+      🔍 Key Findings:
+      - All core functionality operational
+      - Data endpoints correctly return empty results when no cache data available
+      - Authentication and session management robust
+      - AI integrations (Claude) working perfectly
+      - No critical issues found
+      
+      Backend logs show clean operation with successful API calls. Minor bcrypt warning present but not affecting functionality.

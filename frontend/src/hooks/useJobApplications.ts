@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
-import type { JobListing } from "@/types/jobs";
+import { useAuth } from "@/hooks/useAuth";
+
+const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
+const API = `${BACKEND_URL}/api`;
 
 export type ApplicationStatus = "saved" | "applied" | "interview" | "offer" | "rejected";
 
 export interface JobApplication {
   id: string;
+  user_id: string;
   job_id: string;
   job_title: string;
   company: string;
@@ -24,93 +26,138 @@ export interface JobApplication {
   created_at: string;
 }
 
+interface JobForApplication {
+  id: string;
+  title: string;
+  company: string;
+  location?: string;
+  type?: string;
+  salary?: string;
+  matchScore?: number;
+  matchingSkills?: string[];
+  missingSkills?: string[];
+  applyUrl?: string;
+}
+
 export const useJobApplications = () => {
+  const { user } = useAuth();
   const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
-  const sessionId = getSessionId();
+  const [loading, setLoading] = useState(false);
 
   const fetchApplications = useCallback(async () => {
+    if (!user?.user_id) {
+      setApplications([]);
+      return;
+    }
     setLoading(true);
-    const { data, error } = await supabase
-      .from("job_applications")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setApplications(data as JobApplication[]);
+    try {
+      const res = await fetch(`${API}/job-applications/${user.user_id}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setApplications(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch applications", e);
     }
     setLoading(false);
-  }, [sessionId]);
+  }, [user?.user_id]);
 
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
 
-  const addApplication = async (job: JobListing, status: ApplicationStatus = "applied", resumeVersionId?: string) => {
-    const { data, error } = await supabase
-      .from("job_applications")
-      .insert({
-        session_id: sessionId,
-        job_id: job.id,
-        job_title: job.title,
-        company: job.company,
-        location: job.location,
-        job_type: job.type,
-        salary: job.salary,
-        match_score: job.matchScore,
-        matching_skills: job.matchingSkills,
-        missing_skills: job.missingSkills,
-        apply_url: job.applyUrl,
-        resume_version_id: resumeVersionId || null,
-        status,
-        applied_date: status === "applied" ? new Date().toISOString().split("T")[0] : null,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setApplications((prev) => [data as JobApplication, ...prev]);
-      return data as JobApplication;
+  const addApplication = async (
+    job: JobForApplication,
+    status: ApplicationStatus = "applied",
+    resumeVersionId?: string
+  ) => {
+    if (!user?.user_id) return null;
+    try {
+      const res = await fetch(`${API}/job-applications`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          job_id: job.id,
+          job_title: job.title,
+          company: job.company,
+          location: job.location || "",
+          job_type: job.type || null,
+          salary: job.salary || null,
+          match_score: job.matchScore || 0,
+          matching_skills: job.matchingSkills || [],
+          missing_skills: job.missingSkills || [],
+          apply_url: job.applyUrl || null,
+          resume_version_id: resumeVersionId || null,
+          status,
+          applied_date: status === "applied" ? new Date().toISOString().split("T")[0] : null,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setApplications((prev) => [data, ...prev]);
+        return data as JobApplication;
+      }
+    } catch (e) {
+      console.error("Failed to add application", e);
     }
     return null;
   };
 
   const updateStatus = async (id: string, status: ApplicationStatus) => {
-    const updates: Partial<JobApplication> = { status };
-    if (status === "applied") {
-      updates.applied_date = new Date().toISOString().split("T")[0];
-    }
-
-    const { error } = await supabase
-      .from("job_applications")
-      .update(updates)
-      .eq("id", id);
-
-    if (!error) {
-      setApplications((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, ...updates } : app))
-      );
+    try {
+      const updates: Record<string, string | null> = { status };
+      if (status === "applied") {
+        updates.applied_date = new Date().toISOString().split("T")[0];
+      }
+      const res = await fetch(`${API}/job-applications/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        setApplications((prev) =>
+          prev.map((app) => (app.id === id ? { ...app, ...updates } : app))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to update status", e);
     }
   };
 
   const updateNotes = async (id: string, notes: string) => {
-    const { error } = await supabase
-      .from("job_applications")
-      .update({ notes })
-      .eq("id", id);
-
-    if (!error) {
-      setApplications((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, notes } : app))
-      );
+    try {
+      const res = await fetch(`${API}/job-applications/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes }),
+      });
+      if (res.ok) {
+        setApplications((prev) =>
+          prev.map((app) => (app.id === id ? { ...app, notes } : app))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to update notes", e);
     }
   };
 
   const removeApplication = async (id: string) => {
-    const { error } = await supabase.from("job_applications").delete().eq("id", id);
-    if (!error) {
-      setApplications((prev) => prev.filter((app) => app.id !== id));
+    try {
+      const res = await fetch(`${API}/job-applications/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setApplications((prev) => prev.filter((app) => app.id !== id));
+      }
+    } catch (e) {
+      console.error("Failed to remove application", e);
     }
   };
 

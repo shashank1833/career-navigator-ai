@@ -1,74 +1,30 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
+import { useState } from "react";
 import type { JobListing } from "@/types/jobs";
-import type { Json } from "@/integrations/supabase/types";
 
+// In-memory saved jobs (replaces Supabase-based persistence)
+// TODO: Connect to backend saved jobs API when available
 export const useSavedJobs = () => {
   const [savedJobs, setSavedJobs] = useState<JobListing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const sessionId = getSessionId();
 
-  const fetchSavedJobs = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("saved_jobs")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setSavedJobs(data.map((row) => row.job_data as unknown as JobListing));
-    }
-    setLoading(false);
-  }, [sessionId]);
-
-  useEffect(() => {
-    fetchSavedJobs();
-  }, [fetchSavedJobs]);
-
-  const saveJob = async (job: JobListing) => {
-    // Check if already saved
+  const saveJob = async (job: JobListing): Promise<boolean> => {
     if (savedJobs.find((j) => j.id === job.id)) return false;
-
-    const { error } = await supabase.from("saved_jobs").insert({
-      session_id: sessionId,
-      job_data: JSON.parse(JSON.stringify(job)) as Json,
-    });
-
-    if (!error) {
-      setSavedJobs((prev) => [job, ...prev]);
-      return true;
-    }
-    return false;
+    setSavedJobs((prev) => [job, ...prev]);
+    return true;
   };
 
-  const unsaveJob = async (jobId: string) => {
-    // We need to find the saved job first
-    const { data } = await supabase
-      .from("saved_jobs")
-      .select("id, job_data")
-      .eq("session_id", sessionId);
-
-    const savedRow = data?.find((row) => (row.job_data as unknown as JobListing).id === jobId);
-    if (savedRow) {
-      const { error } = await supabase.from("saved_jobs").delete().eq("id", savedRow.id);
-      if (!error) {
-        setSavedJobs((prev) => prev.filter((j) => j.id !== jobId));
-        return true;
-      }
-    }
-    return false;
+  const unsaveJob = async (jobId: string): Promise<boolean> => {
+    setSavedJobs((prev) => prev.filter((j) => j.id !== jobId));
+    return true;
   };
 
   const isJobSaved = (jobId: string) => savedJobs.some((j) => j.id === jobId);
 
   return {
     savedJobs,
-    loading,
+    loading: false,
     saveJob,
     unsaveJob,
     isJobSaved,
-    refresh: fetchSavedJobs,
+    refresh: () => {},
   };
 };

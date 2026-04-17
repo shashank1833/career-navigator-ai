@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AnalysisInterviewQuestions, InterviewQuestionItem } from "@/types/analysis";
 
@@ -52,22 +51,14 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
 
     setGenerating(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke(
-        "generate-interview-questions",
-        { body: { jobDescription: customJD, skills: skills || [] } }
-      );
-
-      if (error) throw error;
-      if (result?.error) throw new Error(result.error);
-
-      setQuestions((prev) => {
-        if (!prev) return result;
-        return {
-          technical: [...(prev.technical || []), ...(result.technical || [])],
-          conceptual: [...(prev.conceptual || []), ...(result.conceptual || [])],
-          behavioral: [...(prev.behavioral || []), ...(result.behavioral || [])],
-        };
-      });
+      // Fallback: generate basic questions from job description
+      const lines = customJD.split(/[.!?]/).filter(l => l.trim().length > 20).slice(0, 5);
+      const generated: AnalysisInterviewQuestions = {
+        technical: lines.slice(0, 2).map((l, i) => ({ question: `Explain your experience with: ${l.trim()}?`, difficulty: i === 0 ? "Medium" : "Hard" })),
+        conceptual: lines.slice(2, 4).map((l) => ({ question: `How would you approach: ${l.trim()}?`, difficulty: "Medium" })),
+        behavioral: [{ question: `Tell me about a time you dealt with: ${lines[0]?.trim() || "a challenging project"}?`, difficulty: "Easy" }],
+      };
+      setQuestions(generated);
       setActiveCategory("technical");
       toast.success("Interview questions generated!");
     } catch (err) {

@@ -1,272 +1,211 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Zap, DollarSign, Target, AlertTriangle, Loader2, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { TrendingUp, DollarSign, Target, Loader2, Search, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface MarketData {
-  totalJobsAnalyzed: number;
-  searchTerm: string;
-  skillDemand: { skill: string; count: number; percentage: number }[];
-  technologyCategories: { category: string; skills: { skill: string; count: number; percentage: number; demand: string }[] }[];
-  salaryInsights: {
-    average: number;
-    median: number;
-    min: number;
-    max: number;
-    sampleSize: number;
-    distribution: { range: string; count: number }[];
-  } | null;
-  skillGap: {
-    matching: { skill: string; demandPercentage: number; userHas: boolean }[];
-    missing: { skill: string; demandPercentage: number; userHas: boolean }[];
-    coverageScore: number;
-  };
-  emergingSkills: { skill: string; percentage: number; trend: string }[];
+const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
+const API = `${BACKEND_URL}/api`;
+
+interface SalaryInsights {
+  median: number;
+  p25: number;
+  p75: number;
+  min: number;
+  max: number;
+  sample_count: number;
+  top_companies: { company: string; count: number }[];
+  role: string;
+  location: string;
 }
 
 interface MarketInsightsProps {
   userSkills?: string[];
 }
 
-const DEMAND_COLORS: Record<string, string> = {
-  High: "hsl(142, 71%, 45%)",
-  Medium: "hsl(45, 93%, 47%)",
-  Emerging: "hsl(187, 92%, 49%)",
+const CITIES = ["United States", "New York", "San Francisco", "Seattle", "Austin", "Boston", "Chicago", "Los Angeles", "Remote"];
+
+const formatSalary = (n: number) => {
+  if (!n) return "$0";
+  if (n >= 1000) return `$${(n / 1000).toFixed(0)}K`;
+  return `$${n}`;
 };
 
-const tooltipStyle = {
-  background: "hsl(217,33%,14%)",
-  border: "1px solid hsl(217,33%,20%)",
-  borderRadius: 8,
-  fontSize: 12,
+const SalaryRangeBar = ({ min, p25, median, p75, max }: { min: number; p25: number; median: number; p75: number; max: number }) => {
+  const range = max - min;
+  if (!range) return null;
+  const pct = (v: number) => ((v - min) / range) * 100;
+
+  return (
+    <div className="mt-4">
+      <div className="relative h-6 bg-muted/30 rounded-full overflow-hidden">
+        {/* IQR bar */}
+        <div
+          className="absolute h-full bg-primary/30 rounded-full"
+          style={{ left: `${pct(p25)}%`, width: `${pct(p75) - pct(p25)}%` }}
+        />
+        {/* Median line */}
+        <div
+          className="absolute top-0 bottom-0 w-0.5 bg-primary"
+          style={{ left: `${pct(median)}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-[10px] text-muted-foreground mt-1 salary-number">
+        <span>{formatSalary(min)}</span>
+        <span className="text-primary font-medium">{formatSalary(median)} median</span>
+        <span>{formatSalary(max)}</span>
+      </div>
+      <div className="flex justify-center gap-4 text-[10px] text-muted-foreground mt-2">
+        <span>P25: <span className="salary-number">{formatSalary(p25)}</span></span>
+        <span>P75: <span className="salary-number">{formatSalary(p75)}</span></span>
+      </div>
+    </div>
+  );
 };
 
 const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
-  const [jobTitle, setJobTitle] = useState("");
+  const [role, setRole] = useState("");
+  const [location, setLocation] = useState("United States");
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<MarketData | null>(null);
+  const [salaryData, setSalaryData] = useState<SalaryInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const analyzeMarket = async () => {
-    if (!jobTitle.trim()) return;
+  const fetchSalary = async () => {
+    if (!role.trim()) return;
     setLoading(true);
     setError(null);
     try {
-      const { data: result, error: fnError } = await supabase.functions.invoke("analyze-market", {
-        body: { jobTitle: jobTitle.trim(), userSkills },
-      });
-      if (fnError) throw fnError;
-      if (result?.error) throw new Error(result.error);
-      setData(result);
-    } catch (err: any) {
-      setError(err.message || "Failed to analyze market data");
-    } finally {
-      setLoading(false);
+      const params = new URLSearchParams({ role: role.trim(), location });
+      const res = await fetch(`${API}/salary-insights?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch salary data");
+      const data = await res.json();
+      setSalaryData(data);
+    } catch (e: any) {
+      setError(e.message);
     }
+    setLoading(false);
   };
 
-  const formatSalary = (val: number) => {
-    if (val >= 1000) return `$${Math.round(val / 1000)}k`;
-    return `$${val}`;
-  };
+  const companyChartData = (salaryData?.top_companies || []).map((c) => ({
+    name: c.company.length > 15 ? c.company.slice(0, 15) + "..." : c.company,
+    value: c.count,
+  }));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Search */}
-      <div className="glass-card p-5">
-        <div className="flex gap-3">
-          <Input
-            placeholder="e.g. Frontend Engineer, Data Scientist, Product Manager…"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && analyzeMarket()}
-            className="bg-muted/50 border-border/50"
-          />
-          <Button onClick={analyzeMarket} disabled={loading || !jobTitle.trim()} className="shrink-0">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
-            Analyze
-          </Button>
-        </div>
-        {error && <p className="text-destructive text-sm mt-2">{error}</p>}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Input
+          placeholder="Role (e.g., Software Engineer)"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && fetchSalary()}
+          className="flex-1"
+        />
+        <Select value={location} onValueChange={setLocation}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CITIES.map((c) => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button onClick={fetchSalary} disabled={!role.trim() || loading} className="gap-2">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          Analyze
+        </Button>
       </div>
 
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Analyzing {jobTitle} job market...</p>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {!salaryData && !loading && (
+        <div className="text-center py-8 text-muted-foreground text-sm">
+          Enter a role and location to see salary intelligence.
         </div>
       )}
 
-      {data && !loading && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-          {/* Summary */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant="secondary" className="text-xs">{data.totalJobsAnalyzed} jobs analyzed</Badge>
-            <span>for "{data.searchTerm}"</span>
-          </div>
-
-          {/* Top Skills Demand */}
-          <div className="glass-card p-5">
+      {salaryData && (
+        <div className="space-y-5">
+          {/* Salary Range */}
+          <div className="flat-card p-5">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <p className="text-xs font-medium text-muted-foreground">Top Skills in Demand</p>
-            </div>
-            <ResponsiveContainer width="100%" height={Math.max(300, data.skillDemand.slice(0, 15).length * 32)}>
-              <BarChart data={data.skillDemand.slice(0, 15)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                <YAxis type="category" dataKey="skill" tick={{ fontSize: 11, fill: "hsl(210,40%,98%)" }} axisLine={false} tickLine={false} width={75} />
-                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} formatter={(val: number) => [`${val}%`, "Demand"]} />
-                <Bar dataKey="percentage" fill="hsl(217,91%,60%)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Technology Categories */}
-            <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Zap className="w-4 h-4 text-accent" />
-                <p className="text-xs font-medium text-muted-foreground">Technology Stack Insights</p>
-              </div>
-              <div className="space-y-4">
-                {data.technologyCategories.slice(0, 5).map((cat) => (
-                  <div key={cat.category}>
-                    <h4 className="text-xs font-medium text-foreground mb-2">{cat.category}</h4>
-                    <div className="space-y-1.5">
-                      {cat.skills.slice(0, 5).map((s) => (
-                        <div key={s.skill} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24 truncate capitalize">{s.skill}</span>
-                          <Progress value={s.percentage} className="h-1.5 flex-1" />
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] px-1.5 py-0 shrink-0"
-                            style={{ borderColor: DEMAND_COLORS[s.demand], color: DEMAND_COLORS[s.demand] }}
-                          >
-                            {s.demand}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Salary Insights */}
-            <div className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <DollarSign className="w-4 h-4 text-green-500" />
-                <p className="text-xs font-medium text-muted-foreground">Salary Insights</p>
-              </div>
-              {data.salaryInsights ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: "Average", value: formatSalary(data.salaryInsights.average) },
-                      { label: "Median", value: formatSalary(data.salaryInsights.median) },
-                      { label: "Range", value: `${formatSalary(data.salaryInsights.min)} – ${formatSalary(data.salaryInsights.max)}`, small: true },
-                      { label: "Sample", value: `${data.salaryInsights.sampleSize} jobs` },
-                    ].map((stat) => (
-                      <div key={stat.label} className="p-3 rounded-lg bg-muted/30">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</p>
-                        <p className={`${stat.small ? 'text-sm' : 'text-lg'} font-bold text-foreground`}>{stat.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <ResponsiveContainer width="100%" height={160}>
-                    <BarChart data={data.salaryInsights.distribution}>
-                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(215,20%,65%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: "hsl(210,40%,98%)" }} />
-                      <Bar dataKey="count" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  No salary data available for this search.
-                </div>
+              <DollarSign className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-foreground text-sm">
+                Salary Range — {salaryData.role}
+              </h3>
+              {salaryData.location && (
+                <span className="text-xs text-muted-foreground">• {salaryData.location}</span>
               )}
             </div>
-          </div>
 
-          {/* Skill Gap Comparison */}
-          <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-secondary" />
-                <p className="text-xs font-medium text-muted-foreground">Skill Gap vs Market Demand</p>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                Coverage: {data.skillGap.coverageScore}%
-              </Badge>
-            </div>
-            {userSkills.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Upload a resume to see skill gap analysis.</p>
+            {salaryData.sample_count > 0 ? (
+              <>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold salary-number text-foreground">{formatSalary(salaryData.p25)}</p>
+                    <p className="text-xs text-muted-foreground">25th percentile</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold salary-number text-primary">{formatSalary(salaryData.median)}</p>
+                    <p className="text-xs text-muted-foreground">Median</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold salary-number text-foreground">{formatSalary(salaryData.p75)}</p>
+                    <p className="text-xs text-muted-foreground">75th percentile</p>
+                  </div>
+                </div>
+
+                <SalaryRangeBar
+                  min={salaryData.min}
+                  p25={salaryData.p25}
+                  median={salaryData.median}
+                  p75={salaryData.p75}
+                  max={salaryData.max}
+                />
+
+                <p className="text-xs text-muted-foreground mt-3">
+                  Based on <span className="salary-number font-medium">{salaryData.sample_count}</span> job postings
+                </p>
+              </>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-xs font-medium text-green-500 mb-3 flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-500" /> Your Matching Skills
-                  </h4>
-                  <div className="space-y-1.5">
-                    {data.skillGap.matching.length > 0 ? data.skillGap.matching.map((s) => (
-                      <div key={s.skill} className="flex items-center justify-between text-sm">
-                        <span className="text-foreground capitalize">{s.skill}</span>
-                        <span className="text-muted-foreground text-xs">{s.demandPercentage}% demand</span>
-                      </div>
-                    )) : <p className="text-xs text-muted-foreground">No matching skills found.</p>}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-medium text-destructive mb-3 flex items-center gap-1.5">
-                    <AlertTriangle className="w-3 h-3" /> Missing High-Demand Skills
-                  </h4>
-                  <div className="space-y-1.5">
-                    {data.skillGap.missing.length > 0 ? data.skillGap.missing.map((s) => (
-                      <div key={s.skill} className="flex items-center justify-between text-sm">
-                        <span className="text-foreground capitalize">{s.skill}</span>
-                        <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
-                          {s.demandPercentage}% demand
-                        </Badge>
-                      </div>
-                    )) : <p className="text-xs text-muted-foreground">Great! You cover all high-demand skills.</p>}
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                No salary data available for this role yet. Job cache may need to refresh.
+              </p>
             )}
           </div>
 
-          {/* Emerging Trends */}
-          <div className="glass-card p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap className="w-4 h-4 text-yellow-500" />
-              <p className="text-xs font-medium text-muted-foreground">Emerging Skill Trends</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {data.emergingSkills.map((s) => (
-                <div key={s.skill} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
-                  <span className="text-sm text-foreground capitalize flex-1">{s.skill}</span>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] shrink-0"
-                    style={{
-                      borderColor: s.trend === "Growing demand" ? "hsl(142,71%,45%)" : s.trend === "Rapid growth" ? "hsl(45,93%,47%)" : "hsl(187,92%,49%)",
-                      color: s.trend === "Growing demand" ? "hsl(142,71%,45%)" : s.trend === "Rapid growth" ? "hsl(45,93%,47%)" : "hsl(187,92%,49%)",
+          {/* Top Companies */}
+          {companyChartData.length > 0 && (
+            <div className="flat-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-foreground text-sm">Top Hiring Companies</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={150}>
+                <BarChart data={companyChartData} margin={{ left: -10, right: 10 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis hide />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--card-bg)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: 8,
+                      fontSize: 12,
                     }}
-                  >
-                    {s.trend}
-                  </Badge>
-                </div>
-              ))}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {companyChartData.map((_, i) => (
+                      <Cell key={i} fill={`hsl(160, 84%, ${50 - i * 5}%)`} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-        </motion.div>
+          )}
+        </div>
       )}
     </div>
   );

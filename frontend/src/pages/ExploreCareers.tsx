@@ -3,13 +3,78 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Filter, Code, BarChart3, Target, Sparkles, Cloud, Brain,
   Briefcase, Shield, Zap, TrendingUp, Compass, ChevronDown, ChevronUp,
-  ExternalLink, BookOpen, Award, X
+  ExternalLink, BookOpen, Award, X, Flame
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
+
+interface HeatmapSkill {
+  skill: string;
+  count: number;
+  demand_pct: number;
+  trending: boolean;
+}
+
+const MarketHeatmap = () => {
+  const [skills, setSkills] = useState<HeatmapSkill[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/market-heatmap`, { credentials: "include" })
+      .then(r => r.json())
+      .then(data => {
+        setSkills(data.skills || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+  if (!skills.length) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="mb-8 flat-card p-5"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-4 h-4 text-primary" />
+        <h2 className="font-semibold text-foreground text-sm">Live Market Heatmap</h2>
+        <span className="text-xs text-muted-foreground">— skill demand from job postings</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {skills.slice(0, 30).map((s) => {
+          const opacity = Math.max(0.2, s.demand_pct / 100);
+          return (
+            <div
+              key={s.skill}
+              className="relative skill-tag cursor-default"
+              style={{
+                backgroundColor: `hsl(160, 84%, 39%, ${opacity})`,
+                borderColor: `hsl(160, 84%, 39%, ${opacity * 1.5})`,
+                color: s.demand_pct > 50 ? "hsl(160, 30%, 4%)" : "inherit",
+              }}
+              title={`${s.count} job postings`}
+            >
+              {s.skill}
+              {s.trending && (
+                <Flame className="w-2.5 h-2.5 text-amber-400 ml-1 inline" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-xs text-muted-foreground mt-3">
+        Darker = higher demand. <Flame className="w-3 h-3 text-amber-400 inline" /> = trending this week.
+      </p>
+    </motion.div>
+  );
+};
 
 interface Career {
   id: string;
@@ -108,6 +173,9 @@ const ExploreCareers = () => {
             Discover careers across domains, compare salaries, and find the perfect path for your ambitions.
           </p>
         </motion.div>
+
+        {/* Market Heatmap */}
+        <MarketHeatmap />
 
         {/* Search & Filters */}
         <motion.div

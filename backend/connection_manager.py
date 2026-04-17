@@ -1,22 +1,47 @@
 """
 WebSocket Connection Manager for real-time roadmap progress synchronization.
 Tracks active WebSocket connections per roadmap_id and broadcasts progress updates
-to all connected clients.
+to all connected clients. Includes rate limiting: max 20 messages per user per 10 seconds.
 """
 from fastapi import WebSocket
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Deque
 import logging
 import json
+from datetime import datetime, timezone
+from collections import deque, defaultdict
 
 logger = logging.getLogger(__name__)
 
+RATE_LIMIT_MAX = 20        # max messages
+RATE_LIMIT_WINDOW = 10.0   # seconds
+
 
 class ConnectionManager:
-    """Manages WebSocket connections grouped by roadmap_id."""
+    """Manages WebSocket connections grouped by roadmap_id with rate limiting."""
 
     def __init__(self):
         # { roadmap_id: { user_id: WebSocket } }
         self.active_connections: Dict[str, Dict[str, WebSocket]] = {}
+        # { user_id: deque of timestamps }
+        self.message_timestamps: Dict[str, Deque[float]] = defaultdict(lambda: deque())
+
+    def _check_rate_limit(self, user_id: str) -> bool:
+        """
+        Return True if the user is within rate limits.
+        Prune timestamps older than the window.
+        """
+        now = datetime.now(timezone.utc).timestamp()
+        timestamps = self.message_timestamps[user_id]
+
+        # Remove old timestamps outside the window
+        while timestamps and (now - timestamps[0]) > RATE_LIMIT_WINDOW:
+            timestamps.popleft()
+
+        if len(timestamps) >= RATE_LIMIT_MAX:
+            return False  # Rate limit exceeded
+
+        timestamps.append(now)
+        return True
 
     async def connect(self, websocket: WebSocket, roadmap_id: str, user_id: str):
         """Accept a WebSocket connection and register it under the given roadmap."""
@@ -33,6 +58,8 @@ class ConnectionManager:
             self.active_connections[roadmap_id].pop(user_id, None)
             if not self.active_connections[roadmap_id]:
                 del self.active_connections[roadmap_id]
+        # Clean up rate limit tracking
+        self.message_timestamps.pop(user_id, None)
         logger.info(f"WS disconnected: user={user_id} roadmap={roadmap_id}")
 
     async def broadcast_to_roadmap(self, roadmap_id: str, message: dict):

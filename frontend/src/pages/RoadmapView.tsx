@@ -61,7 +61,7 @@ const RoadmapView = () => {
     isStepCompleted: wsIsStepCompleted,
   } = useRoadmapProgress({
     roadmapId: selectedRoadmap?.id || null,
-    userId: user?.id || null,
+    userId: user?.user_id || user?.id || null,
     enabled: !!selectedRoadmap && !!user,
   });
 
@@ -79,7 +79,7 @@ const RoadmapView = () => {
   // Fetch REST progress for the roadmap list view (overview)
   useEffect(() => {
     if (user) {
-      fetch(`${BACKEND_URL}/api/user-progress/${user.id}`)
+      fetch(`${BACKEND_URL}/api/user-progress/${user.user_id || user.id}`)
         .then((r) => r.json())
         .then(setRestProgress)
         .catch(() => {});

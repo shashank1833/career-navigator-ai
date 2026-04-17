@@ -37,22 +37,12 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 158 30% 5%;
-    --sidebar-foreground: 150 20% 96%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 150 20% 96%;
-    --sidebar-accent: 158 20% 16%;
-    --sidebar-accent-foreground: 150 20% 96%;
-    --sidebar-border: 158 18% 18%;
-    --sidebar-ring: 160 84% 39%;
+    /* Flat card vars */
+    --card-bg: hsl(158, 25%, 11%);
+    --card-border: hsl(158, 18%, 18%);
 
-    /* Custom tokens */
-    --glow-primary: 160 84% 39%;
-    --glow-secondary: 175 65% 42%;
-    --glow-accent: 142 70% 50%;
-    --surface-glass: 158 22% 13%;
-    --gradient-start: 158 30% 4%;
-    --gradient-end: 158 22% 12%;
+    /* Font mono policy */
+    --font-mono: 'JetBrains Mono', monospace;
   }
 
   .light {
@@ -85,21 +75,8 @@
     --input: 150 18% 85%;
     --ring: 160 84% 32%;
 
-    --sidebar-background: 148 25% 95%;
-    --sidebar-foreground: 158 35% 10%;
-    --sidebar-primary: 160 84% 32%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 148 22% 92%;
-    --sidebar-accent-foreground: 158 35% 10%;
-    --sidebar-border: 150 18% 85%;
-    --sidebar-ring: 160 84% 32%;
-
-    --glow-primary: 160 84% 32%;
-    --glow-secondary: 175 65% 32%;
-    --glow-accent: 142 60% 36%;
-    --surface-glass: 148 20% 95%;
-    --gradient-start: 148 30% 97%;
-    --gradient-end: 148 22% 92%;
+    --card-bg: hsl(0, 0%, 100%);
+    --card-border: hsl(150, 18%, 85%);
   }
 }
 
@@ -109,56 +86,50 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)), hsl(var(--gradient-start)));
     min-height: 100vh;
-    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* Monospace only for specific contexts */
+  .skill-tag, .salary-number, code, pre, .code-font {
+    font-family: var(--font-mono);
   }
 }
 
 @layer components {
+  /* Flat high-contrast card — replaces glass-card */
+  .flat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+  }
+
+  /* Keep glass-card as alias to flat-card for backward compat */
   .glass-card {
-    @apply relative overflow-hidden rounded-xl border border-border;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--surface-glass) / 0.7),
-      hsl(var(--surface-glass) / 0.4)
-    );
-    backdrop-filter: blur(var(--glass-blur, 20px));
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.3),
-      0 8px 32px hsl(var(--gradient-start) / 0.4),
-      inset 0 1px 0 hsl(var(--foreground) / 0.05);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-500;
+    @apply glass-card transition-all duration-300;
   }
 
   .glass-card-hover:hover {
     border-color: hsl(var(--primary) / 0.4);
-    box-shadow:
-      0 0 0 1px hsl(var(--primary) / 0.2),
-      0 8px 40px hsl(var(--primary) / 0.15),
-      0 0 60px hsl(var(--primary) / 0.05),
-      inset 0 1px 0 hsl(var(--foreground) / 0.08);
     transform: translateY(-2px);
   }
 
-  .glow-text-primary {
-    color: hsl(var(--primary));
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+  /* Skill tag — monospace */
+  .skill-tag {
+    font-family: var(--font-mono);
+    @apply text-xs px-2 py-0.5 rounded-md border border-border bg-muted/30 text-muted-foreground;
   }
 
-  .glow-text-accent {
-    color: hsl(var(--accent));
-    text-shadow: 0 0 20px hsl(var(--accent) / 0.5);
-  }
-
-  .glow-text-secondary {
-    color: hsl(var(--secondary));
-    text-shadow: 0 0 20px hsl(var(--secondary) / 0.5);
+  /* Salary — monospace */
+  .salary-number {
+    font-family: var(--font-mono);
   }
 
   .gradient-text {
@@ -175,59 +146,29 @@
     background-clip: text;
   }
 
-  .glow-border {
-    position: relative;
+  .glow-text-primary {
+    color: hsl(var(--primary));
   }
 
-  .glow-border::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.5), transparent, hsl(var(--accent) / 0.5));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+  .glow-text-accent {
+    color: hsl(var(--accent));
   }
 
-  .progress-glow {
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.2);
+  .glow-text-secondary {
+    color: hsl(var(--secondary));
   }
 
   .floating-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.15;
+    filter: blur(80px);
+    opacity: 0.08;
     pointer-events: none;
   }
 
-  .code-font {
-    font-family: 'JetBrains Mono', monospace;
+  .progress-glow {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.4);
   }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(2deg); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.3; }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 
 @keyframes fade-up {
@@ -235,22 +176,13 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-.animate-gradient-shift {
-  background-size: 200% 200%;
-  animation: gradient-shift 8s ease infinite;
-}
-
 .animate-fade-up {
   animation: fade-up 0.6s ease-out forwards;
 }
 
 /* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
   border-radius: 3px;
@@ -259,13 +191,11 @@
   background: hsl(var(--muted-foreground) / 0.3);
 }
 
-/* Selection color */
 ::selection {
   background: hsl(var(--primary) / 0.3);
   color: hsl(var(--foreground));
 }
 
-/* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
