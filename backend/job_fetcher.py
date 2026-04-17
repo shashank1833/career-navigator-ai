@@ -28,58 +28,81 @@ def normalize_salary(salary_str: Any) -> tuple[Optional[int], Optional[int]]:
     if isinstance(salary_str, (int, float)):
         val = int(salary_str)
         return val, val
-    salary_str = str(salary_str).replace(",", "").replace("$", "").replace("K", "000")
     import re
-    numbers = re.findall(r'\d+', salary_str)
+    cleaned = str(salary_str).replace(",", "").replace("$", "").replace("K", "000")
+    numbers = re.findall(r'\d+', cleaned)
     if len(numbers) >= 2:
         return int(numbers[0]), int(numbers[1])
-    elif len(numbers) == 1:
+    if len(numbers) == 1:
         val = int(numbers[0])
-        # If value looks like hourly (< 200), convert to annual
-        if val < 200:
-            val = val * 2080
+        # If value looks like hourly (< 200), convert to annual assuming 2080h/yr
+        val = val * 2080 if val < 200 else val
         return val, val
     return None, None
 
 
-def normalize_job(raw: Dict[str, Any], source: str) -> Dict[str, Any]:
-    """Normalize job data to common schema."""
-    # Handle LinkedIn format
-    if source == "linkedin":
-        url = raw.get("jobUrl") or raw.get("url") or raw.get("applyUrl") or ""
-        title = raw.get("title") or raw.get("jobTitle") or ""
-        company = raw.get("company") or raw.get("companyName") or ""
-        location = raw.get("location") or raw.get("jobLocation") or ""
-        salary_raw = raw.get("salary") or raw.get("salaryRange") or ""
-        skills = raw.get("skills") or raw.get("requiredSkills") or []
-        if isinstance(skills, str):
-            skills = [s.strip() for s in skills.split(",") if s.strip()]
-    else:
-        # Indeed format
-        url = raw.get("url") or raw.get("jobUrl") or raw.get("externalApplyLink") or ""
-        title = raw.get("positionName") or raw.get("title") or raw.get("jobTitle") or ""
-        company = raw.get("company") or raw.get("companyName") or ""
-        location = raw.get("location") or raw.get("jobLocation") or ""
-        salary_raw = raw.get("salary") or raw.get("salaryRange") or ""
-        skills = raw.get("skills") or []
-        if isinstance(skills, str):
-            skills = [s.strip() for s in skills.split(",") if s.strip()]
+def _coerce_skills(raw_skills: Any) -> List[str]:
+    """Normalise a skills value that may be a string, list, or None."""
+    if not raw_skills:
+        return []
+    if isinstance(raw_skills, str):
+        return [s.strip() for s in raw_skills.split(",") if s.strip()]
+    if isinstance(raw_skills, list):
+        return [str(s).strip() for s in raw_skills if s]
+    return []
 
-    salary_min, salary_max = normalize_salary(salary_raw)
 
-    job_id = str(uuid.uuid4())
+def _extract_linkedin_fields(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract normalised fields from a raw LinkedIn Apify record."""
     return {
-        "id": job_id,
-        "title": title,
-        "company": company,
-        "location": location,
+        "url": raw.get("jobUrl") or raw.get("url") or raw.get("applyUrl") or "",
+        "title": raw.get("title") or raw.get("jobTitle") or "",
+        "company": raw.get("company") or raw.get("companyName") or "",
+        "location": raw.get("location") or raw.get("jobLocation") or "",
+        "salary_raw": raw.get("salary") or raw.get("salaryRange") or "",
+        "skills": _coerce_skills(raw.get("skills") or raw.get("requiredSkills")),
+        "description": raw.get("description") or raw.get("jobDescription") or "",
+    }
+
+
+def _extract_indeed_fields(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract normalised fields from a raw Indeed Apify record."""
+    return {
+        "url": raw.get("url") or raw.get("jobUrl") or raw.get("externalApplyLink") or "",
+        "title": raw.get("positionName") or raw.get("title") or raw.get("jobTitle") or "",
+        "company": raw.get("company") or raw.get("companyName") or "",
+        "location": raw.get("location") or raw.get("jobLocation") or "",
+        "salary_raw": raw.get("salary") or raw.get("salaryRange") or "",
+        "skills": _coerce_skills(raw.get("skills")),
+        "description": raw.get("description") or raw.get("jobDescription") or "",
+    }
+
+
+_SOURCE_EXTRACTORS = {
+    "linkedin": _extract_linkedin_fields,
+    "indeed": _extract_indeed_fields,
+}
+
+
+def normalize_job(raw: Dict[str, Any], source: str) -> Dict[str, Any]:
+    """Normalize a raw Apify job record to the common CareerNav schema."""
+    extractor = _SOURCE_EXTRACTORS.get(source, _extract_indeed_fields)
+    fields = extractor(raw)
+
+    salary_min, salary_max = normalize_salary(fields["salary_raw"])
+
+    return {
+        "id": str(uuid.uuid4()),
+        "title": fields["title"],
+        "company": fields["company"],
+        "location": fields["location"],
         "salary_min": salary_min,
         "salary_max": salary_max,
-        "salary_raw": str(salary_raw) if salary_raw else "",
-        "skills_required": skills[:20],  # cap at 20 skills
-        "url": url,
+        "salary_raw": str(fields["salary_raw"]) if fields["salary_raw"] else "",
+        "skills_required": fields["skills"][:20],  # cap at 20
+        "url": fields["url"],
         "source": source,
-        "description": raw.get("description") or raw.get("jobDescription") or "",
+        "description": fields["description"],
         "scraped_at": datetime.now(timezone.utc).isoformat(),
     }
 

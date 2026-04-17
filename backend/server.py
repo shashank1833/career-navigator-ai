@@ -413,14 +413,17 @@ async def get_user_progress(user_id: str):
 
 from job_fetcher import JobFetcher
 
-job_fetcher_instance: Optional[JobFetcher] = None
+# Module-level instance – initialized lazily on first request.
+# asyncio is single-threaded so no locking is needed.
+_job_fetcher: Optional[JobFetcher] = None
 
 
 def get_job_fetcher() -> JobFetcher:
-    global job_fetcher_instance
-    if job_fetcher_instance is None:
-        job_fetcher_instance = JobFetcher(db)
-    return job_fetcher_instance
+    """Return (or create) the singleton JobFetcher, always non-None."""
+    global _job_fetcher
+    if _job_fetcher is None:
+        _job_fetcher = JobFetcher(db)
+    return _job_fetcher
 
 
 @api_router.get("/jobs")

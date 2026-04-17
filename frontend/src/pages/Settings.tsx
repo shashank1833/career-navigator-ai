@@ -35,12 +35,15 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
+    // setProfile uses functional update (prev) which doesn't need to be in deps.
+    // setLoadingProfile is a stable React setter.
     setProfile(prev => ({
       ...prev,
       display_name: user.name || "",
       avatar_url: user.picture || "",
     }));
     setLoadingProfile(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleSaveProfile = async () => {

@@ -47,8 +47,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(appUser);
         return true;
       }
-    } catch {
-      // not authenticated
+      // Non-2xx response means the user is not authenticated – not an error
+    } catch (error) {
+      // Network error or server unreachable – treat as unauthenticated
+      if (import.meta.env.DEV) {
+        console.warn("[useAuth] checkAuth network error:", error);
+      }
     }
     return false;
   };
@@ -76,8 +80,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: "POST",
         credentials: "include",
       });
-    } catch {
-      // ignore
+    } catch (error) {
+      // Logout errors are non-fatal — clear local state regardless
+      if (import.meta.env.DEV) {
+        console.warn("[useAuth] logout network error:", error);
+      }
     }
     setUser(null);
   };

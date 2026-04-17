@@ -50,19 +50,25 @@ const CoachPage = () => {
         const data = await res.json();
         setSessions(data);
       }
-    } catch (e) { console.error(e); }
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn("[CoachPage] fetch sessions failed:", error);
+    }
     setLoadingSessions(false);
+  // API is a module-level constant – stable, intentionally excluded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
 
   useEffect(() => {
     fetchSessions();
-    // Fetch roadmap progress
+    // Fetch roadmap progress count for context panel
     if (user?.user_id) {
       fetch(`${API}/user-progress/${user.user_id}`, { credentials: "include" })
-        .then(r => r.json())
+        .then(r => r.ok ? r.json() : [])
         .then(data => setRoadmapProgress(Array.isArray(data) ? data.filter((p: any) => p.completed).length : 0))
         .catch(() => {});
     }
+  // API is a module-level constant – stable, intentionally excluded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSessions, user?.user_id]);
 
   const loadSession = async (sessionId: string) => {
@@ -73,7 +79,9 @@ const CoachPage = () => {
         setCurrentSessionId(sessionId);
         setMessages(data.messages || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn("[CoachPage] loadSession failed:", error);
+    }
   };
 
   const startNewSession = () => {
@@ -118,8 +126,8 @@ const CoachPage = () => {
         setMessages(prev => [...prev, assistantMessage]);
         fetchSessions();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn("[CoachPage] sendMessage failed:", error);
     }
     setSending(false);
   };

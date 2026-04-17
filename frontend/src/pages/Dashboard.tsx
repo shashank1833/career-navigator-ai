@@ -55,13 +55,18 @@ const Dashboard = () => {
     setStatsLoading(true);
 
     const userId = user.user_id;
-
+    // API is a module-level constant — intentionally omitted from deps (stable reference)
     Promise.all([
-      fetch(`${API}/user-progress/${userId}`, { credentials: "include" }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/resume-versions/${userId}`, { credentials: "include" }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/job-applications/${userId}`, { credentials: "include" }).then(r => r.json()).catch(() => []),
+      fetch(`${API}/user-progress/${userId}`, { credentials: "include" })
+        .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API}/resume-versions/${userId}`, { credentials: "include" })
+        .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API}/job-applications/${userId}`, { credentials: "include" })
+        .then(r => r.ok ? r.json() : []).catch(() => []),
     ]).then(([progress, versions, apps]) => {
-      const completedProgress = Array.isArray(progress) ? progress.filter((p: any) => p.completed) : [];
+      const completedProgress = Array.isArray(progress)
+        ? progress.filter((p: any) => p.completed)
+        : [];
       setRoadmapProgress(completedProgress);
       setStats({
         roadmapCompleted: completedProgress.length,
@@ -69,7 +74,10 @@ const Dashboard = () => {
         applications: Array.isArray(apps) ? apps.length : 0,
       });
       setStatsLoading(false);
+    }).catch(() => {
+      setStatsLoading(false);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
 
   if (loading) {

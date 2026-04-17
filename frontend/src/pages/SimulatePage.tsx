@@ -181,19 +181,19 @@ const SimulatePage = () => {
 
               {/* Horizontal progress bar */}
               <div className="hidden sm:flex items-center gap-0 mb-6 overflow-x-auto pb-2">
-                {plan.milestones.map((m, i) => (
-                  <div key={i} className="flex items-center flex-shrink-0">
+                {plan.milestones.map((m) => (
+                  <div key={`nav-${m.milestone}`} className="flex items-center flex-shrink-0">
                     <button
-                      onClick={() => setExpandedMilestone(expandedMilestone === i ? null : i)}
+                      onClick={() => setExpandedMilestone(expandedMilestone === m.milestone - 1 ? null : m.milestone - 1)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                        expandedMilestone === i
+                        expandedMilestone === m.milestone - 1
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border hover:border-primary/40 text-muted-foreground"
                       }`}
                     >
                       {m.month_range}
                     </button>
-                    {i < plan.milestones.length - 1 && (
+                    {m.milestone < plan.milestones.length && (
                       <div className="w-8 h-px bg-border mx-1" />
                     )}
                   </div>
@@ -207,7 +207,7 @@ const SimulatePage = () => {
                   const isExpanded = expandedMilestone === i;
                   return (
                     <motion.div
-                      key={i}
+                      key={`milestone-${m.milestone}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}
@@ -262,8 +262,8 @@ const SimulatePage = () => {
                                   <Target className="w-3 h-3" /> Actions
                                 </p>
                                 <ul className="space-y-1">
-                                  {m.actions.map((a, ai) => (
-                                    <li key={ai} className="text-xs text-foreground flex items-start gap-1.5">
+                                  {m.actions.map((a) => (
+                                    <li key={`${m.milestone}-${a.slice(0, 20)}`} className="text-xs text-foreground flex items-start gap-1.5">
                                       <span className="text-primary mt-0.5">•</span>
                                       {a}
                                     </li>
