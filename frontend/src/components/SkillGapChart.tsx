@@ -23,6 +23,7 @@ interface SkillGapData {
 
 interface SkillGapChartProps {
   userId?: string;
+  resumeSkills?: string[]; // from analyzed resume — merged with roadmap progress on backend
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -37,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const SkillGapChart = ({ userId }: SkillGapChartProps) => {
+const SkillGapChart = ({ userId, resumeSkills = [] }: SkillGapChartProps) => {
   const navigate = useNavigate();
   const [data, setData] = useState<SkillGapData | null>(null);
   const [loading, setLoading] = useState(false);

@@ -22,6 +22,7 @@ interface SalaryInsights {
 
 interface MarketInsightsProps {
   userSkills?: string[];
+  defaultRole?: string;
 }
 
 const CITIES = ["United States", "New York", "San Francisco", "Seattle", "Austin", "Boston", "Chicago", "Los Angeles", "Remote"];
@@ -64,12 +65,18 @@ const SalaryRangeBar = ({ min, p25, median, p75, max }: { min: number; p25: numb
   );
 };
 
-const MarketInsights = ({ userSkills = [] }: MarketInsightsProps) => {
-  const [role, setRole] = useState("");
+const MarketInsights = ({ userSkills = [], defaultRole = "" }: MarketInsightsProps) => {
+  const [role, setRole] = useState(defaultRole);
   const [location, setLocation] = useState("United States");
   const [loading, setLoading] = useState(false);
   const [salaryData, setSalaryData] = useState<SalaryInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync default role from resume profile when it first loads
+  useEffect(() => {
+    if (defaultRole && !role) setRole(defaultRole);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultRole]);
 
   const fetchSalary = async () => {
     if (!role.trim()) return;

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Loader2, ChevronDown, ChevronUp, Clock, BookOpen, Briefcase, Target, ArrowRight } from "lucide-react";
+import { Zap, Loader2, ChevronDown, ChevronUp, Clock, BookOpen, Briefcase, Target, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { useResumeProfile } from "@/hooks/useResumeProfile";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
 const API = `${BACKEND_URL}/api`;
@@ -44,6 +45,7 @@ const MILESTONE_COLORS = [
 
 const SimulatePage = () => {
   const { user } = useAuth();
+  const { profile: resumeProfile, hasProfile } = useResumeProfile();
   const [currentRole, setCurrentRole] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [timeline, setTimeline] = useState(12);
@@ -51,6 +53,14 @@ const SimulatePage = () => {
   const [plan, setPlan] = useState<TrajectoryPlan | null>(null);
   const [error, setError] = useState("");
   const [expandedMilestone, setExpandedMilestone] = useState<number | null>(0);
+
+  // Pre-fill current role from resume profile when it loads
+  useEffect(() => {
+    if (resumeProfile.tagline && !currentRole) {
+      setCurrentRole(resumeProfile.tagline);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeProfile.tagline]);
 
   const simulate = async () => {
     if (!currentRole || !targetRole || !user?.user_id) return;
@@ -95,6 +105,19 @@ const SimulatePage = () => {
 
       {/* Configuration */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flat-card p-6 mb-8">
+        {/* Resume-connected badge */}
+        {hasProfile && (
+          <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="text-xs text-emerald-400 font-medium">
+              Using skills from your resume
+            </span>
+            <span className="text-xs text-muted-foreground">
+              — {resumeProfile.skills.slice(0, 5).join(", ")}
+              {resumeProfile.skills.length > 5 ? ` +${resumeProfile.skills.length - 5} more` : ""}
+            </span>
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div className="space-y-2">
             <Label>Current Role</Label>

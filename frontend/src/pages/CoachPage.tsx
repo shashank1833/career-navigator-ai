@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Send, Plus, ChevronRight, Loader2, MessageSquare, User, Clock, Sparkles } from "lucide-react";
+import { Brain, Send, Plus, ChevronRight, Loader2, MessageSquare, User, Clock, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
+import { useResumeProfile } from "@/hooks/useResumeProfile";
 import { cn } from "@/lib/utils";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
@@ -25,6 +26,7 @@ interface Session {
 
 const CoachPage = () => {
   const { user } = useAuth();
+  const { profile: resumeProfile, hasProfile } = useResumeProfile();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,7 +56,7 @@ const CoachPage = () => {
       if (import.meta.env.DEV) console.warn("[CoachPage] fetch sessions failed:", error);
     }
     setLoadingSessions(false);
-  // API is a module-level constant – stable, intentionally excluded
+  // API is a module-level constant - stable, intentionally excluded
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
 
@@ -67,7 +69,7 @@ const CoachPage = () => {
         .then(data => setRoadmapProgress(Array.isArray(data) ? data.filter((p: any) => p.completed).length : 0))
         .catch(() => {});
     }
-  // API is a module-level constant – stable, intentionally excluded
+  // API is a module-level constant - stable, intentionally excluded
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSessions, user?.user_id]);
 
@@ -160,6 +162,7 @@ const CoachPage = () => {
           >
             <span className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-primary" /> Context
+              {hasProfile && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
             </span>
             <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showContext && "rotate-90")} />
           </button>
@@ -169,14 +172,45 @@ const CoachPage = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-3 space-y-2 text-xs text-muted-foreground"
+                className="mt-3 space-y-2.5 text-xs"
               >
-                <div className="flex justify-between">
-                  <span>Roadmap Steps</span>
+                {hasProfile ? (
+                  <>
+                    {resumeProfile.tagline && (
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-muted-foreground shrink-0">Role</span>
+                        <span className="text-foreground text-right">{resumeProfile.tagline}</span>
+                      </div>
+                    )}
+                    {resumeProfile.experience && (
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-muted-foreground shrink-0">Experience</span>
+                        <span className="text-foreground text-right">{resumeProfile.experience}</span>
+                      </div>
+                    )}
+                    {resumeProfile.skills.length > 0 && (
+                      <div>
+                        <span className="text-muted-foreground block mb-1">Top skills</span>
+                        <div className="flex flex-wrap gap-1">
+                          {resumeProfile.skills.slice(0, 6).map(s => (
+                            <span key={s} className="skill-tag text-emerald-400 border-emerald-400/30 text-[9px]">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-[10px]">
+                    No resume analyzed yet. <br />
+                    Visit <span className="text-primary">/analyze</span> to unlock personalized coaching.
+                  </p>
+                )}
+                <div className="flex justify-between pt-1 border-t border-border/50">
+                  <span className="text-muted-foreground">Roadmap steps done</span>
                   <span className="text-primary font-medium">{roadmapProgress}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Logged in as</span>
+                  <span className="text-muted-foreground">User</span>
                   <span className="text-foreground truncate max-w-[100px]">{user?.name || user?.email}</span>
                 </div>
               </motion.div>
@@ -226,14 +260,22 @@ const CoachPage = () => {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col flat-card overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Brain className="w-4 h-4 text-primary" />
+        <div className="flex items-center justify-between gap-3 p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Brain className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">CareerNav Coach</h2>
+              <p className="text-xs text-muted-foreground">AI-powered career advisor with memory</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">CareerNav Coach</h2>
-            <p className="text-xs text-muted-foreground">AI-powered career advisor with memory</p>
-          </div>
+          {hasProfile && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] text-emerald-400 font-medium">Resume connected</span>
+            </div>
+          )}
         </div>
 
         {/* Messages */}
@@ -246,7 +288,7 @@ const CoachPage = () => {
               <div>
                 <h3 className="font-semibold text-foreground mb-1">Start a conversation</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Ask me anything about your career — skill gaps, job strategies, interview prep, or next steps.
+                  Ask me anything about your career - skill gaps, job strategies, interview prep, or next steps.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-sm">

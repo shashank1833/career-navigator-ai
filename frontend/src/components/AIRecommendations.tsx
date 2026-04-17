@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain, Loader2, Sparkles, Target, TrendingUp, DollarSign,
@@ -25,15 +25,34 @@ const EXPERIENCE_LEVELS = [
   { value: "lead", label: "Lead / Principal" },
 ];
 
-const AIRecommendations = () => {
-  const [skills, setSkills] = useState("");
-  const [interests, setInterests] = useState("");
+interface AIRecommendationsProps {
+  defaultSkills?: string[];
+  defaultRole?: string;
+}
+
+const AIRecommendations = ({ defaultSkills = [], defaultRole = "" }: AIRecommendationsProps) => {
+  const [skills, setSkills] = useState(() => defaultSkills.slice(0, 10).join(", "));
+  const [interests, setInterests] = useState(() => defaultRole);
   const [expLevel, setExpLevel] = useState("entry");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
-  const handleRecommend = async () => {
+  // Auto-run when resume profile arrives for the first time
+  useEffect(() => {
+    if (!autoLoaded && defaultSkills.length > 0) {
+      setSkills(defaultSkills.slice(0, 10).join(", "));
+      if (defaultRole) setInterests(defaultRole);
+      setAutoLoaded(true);
+      // Trigger recommendation after a short delay
+      const timer = setTimeout(() => triggerRecommend(defaultSkills, defaultRole), 600);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultSkills.join(","), defaultRole]);
+
+  const triggerRecommend = async (skillsArr: string[], role: string) => {
     setLoading(true);
     setHasSearched(true);
     try {
@@ -41,8 +60,8 @@ const AIRecommendations = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-          interests: interests.split(",").map((s) => s.trim()).filter(Boolean),
+          skills: skillsArr.slice(0, 10),
+          interests: role ? [role] : [],
           experience_level: expLevel,
         }),
       });
@@ -118,7 +137,10 @@ const AIRecommendations = () => {
           </div>
 
           <Button
-            onClick={handleRecommend}
+            onClick={() => triggerRecommend(
+              skills.split(",").map(s => s.trim()).filter(Boolean),
+              interests
+            )}
             disabled={loading || (!skills && !interests)}
             className="w-full gap-2 rounded-xl h-11"
           >

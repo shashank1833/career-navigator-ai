@@ -484,7 +484,8 @@ class JobMatchRequest(BaseModel):
 # ── match_jobs helpers ──────────────────────────────────────────────
 
 async def _collect_user_skills(user_id: str) -> list[str]:
-    """Return deduplicated skills from all completed roadmap steps."""
+    """Return deduplicated skills from completed roadmap steps + saved resume profile."""
+    # Roadmap progress skills
     progress_docs = await db.user_progress.find(
         {"user_id": user_id, "completed": True}, {"_id": 0}
     ).to_list(1000)
@@ -499,6 +500,11 @@ async def _collect_user_skills(user_id: str) -> list[str]:
         for step in roadmap.get("steps", []):
             if step.get("id") in completed_ids:
                 skills.extend(step.get("skills", []))
+
+    # Merge with saved resume profile skills
+    resume_profile = await db.user_profiles.find_one({"user_id": user_id}, {"_id": 0}) or {}
+    skills.extend(resume_profile.get("skills", []))
+
     return list(set(skills))
 
 
@@ -639,21 +645,34 @@ async def send_coach_message(request: CoachMessageRequest):
                 role = "User" if msg["role"] == "user" else "Coach"
                 history_text += f"{role}: {msg['content']}\n"
         
-        # Get user's roadmap progress for context
+        # Get user's roadmap progress + resume profile for context
         progress_docs = await db.user_progress.find(
             {"user_id": request.user_id, "completed": True}, {"_id": 0}
         ).to_list(100)
-        
         completed_count = len(progress_docs)
-        
+
+        # Pull saved resume profile (source of truth)
+        resume_profile = await db.user_profiles.find_one(
+            {"user_id": request.user_id}, {"_id": 0}
+        ) or {}
+        profile_ctx = ""
+        if resume_profile.get("skills"):
+            profile_ctx += f"\n- Resume skills: {', '.join(resume_profile['skills'][:15])}"
+        if resume_profile.get("tagline"):
+            profile_ctx += f"\n- Current role / tagline: {resume_profile['tagline']}"
+        if resume_profile.get("experience"):
+            profile_ctx += f"\n- Experience level: {resume_profile['experience']}"
+        if resume_profile.get("education"):
+            profile_ctx += f"\n- Education: {resume_profile['education']}"
+
         system_msg = f"""You are CareerNav Coach, an expert AI career advisor. You help users navigate career transitions, develop skills, and achieve their career goals.
 
-User context:
+User profile (from analyzed resume):{profile_ctx if profile_ctx else " No resume analyzed yet."}
 - Completed roadmap steps: {completed_count}
 - Session ID: {session_id}
 
 You provide:
-1. Personalized career guidance based on the user's progress
+1. Personalized guidance using the user's actual skills and background above
 2. Skill gap analysis and learning recommendations
 3. Job search strategies and interview tips
 4. Honest, actionable advice with specific next steps
@@ -709,6 +728,44 @@ async def get_coach_session_history(session_id: str):
         return session
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── User Resume Profile (source of truth for all features) ──────────
+
+class UserProfileSave(BaseModel):
+    name: str = ""
+    tagline: str = ""
+    experience: str = ""
+    education: str = ""
+    skills: List[str] = []
+    technologies: List[str] = []
+
+
+@api_router.post("/user-profile/{user_id}")
+async def save_user_profile(user_id: str, profile: UserProfileSave):
+    """Persist a user's analyzed resume profile as the app-wide source of truth."""
+    try:
+        doc = {
+            "user_id": user_id,
+            **profile.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.user_profiles.update_one(
+            {"user_id": user_id}, {"$set": doc}, upsert=True
+        )
+        return doc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/user-profile/{user_id}")
+async def get_user_profile(user_id: str):
+    """Get a user's stored resume profile."""
+    try:
+        profile = await db.user_profiles.find_one({"user_id": user_id}, {"_id": 0})
+        return profile or {}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -780,9 +837,17 @@ async def _fetch_resources_for_skills(skill_names: list[str]) -> list:
 
 @api_router.get("/skill-gap/{user_id}")
 async def get_skill_gap(user_id: str):
-    """Get skill gap analysis comparing user progress vs top job requirements."""
+    """Get skill gap analysis: merges resume skills + roadmap progress vs top job requirements."""
     try:
-        user_skills = await _extract_skills_from_progress(user_id)
+        # 1. Skills from completed roadmap steps
+        roadmap_skills = await _extract_skills_from_progress(user_id)
+
+        # 2. Skills from saved resume profile (source of truth)
+        resume_profile = await db.user_profiles.find_one({"user_id": user_id}, {"_id": 0}) or {}
+        resume_skills = {s.lower() for s in resume_profile.get("skills", [])}
+
+        # Union: roadmap progress + resume skills
+        user_skills = roadmap_skills | resume_skills
         jobs, demand = await _build_skill_demand(limit=20)
         total_jobs = max(len(jobs), 1)
         covered, missing = _classify_skills(demand, user_skills, total_jobs)
@@ -996,7 +1061,7 @@ class SimulateRequest(BaseModel):
 # ── trajectory helpers ───────────────────────────────────────────────
 
 async def _get_user_skills_capped(user_id: str, cap: int = 20) -> list[str]:
-    """Return up to `cap` unique skills from the user's completed roadmap steps."""
+    """Return up to `cap` unique skills from roadmap steps + saved resume profile."""
     progress = await db.user_progress.find(
         {"user_id": user_id, "completed": True}, {"_id": 0}
     ).to_list(100)
@@ -1009,6 +1074,11 @@ async def _get_user_skills_capped(user_id: str, cap: int = 20) -> list[str]:
         for step in roadmap.get("steps", []):
             if step.get("id") in done:
                 skills.extend(step.get("skills", []))
+
+    # Merge resume profile skills
+    resume_profile = await db.user_profiles.find_one({"user_id": user_id}, {"_id": 0}) or {}
+    skills.extend(resume_profile.get("skills", []))
+
     return list(set(skills))[:cap]
 
 
@@ -1066,12 +1136,18 @@ async def simulate_career_trajectory(request: SimulateRequest):
         user_skills = await _get_user_skills_capped(request.user_id)
         top_target_skills = await _get_top_target_skills(request.target_role)
 
+        # Fill current_role from saved resume profile when not set by user
+        current_role = request.current_role
+        if not current_role:
+            rp = await db.user_profiles.find_one({"user_id": request.user_id}, {"_id": 0}) or {}
+            current_role = rp.get("tagline") or "Current Role"
+
         if not EMERGENT_LLM_KEY:
             return {
                 "milestones": _build_fallback_milestones(
                     request.target_role, top_target_skills, request.timeline_months
                 ),
-                "current_role": request.current_role,
+                "current_role": current_role,
                 "target_role": request.target_role,
             }
 
@@ -1082,7 +1158,7 @@ async def simulate_career_trajectory(request: SimulateRequest):
         )
         prompt = (
             f"Create a {request.timeline_months}-month career transition plan.\n\n"
-            f"Current role: {request.current_role}\n"
+            f"Current role: {current_role}\n"
             f"Target role: {request.target_role}\n"
             f"Current skills: {user_skills}\n"
             f"Target skills needed: {top_target_skills}\n\n"
@@ -1095,7 +1171,7 @@ async def simulate_career_trajectory(request: SimulateRequest):
         raw_response = await chat.send_message(UserMessage(text=prompt))
         plan = _parse_llm_plan(raw_response)
         plan.update({
-            "current_role": request.current_role,
+            "current_role": current_role,
             "target_role": request.target_role,
             "user_skills": user_skills,
             "target_skills": top_target_skills,

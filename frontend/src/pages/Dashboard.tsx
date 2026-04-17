@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileText, Briefcase, BookOpen, TrendingUp, Brain, Target,
-  Loader2, Sparkles, Rocket, Map, LayoutGrid, Table,
-  Award, CheckCircle2, Compass, MessageSquare, Zap
+  FileText, Briefcase, Target, TrendingUp, Brain,
+  Loader2, Sparkles, Map, LayoutGrid, Table,
+  Award, Compass, MessageSquare, Zap, CheckCircle2,
+  ChevronRight, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useResumeProfile } from "@/hooks/useResumeProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardCharts from "@/components/DashboardCharts";
 import MarketInsights from "@/components/MarketInsights";
@@ -44,6 +46,7 @@ const item = {
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const { profile: resumeProfile, hasProfile } = useResumeProfile();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({ applications: 0, roadmapCompleted: 0, resumeVersions: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -55,7 +58,6 @@ const Dashboard = () => {
     setStatsLoading(true);
 
     const userId = user.user_id;
-    // API is a module-level constant — intentionally omitted from deps (stable reference)
     Promise.all([
       fetch(`${API}/user-progress/${userId}`, { credentials: "include" })
         .then(r => r.ok ? r.json() : []).catch(() => []),
@@ -74,19 +76,20 @@ const Dashboard = () => {
         applications: Array.isArray(apps) ? apps.length : 0,
       });
       setStatsLoading(false);
-    }).catch(() => {
-      setStatsLoading(false);
-    });
+    }).catch(() => setStatsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
 
-  if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
-
-  if (!user) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
+  if (loading) return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+  if (!user) return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   const displayName = user?.name || user?.email?.split("@")[0] || "User";
   const firstName = displayName.split(" ")[0];
@@ -106,10 +109,8 @@ const Dashboard = () => {
   ];
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    const h = new Date().getHours();
+    return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
   };
 
   return (
@@ -130,12 +131,11 @@ const Dashboard = () => {
               {getGreeting()}, <span className="gradient-text">{firstName}</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg">
-              {stats.roadmapCompleted > 0
-                ? "Pick up where you left off — review your applications, refine your resume, or explore new opportunities."
-                : "Start by uploading your resume or exploring career paths to unlock personalized insights."
-              }
+              {hasProfile
+                ? "Your resume is connected — all features are personalised to your profile."
+                : "Upload your resume on the Analysis page to unlock personalised insights across all features."}
             </p>
-            {stats.roadmapCompleted === 0 && (
+            {!hasProfile && (
               <div className="flex gap-3 mt-4">
                 <Button onClick={() => navigate("/analyze")} size="sm" className="gap-2">
                   <Sparkles className="w-3.5 h-3.5" /> Analyze Resume
@@ -151,6 +151,47 @@ const Dashboard = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Resume Profile Card — shows when resume has been analyzed */}
+      {hasProfile && (
+        <motion.div variants={item} className="flat-card p-5 border-emerald-500/30 border">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <span className="text-sm font-semibold text-foreground">Resume Analyzed ✓</span>
+              {resumeProfile.tagline && (
+                <span className="text-xs text-muted-foreground">— {resumeProfile.tagline}</span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/analyze")}
+              className="text-xs h-7 gap-1 text-primary"
+            >
+              Update <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
+
+          {resumeProfile.skills.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {resumeProfile.skills.slice(0, 12).map((s) => (
+                <span key={s} className="skill-tag text-emerald-400 border-emerald-400/30">{s}</span>
+              ))}
+              {resumeProfile.skills.length > 12 && (
+                <span className="text-xs text-muted-foreground self-center">
+                  +{resumeProfile.skills.length - 12} more
+                </span>
+              )}
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            These skills power your Skill Gap analysis, Coach, Simulator &amp; Market Insights
+          </p>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -174,12 +215,12 @@ const Dashboard = () => {
         ))}
       </motion.div>
 
-      {/* Main Tabs */}
+      {/* Insights Tabs */}
       <motion.div variants={item}>
         <Tabs defaultValue="overview">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-semibold text-foreground">Insights & Tools</h3>
+              <h3 className="text-base font-semibold text-foreground">Insights &amp; Tools</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Analytics, AI, and market intelligence</p>
             </div>
             <TabsList className="bg-muted/50 border border-border rounded-lg p-1">
@@ -197,22 +238,48 @@ const Dashboard = () => {
               </TabsTrigger>
             </TabsList>
           </div>
+
           <TabsContent value="overview" className="flat-card p-5">
             <DashboardCharts applications={applications} />
           </TabsContent>
+
           <TabsContent value="skill-gap" className="flat-card p-5">
-            <SkillGapChart userId={user.user_id} />
+            {!hasProfile && !user.user_id ? (
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">No resume analyzed yet</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <button onClick={() => navigate("/analyze")} className="text-primary underline">Analyze your resume</button>
+                    {" "}to see a personalized skill gap analysis.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <SkillGapChart
+                userId={user.user_id}
+                resumeSkills={resumeProfile.skills}
+              />
+            )}
           </TabsContent>
+
           <TabsContent value="ai" className="flat-card p-5">
-            <AIRecommendations />
+            <AIRecommendations
+              defaultSkills={resumeProfile.skills}
+              defaultRole={resumeProfile.tagline}
+            />
           </TabsContent>
+
           <TabsContent value="market" className="flat-card p-5">
-            <MarketInsights userSkills={[]} />
+            <MarketInsights
+              userSkills={resumeProfile.skills}
+              defaultRole={resumeProfile.tagline}
+            />
           </TabsContent>
         </Tabs>
       </motion.div>
 
-      {/* Applications */}
+      {/* Applications Kanban */}
       {applications.length > 0 && (
         <motion.div variants={item}>
           <Tabs defaultValue="kanban">

@@ -19,6 +19,7 @@ import CareerRoleAnalyzer from "@/components/CareerRoleAnalyzer";
 import CareerStrategyEngine from "@/components/CareerStrategyEngine";
 import CareerReportExport from "@/components/CareerReportExport";
 import { useResumeVersions } from "@/hooks/useResumeVersions";
+import { useResumeProfile } from "@/hooks/useResumeProfile";
 import type { AnalysisResult } from "@/types/analysis";
 
 type NavigationState = {
@@ -34,6 +35,7 @@ const Index = () => {
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [navigationState] = useState<NavigationState | null>(() => location.state as NavigationState | null);
   const { saveOriginalResume } = useResumeVersions();
+  const { saveProfile } = useResumeProfile();
 
   useEffect(() => {
     if (navigationState?.analysisData) {
@@ -58,7 +60,19 @@ const Index = () => {
 
   const handleAnalyze = (result: AnalysisResult) => {
     setData(result);
+    // Save to resume version history
     saveOriginalResume(result.profile, result);
+    // Save as app-wide source of truth (feeds Coach, Simulate, Market, Skill Gap)
+    saveProfile({
+      name:       result.profile.name,
+      tagline:    result.profile.tagline,
+      experience: result.profile.experience,
+      education:  result.profile.education,
+      skills:     result.profile.skills,
+      technologies: Array.isArray(result.profile.technologies)
+        ? (result.profile.technologies as any[]).filter((t): t is string => typeof t === "string")
+        : [],
+    });
   };
 
   return (
