@@ -93,9 +93,9 @@ const ModernTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data 
             Skills
           </h2>
           <div className="flex flex-wrap gap-2">
-            {data.skills.map((skill, i) => (
+            {data.skills.map((skill) => (
               <span 
-                key={i} 
+                key={skill} 
                 className="px-2 py-1 rounded text-xs"
                 style={{ backgroundColor: colors.primary + "15", color: colors.primary }}
               >
@@ -113,8 +113,8 @@ const ModernTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data 
             Experience
           </h2>
           <div className="space-y-4">
-            {data.experiences.map((exp, i) => (
-              <div key={i}>
+            {data.experiences.map((exp) => (
+              <div key={`${exp.company}-${exp.title}`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold text-gray-800">{exp.title}</h3>
@@ -123,8 +123,8 @@ const ModernTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data 
                   <span className="text-xs text-gray-500">{exp.duration}</span>
                 </div>
                 <ul className="mt-2 space-y-1 text-gray-700">
-                  {exp.bullets.map((bullet, j) => (
-                    <li key={j} className="flex items-start gap-2">
+                  {exp.bullets.map((bullet) => (
+                    <li key={bullet.slice(0, 25)} className="flex items-start gap-2">
                       <span style={{ color: colors.primary }}>•</span>
                       <span>{bullet}</span>
                     </li>
@@ -143,14 +143,14 @@ const ModernTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data 
             Projects
           </h2>
           <div className="space-y-3">
-            {data.projects.map((project, i) => (
-              <div key={i}>
+            {data.projects.map((project) => (
+              <div key={project.name}>
                 <h3 className="font-semibold text-gray-800">{project.name}</h3>
                 <p className="text-gray-600 text-sm">{project.description}</p>
                 {project.technologies.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {project.technologies.map((tech, j) => (
-                      <span key={j} className="text-xs text-gray-500">
+                    {project.technologies.map((tech) => (
+                      <span key={tech} className="text-xs text-gray-500">
                         {tech}{j < project.technologies.length - 1 ? " •" : ""}
                       </span>
                     ))}
@@ -226,16 +226,16 @@ const ProfessionalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({
             Professional Experience
           </h2>
           <div className="space-y-4">
-            {data.experiences.map((exp, i) => (
-              <div key={i}>
+            {data.experiences.map((exp) => (
+              <div key={`${exp.company}-${exp.title}`}>
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-bold text-gray-800">{exp.title}</h3>
                   <span className="text-xs text-gray-500 italic">{exp.duration}</span>
                 </div>
                 <p className="text-gray-600 italic">{exp.company}{exp.location && `, ${exp.location}`}</p>
                 <ul className="mt-2 space-y-1 text-gray-700 ml-4">
-                  {exp.bullets.map((bullet, j) => (
-                    <li key={j} className="list-disc">{bullet}</li>
+                  {exp.bullets.map((bullet) => (
+                    <li key={bullet.slice(0, 25)} className="list-disc">{bullet}</li>
                   ))}
                 </ul>
               </div>
@@ -280,8 +280,8 @@ const ProfessionalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({
             Key Projects
           </h2>
           <div className="space-y-2">
-            {data.projects.map((project, i) => (
-              <div key={i}>
+            {data.projects.map((project) => (
+              <div key={project.name}>
                 <span className="font-semibold">{project.name}:</span>{" "}
                 <span className="text-gray-600">{project.description}</span>
               </div>
@@ -338,16 +338,16 @@ const MinimalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data
         <div className="mb-4">
           <h2 className="font-bold text-sm border-b border-black pb-0.5 mb-2">EXPERIENCE</h2>
           <div className="space-y-3">
-            {data.experiences.map((exp, i) => (
-              <div key={i}>
+            {data.experiences.map((exp) => (
+              <div key={`${exp.company}-${exp.title}`}>
                 <div className="flex justify-between">
                   <span className="font-semibold">{exp.title}</span>
                   <span className="text-gray-600">{exp.duration}</span>
                 </div>
                 <p className="text-gray-600 italic">{exp.company}</p>
                 <ul className="mt-1 space-y-0.5 text-gray-700">
-                  {exp.bullets.map((bullet, j) => (
-                    <li key={j} className="flex items-start gap-2">
+                  {exp.bullets.map((bullet) => (
+                    <li key={bullet.slice(0, 25)} className="flex items-start gap-2">
                       <span>–</span>
                       <span>{bullet}</span>
                     </li>
@@ -372,8 +372,8 @@ const MinimalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data
         <div>
           <h2 className="font-bold text-sm border-b border-black pb-0.5 mb-2">PROJECTS</h2>
           <div className="space-y-2">
-            {data.projects.map((project, i) => (
-              <div key={i}>
+            {data.projects.map((project) => (
+              <div key={project.name}>
                 <span className="font-semibold">{project.name}</span>
                 <span className="text-gray-600"> – {project.description}</span>
                 {project.technologies.length > 0 && (
@@ -442,8 +442,8 @@ const CreativeTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
               Skills
             </h2>
             <div className="space-y-2">
-              {data.skills.map((skill, i) => (
-                <div key={i} className="text-xs">
+              {data.skills.map((skill) => (
+                <div key={skill} className="text-xs">
                   <span>{skill}</span>
                   <div className="h-1 bg-white/30 rounded mt-1">
                     <div 
@@ -487,8 +487,8 @@ const CreativeTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
               Experience
             </h2>
             <div className="space-y-4">
-              {data.experiences.map((exp, i) => (
-                <div key={i} className="relative pl-4 border-l-2" style={{ borderColor: colors.accent }}>
+              {data.experiences.map((exp) => (
+                <div key={`${exp.company}-${exp.title}`} className="relative pl-4 border-l-2" style={{ borderColor: colors.accent }}>
                   <div 
                     className="absolute -left-[5px] top-0 w-2 h-2 rounded-full"
                     style={{ backgroundColor: colors.primary }}
@@ -496,8 +496,8 @@ const CreativeTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
                   <h3 className="font-semibold text-gray-800">{exp.title}</h3>
                   <p className="text-gray-600 text-xs">{exp.company} • {exp.duration}</p>
                   <ul className="mt-1 space-y-0.5 text-gray-700 text-xs">
-                    {exp.bullets.map((bullet, j) => (
-                      <li key={j}>• {bullet}</li>
+                    {exp.bullets.map((bullet) => (
+                      <li key={bullet.slice(0, 25)}>• {bullet}</li>
                     ))}
                   </ul>
                 </div>
@@ -513,9 +513,9 @@ const CreativeTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
               Projects
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              {data.projects.map((project, i) => (
+              {data.projects.map((project) => (
                 <div 
-                  key={i} 
+                  key={project.name} 
                   className="p-3 rounded-lg border"
                   style={{ borderColor: colors.border }}
                 >
@@ -594,16 +594,16 @@ const AcademicTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
             Professional Experience
           </h2>
           <div className="space-y-3 ml-2">
-            {data.experiences.map((exp, i) => (
-              <div key={i}>
+            {data.experiences.map((exp) => (
+              <div key={`${exp.company}-${exp.title}`}>
                 <div className="flex justify-between">
                   <span className="font-semibold">{exp.title}</span>
                   <span className="text-gray-500 text-xs">{exp.duration}</span>
                 </div>
                 <p className="text-gray-600 italic">{exp.company}</p>
                 <ul className="mt-1 space-y-0.5 text-gray-700 text-xs">
-                  {exp.bullets.map((bullet, j) => (
-                    <li key={j} className="flex items-start gap-2">
+                  {exp.bullets.map((bullet) => (
+                    <li key={bullet.slice(0, 25)} className="flex items-start gap-2">
                       <span>•</span>
                       <span>{bullet}</span>
                     </li>
@@ -626,7 +626,7 @@ const AcademicTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
           </h2>
           <ul className="ml-2 space-y-1 text-xs">
             {data.publications.map((pub, i) => (
-              <li key={i}>[{i + 1}] {pub}</li>
+              <li key={pub.slice(0, 30)}>[{i + 1}] {pub}</li>
             ))}
           </ul>
         </div>
@@ -655,8 +655,8 @@ const AcademicTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ dat
             Research Projects
           </h2>
           <div className="space-y-2 ml-2">
-            {data.projects.map((project, i) => (
-              <div key={i}>
+            {data.projects.map((project) => (
+              <div key={project.name}>
                 <span className="font-semibold">{project.name}</span>
                 <span className="text-gray-600"> – {project.description}</span>
               </div>

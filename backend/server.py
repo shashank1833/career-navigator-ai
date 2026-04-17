@@ -807,70 +807,75 @@ async def get_skill_gap(user_id: str):
 
 # ─── Salary Intelligence ─────────────────────────────────────────────
 
+# ── salary_insights helpers ─────────────────────────────────────────
+
+def _build_salary_query(role: str, location: str) -> Dict[str, Any]:
+    """Build the MongoDB query for jobs with salary data."""
+    query: Dict[str, Any] = {
+        "salary_min": {"$ne": None},
+        "salary_max": {"$ne": None},
+    }
+    if role:
+        query["title"] = {"$regex": role, "$options": "i"}
+    if location:
+        query["location"] = {"$regex": location, "$options": "i"}
+    return query
+
+
+def _empty_salary_response(role: str, location: str) -> Dict[str, Any]:
+    return {"median": 0, "p25": 0, "p75": 0, "sample_count": 0,
+            "top_companies": [], "role": role, "location": location}
+
+
+def _compute_percentiles(jobs: list) -> tuple[list[float], int]:
+    """Return (sorted_midpoints, n) from job salary data."""
+    midpoints = [
+        (lo + hi) / 2
+        for job in jobs
+        for lo, hi in [(job.get("salary_min") or 0, job.get("salary_max") or 0)]
+        if lo > 0 or hi > 0
+    ]
+    midpoints.sort()
+    return midpoints, len(midpoints)
+
+
+def _top_companies(jobs: list, top_n: int = 5) -> list:
+    counts: Dict[str, int] = {}
+    for job in jobs:
+        c = job.get("company", "")
+        if c:
+            counts[c] = counts.get(c, 0) + 1
+    ranked = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    return [{"company": c, "count": cnt} for c, cnt in ranked]
+
+
 @api_router.get("/salary-insights")
 async def get_salary_insights(role: str = "", location: str = "", experience_level: str = ""):
     """Get salary insights from cached job data."""
     try:
-        query: Dict[str, Any] = {
-            "salary_min": {"$ne": None},
-            "salary_max": {"$ne": None},
-        }
-        if role:
-            query["title"] = {"$regex": role, "$options": "i"}
-        if location:
-            query["location"] = {"$regex": location, "$options": "i"}
-        
-        jobs = await db.jobs.find(query, {"_id": 0, "salary_min": 1, "salary_max": 1, "company": 1, "title": 1}).to_list(500)
-        
+        query = _build_salary_query(role, location)
+        jobs = await db.jobs.find(
+            query, {"_id": 0, "salary_min": 1, "salary_max": 1, "company": 1, "title": 1}
+        ).to_list(500)
+
         if not jobs:
-            return {
-                "median": 0,
-                "p25": 0,
-                "p75": 0,
-                "sample_count": 0,
-                "top_companies": [],
-                "role": role,
-                "location": location,
-            }
-        
-        # Use midpoints for analysis
-        midpoints = []
-        for job in jobs:
-            lo = job.get("salary_min") or 0
-            hi = job.get("salary_max") or lo
-            if lo > 0 or hi > 0:
-                midpoints.append((lo + hi) / 2)
-        
+            return _empty_salary_response(role, location)
+
+        midpoints, n = _compute_percentiles(jobs)
         if not midpoints:
-            return {"median": 0, "p25": 0, "p75": 0, "sample_count": 0, "top_companies": [], "role": role, "location": location}
-        
-        midpoints.sort()
-        n = len(midpoints)
-        median = midpoints[n // 2]
-        p25 = midpoints[n // 4]
-        p75 = midpoints[(n * 3) // 4]
-        
-        # Top companies
-        company_counts: Dict[str, int] = {}
-        for job in jobs:
-            c = job.get("company", "")
-            if c:
-                company_counts[c] = company_counts.get(c, 0) + 1
-        
-        top_companies = sorted(company_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-        
+            return _empty_salary_response(role, location)
+
         return {
-            "median": int(median),
-            "p25": int(p25),
-            "p75": int(p75),
+            "median": int(midpoints[n // 2]),
+            "p25": int(midpoints[n // 4]),
+            "p75": int(midpoints[(n * 3) // 4]),
             "min": int(midpoints[0]),
             "max": int(midpoints[-1]),
             "sample_count": n,
-            "top_companies": [{"company": c, "count": cnt} for c, cnt in top_companies],
+            "top_companies": _top_companies(jobs),
             "role": role,
             "location": location,
         }
-        
     except Exception as e:
         logger.error(f"Salary insights failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -878,77 +883,100 @@ async def get_salary_insights(role: str = "", location: str = "", experience_lev
 
 # ─── Market Heatmap Data ─────────────────────────────────────────────
 
+# ── heatmap helpers ──────────────────────────────────────────────────
+
+def _parse_scraped_at(raw: str, week_ago: datetime) -> bool:
+    """Return True if the job was scraped within the past week."""
+    if not raw:
+        return False
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt > week_ago
+    except Exception:
+        return False
+
+
+def _tally_skill_counts(
+    jobs: list, week_ago: datetime
+) -> tuple[Dict[str, int], Dict[str, int]]:
+    """Return (all_counts, recent_counts) dicts from job skill lists."""
+    all_counts: Dict[str, int] = {}
+    recent_counts: Dict[str, int] = {}
+    for job in jobs:
+        is_recent = _parse_scraped_at(job.get("scraped_at", ""), week_ago)
+        for raw_skill in job.get("skills_required", []):
+            s = raw_skill.lower().strip()
+            if s:
+                all_counts[s] = all_counts.get(s, 0) + 1
+                if is_recent:
+                    recent_counts[s] = recent_counts.get(s, 0) + 1
+    return all_counts, recent_counts
+
+
+def _map_domain_counts(jobs: list, careers: list) -> Dict[str, int]:
+    """Count how many cached jobs match each career domain via skill overlap."""
+    domain_counts: Dict[str, int] = {}
+    career_skill_sets = [
+        (c.get("domain", "Other"), {s.lower() for s in c.get("skills", [])})
+        for c in careers
+    ]
+    for job in jobs:
+        job_skills = {s.lower() for s in job.get("skills_required", [])}
+        for domain, career_skills in career_skill_sets:
+            if career_skills & job_skills:       # non-empty intersection
+                domain_counts[domain] = domain_counts.get(domain, 0) + 1
+                break                             # count each job once
+    return domain_counts
+
+
+def _find_trending_skills(
+    all_counts: Dict[str, int], recent_counts: Dict[str, int], threshold: float = 0.2
+) -> set[str]:
+    """Skills where recent postings exceed `threshold` fraction of all postings."""
+    return {
+        skill
+        for skill, count in all_counts.items()
+        if count > 0 and recent_counts.get(skill, 0) / count > threshold
+    }
+
+
+def _build_heatmap_skills(
+    all_counts: Dict[str, int], trending: set[str], top_n: int = 30
+) -> list:
+    """Return top-N skills sorted by count with demand_pct and trending flag."""
+    top = sorted(all_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    max_count = max((c for _, c in top), default=1)
+    return [
+        {
+            "skill": skill,
+            "count": count,
+            "demand_pct": round((count / max_count) * 100),
+            "trending": skill in trending,
+        }
+        for skill, count in top
+    ]
+
+
 @api_router.get("/market-heatmap")
 async def get_market_heatmap():
     """Get market demand data for heatmap visualization."""
     try:
-        jobs = await db.jobs.find({}, {"_id": 0, "skills_required": 1, "scraped_at": 1}).to_list(1000)
-        
-        skill_counts: Dict[str, int] = {}
-        now = datetime.now(timezone.utc)
-        week_ago = now - timedelta(days=7)
-        
-        recent_skill_counts: Dict[str, int] = {}
-        
-        for job in jobs:
-            scraped_at = job.get("scraped_at", "")
-            is_recent = False
-            if scraped_at:
-                try:
-                    scraped_dt = datetime.fromisoformat(scraped_at.replace("Z", "+00:00"))
-                    if scraped_dt.tzinfo is None:
-                        scraped_dt = scraped_dt.replace(tzinfo=timezone.utc)
-                    is_recent = scraped_dt > week_ago
-                except Exception:
-                    pass
-            
-            for skill in job.get("skills_required", []):
-                s = skill.lower().strip()
-                if s:
-                    skill_counts[s] = skill_counts.get(s, 0) + 1
-                    if is_recent:
-                        recent_skill_counts[s] = recent_skill_counts.get(s, 0) + 1
-        
-        # Get careers for domain mapping
+        jobs = await db.jobs.find(
+            {}, {"_id": 0, "skills_required": 1, "scraped_at": 1}
+        ).to_list(1000)
         careers = await db.careers.find({}, {"_id": 0, "domain": 1, "skills": 1}).to_list(50)
-        
-        domain_job_counts: Dict[str, int] = {}
-        for job in jobs:
-            # Simple domain detection from job skills
-            job_skills_set = set(s.lower() for s in job.get("skills_required", []))
-            for career in careers:
-                career_skills = set(s.lower() for s in career.get("skills", []))
-                if career_skills.intersection(job_skills_set):
-                    domain = career.get("domain", "Other")
-                    domain_job_counts[domain] = domain_job_counts.get(domain, 0) + 1
-                    break
-        
-        # Top 30 skills by demand
-        top_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)[:30]
-        max_count = max((c for _, c in top_skills), default=1)
-        
-        # Mark trending skills (>20% more postings than last week)
-        trending_skills = set()
-        for skill, count in skill_counts.items():
-            recent = recent_skill_counts.get(skill, 0)
-            if count > 0 and recent > 0:
-                # If more than 20% of total postings are recent, mark as trending
-                if recent / count > 0.2:
-                    trending_skills.add(skill)
-        
-        heatmap_skills = [
-            {
-                "skill": skill,
-                "count": count,
-                "demand_pct": round((count / max_count) * 100),
-                "trending": skill in trending_skills,
-            }
-            for skill, count in top_skills
-        ]
-        
+
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        all_counts, recent_counts = _tally_skill_counts(jobs, week_ago)
+        domain_counts = _map_domain_counts(jobs, careers)
+        trending = _find_trending_skills(all_counts, recent_counts)
+        heatmap_skills = _build_heatmap_skills(all_counts, trending)
+
         return {
             "skills": heatmap_skills,
-            "domain_counts": domain_job_counts,
+            "domain_counts": domain_counts,
             "total_jobs": len(jobs),
         }
     except Exception as e:
@@ -965,96 +993,113 @@ class SimulateRequest(BaseModel):
     timeline_months: int = 12  # 6, 12, or 24
 
 
+# ── trajectory helpers ───────────────────────────────────────────────
+
+async def _get_user_skills_capped(user_id: str, cap: int = 20) -> list[str]:
+    """Return up to `cap` unique skills from the user's completed roadmap steps."""
+    progress = await db.user_progress.find(
+        {"user_id": user_id, "completed": True}, {"_id": 0}
+    ).to_list(100)
+    skills: list[str] = []
+    for roadmap_id in {p["roadmap_id"] for p in progress}:
+        roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
+        if not roadmap:
+            continue
+        done = {p["step_id"] for p in progress if p["roadmap_id"] == roadmap_id}
+        for step in roadmap.get("steps", []):
+            if step.get("id") in done:
+                skills.extend(step.get("skills", []))
+    return list(set(skills))[:cap]
+
+
+async def _get_top_target_skills(target_role: str, cap: int = 15) -> list[str]:
+    """Return the most-demanded skills for the target role from job cache."""
+    target_jobs = await db.jobs.find(
+        {"title": {"$regex": target_role, "$options": "i"}},
+        {"_id": 0, "skills_required": 1},
+    ).limit(10).to_list(10)
+    demand: Dict[str, int] = {}
+    for job in target_jobs:
+        for skill in job.get("skills_required", []):
+            s = skill.lower()
+            demand[s] = demand.get(s, 0) + 1
+    return [s for s, _ in sorted(demand.items(), key=lambda x: x[1], reverse=True)][:cap]
+
+
+def _build_fallback_milestones(
+    target_role: str, target_skills: list[str], months: int
+) -> list:
+    """Simple 3-phase plan used when no LLM key is available."""
+    per = months // 3
+    tiers = [f"Junior {target_role}", f"Mid {target_role}", target_role]
+    return [
+        {
+            "milestone": i + 1,
+            "month_range": f"Month {i * per + 1}-{(i + 1) * per}",
+            "title": f"Phase {i + 1}",
+            "skills_to_learn": target_skills[i * 5:(i + 1) * 5],
+            "actions": ["Study relevant courses", "Build projects", "Network actively"],
+            "job_tier": tiers[i],
+            "estimated_hours": per * 40,
+        }
+        for i in range(3)
+    ]
+
+
+def _parse_llm_plan(raw: str) -> Dict[str, Any]:
+    """Strip code fences and parse the JSON plan returned by Claude."""
+    cleaned = raw.strip()
+    if "```" in cleaned:
+        cleaned = cleaned.split("```")[1]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        return {"milestones": []}
+
+
 @api_router.post("/simulate-trajectory")
 async def simulate_career_trajectory(request: SimulateRequest):
     """Generate a month-by-month career transition plan using Claude."""
     try:
-        # Get user's current skills from progress
-        progress_docs = await db.user_progress.find(
-            {"user_id": request.user_id, "completed": True}, {"_id": 0}
-        ).to_list(100)
-        
-        user_skills = []
-        for roadmap_id in set(p["roadmap_id"] for p in progress_docs):
-            roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
-            if roadmap:
-                completed_ids = {p["step_id"] for p in progress_docs if p["roadmap_id"] == roadmap_id}
-                for step in roadmap.get("steps", []):
-                    if step.get("id") in completed_ids:
-                        user_skills.extend(step.get("skills", []))
-        
-        user_skills = list(set(user_skills))[:20]
-        
-        # Get skill gap vs target role
-        target_jobs = await db.jobs.find(
-            {"title": {"$regex": request.target_role, "$options": "i"}},
-            {"_id": 0, "skills_required": 1}
-        ).limit(10).to_list(10)
-        
-        target_skills: Dict[str, int] = {}
-        for job in target_jobs:
-            for skill in job.get("skills_required", []):
-                s = skill.lower()
-                target_skills[s] = target_skills.get(s, 0) + 1
-        
-        top_target_skills = [s for s, _ in sorted(target_skills.items(), key=lambda x: x[1], reverse=True)][:15]
-        
+        user_skills = await _get_user_skills_capped(request.user_id)
+        top_target_skills = await _get_top_target_skills(request.target_role)
+
         if not EMERGENT_LLM_KEY:
-            # Fallback plan
-            milestones = []
-            months_per_milestone = request.timeline_months // 3
-            for i in range(3):
-                milestones.append({
-                    "milestone": i + 1,
-                    "month_range": f"Month {i * months_per_milestone + 1}-{(i + 1) * months_per_milestone}",
-                    "title": f"Phase {i + 1}",
-                    "skills_to_learn": top_target_skills[i*5:(i+1)*5],
-                    "actions": ["Study relevant courses", "Build projects", "Network actively"],
-                    "job_tier": f"Junior {request.target_role}" if i == 0 else f"Mid {request.target_role}" if i == 1 else request.target_role,
-                    "estimated_hours": months_per_milestone * 40,
-                })
-            return {"milestones": milestones, "current_role": request.current_role, "target_role": request.target_role}
-        
+            return {
+                "milestones": _build_fallback_milestones(
+                    request.target_role, top_target_skills, request.timeline_months
+                ),
+                "current_role": request.current_role,
+                "target_role": request.target_role,
+            }
+
         from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = get_llm_chat(f"simulate-{request.user_id}", "You are a career transition expert. Return valid JSON only.")
-        
-        prompt = f"""Create a {request.timeline_months}-month career transition plan.
-
-Current role: {request.current_role}
-Target role: {request.target_role}
-Current skills: {user_skills}
-Target skills needed: {top_target_skills}
-Timeline: {request.timeline_months} months
-
-Return a JSON object with a "milestones" array of 3-6 milestones. Each milestone:
-{{
-  "milestone": number,
-  "month_range": "Month X-Y",
-  "title": "Phase title",
-  "skills_to_learn": ["skill1", "skill2"],
-  "actions": ["specific action 1", "specific action 2", "specific action 3"],
-  "job_tier": "which job level becomes accessible",
-  "estimated_hours": hours_per_week * weeks
-}}
-
-Return ONLY the JSON object."""
-        
-        response = await chat.send_message(UserMessage(text=prompt))
-        try:
-            cleaned = response.strip()
-            if "```" in cleaned:
-                cleaned = cleaned.split("```")[1]
-                if cleaned.startswith("json"):
-                    cleaned = cleaned[4:]
-            plan = json.loads(cleaned)
-        except Exception:
-            plan = {"milestones": []}
-        
-        plan["current_role"] = request.current_role
-        plan["target_role"] = request.target_role
-        plan["user_skills"] = user_skills
-        plan["target_skills"] = top_target_skills
-        
+        chat = get_llm_chat(
+            f"simulate-{request.user_id}",
+            "You are a career transition expert. Return valid JSON only.",
+        )
+        prompt = (
+            f"Create a {request.timeline_months}-month career transition plan.\n\n"
+            f"Current role: {request.current_role}\n"
+            f"Target role: {request.target_role}\n"
+            f"Current skills: {user_skills}\n"
+            f"Target skills needed: {top_target_skills}\n\n"
+            'Return a JSON object with a "milestones" array of 3-6 milestones. Each milestone:\n'
+            '{"milestone": number, "month_range": "Month X-Y", "title": "Phase title",\n'
+            ' "skills_to_learn": ["skill1"], "actions": ["action1", "action2"],\n'
+            ' "job_tier": "accessible tier", "estimated_hours": number}\n\n'
+            "Return ONLY the JSON object."
+        )
+        raw_response = await chat.send_message(UserMessage(text=prompt))
+        plan = _parse_llm_plan(raw_response)
+        plan.update({
+            "current_role": request.current_role,
+            "target_role": request.target_role,
+            "user_skills": user_skills,
+            "target_skills": top_target_skills,
+        })
         return plan
         
     except Exception as e:

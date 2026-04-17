@@ -187,7 +187,7 @@ const CreativePreview = ({ template }: { template: ResumeTemplate }) => {
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{exp.title}</p>
             <p style={{ fontSize: 3.5, color: "#777" }}>{exp.company} | {exp.duration}</p>
             {exp.bullets.slice(0, 2).map((b, j) => (
-              <p key={j} style={{ fontSize: 3.5, color: "#555" }}>• {b}</p>
+              <p key={b.slice(0,20)} style={{ fontSize: 3.5, color: "#555" }}>• {b}</p>
             ))}
           </div>
         ))}
@@ -198,7 +198,7 @@ const CreativePreview = ({ template }: { template: ResumeTemplate }) => {
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{p.name}</p>
             <p style={{ fontSize: 3.5, color: "#888" }}>{p.tech}</p>
             {p.bullets.slice(0, 1).map((b, j) => (
-              <p key={j} style={{ fontSize: 3.5, color: "#555" }}>• {b}</p>
+              <p key={b.slice(0,20)} style={{ fontSize: 3.5, color: "#555" }}>• {b}</p>
             ))}
           </div>
         ))}
@@ -274,7 +274,7 @@ const SingleColumnPreview = ({ template }: { template: ResumeTemplate }) => {
             </div>
             <p style={{ fontSize: 3.5, color: "#777", fontStyle: "italic" }}>{exp.company}</p>
             {exp.bullets.slice(0, 2).map((b, j) => (
-              <p key={j} style={{ fontSize: 3.5, color: "#555" }}>{bulletChar} {b}</p>
+              <p key={b.slice(0,20)} style={{ fontSize: 3.5, color: "#555" }}>{bulletChar} {b}</p>
             ))}
           </div>
         ))}
@@ -287,7 +287,7 @@ const SingleColumnPreview = ({ template }: { template: ResumeTemplate }) => {
           <div key={p.name} className="mb-0.5">
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{p.name} <span style={{ fontSize: 3.5, color: "#888", fontWeight: "normal" }}>— {p.tech}</span></p>
             {p.bullets.slice(0, 1).map((b, j) => (
-              <p key={j} style={{ fontSize: 3.5, color: "#555" }}>{bulletChar} {b}</p>
+              <p key={b.slice(0,20)} style={{ fontSize: 3.5, color: "#555" }}>{bulletChar} {b}</p>
             ))}
           </div>
         ))}
