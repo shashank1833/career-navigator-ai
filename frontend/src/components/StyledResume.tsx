@@ -298,6 +298,11 @@ ProfessionalTemplate.displayName = "ProfessionalTemplate";
 const MinimalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data }, ref) => {
   const template = getTemplate("minimal");
   const { colors } = template;
+  // Memoised to avoid recomputing the contact string on every parent render
+  const contactLine = React.useMemo(
+    () => [data.email, data.phone, data.location, data.linkedin].filter(Boolean).join(" | "),
+    [data.email, data.phone, data.location, data.linkedin]
+  );
 
   return (
     <div 
@@ -309,7 +314,7 @@ const MinimalTemplate = forwardRef<HTMLDivElement, { data: ResumeData }>(({ data
       <div className="text-center mb-6">
         <h1 className="text-2xl font-normal mb-1">{data.name}</h1>
         <div className="text-xs text-gray-600">
-          {[data.email, data.phone, data.location, data.linkedin].filter(Boolean).join(" | ")}
+          {contactLine}
         </div>
       </div>
 

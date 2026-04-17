@@ -24,8 +24,11 @@ interface ThemeSettings {
 const getStoredSettings = (): ThemeSettings => {
   try {
     const stored = localStorage.getItem("theme_customizer");
-    if (stored) return JSON.parse(stored);
-  } catch {}
+    if (stored) return JSON.parse(stored) as ThemeSettings;
+  } catch (err) {
+    // JSON.parse can fail if the stored value is corrupted — silently reset.
+    if (import.meta.env.DEV) console.warn("[ThemeCustomizer] corrupted settings, resetting:", err);
+  }
   return { preset: "Ocean", blurIntensity: 20, animationIntensity: "medium" };
 };
 

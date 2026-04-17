@@ -68,7 +68,7 @@ export const useResumeVersions = () => {
         setVersions(deduped);
       }
     } catch (e) {
-      console.error("Failed to fetch resume versions", e);
+      if (import.meta.env.DEV) console.warn("Failed to fetch resume versions", e);
     }
     setLoading(false);
   }, [ownerId]);
@@ -117,7 +117,7 @@ export const useResumeVersions = () => {
         return data;
       }
     } catch (e) {
-      console.error("Failed to save original resume", e);
+      if (import.meta.env.DEV) console.warn("Failed to save original resume", e);
     }
     return null;
   };
@@ -154,7 +154,7 @@ export const useResumeVersions = () => {
         return data;
       }
     } catch (e) {
-      console.error("Failed to save optimized version", e);
+      if (import.meta.env.DEV) console.warn("Failed to save optimized version", e);
     }
     return null;
   };
@@ -169,7 +169,7 @@ export const useResumeVersions = () => {
         setVersions((prev) => prev.filter((v) => v.id !== id));
       }
     } catch (e) {
-      console.error("Failed to delete version", e);
+      if (import.meta.env.DEV) console.warn("Failed to delete version", e);
     }
   };
 

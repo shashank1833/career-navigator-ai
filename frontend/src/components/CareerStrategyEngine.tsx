@@ -76,7 +76,7 @@ const CareerStrategyEngine = ({ targetRole, currentSkills, missingSkills, experi
       setStrategy(converted);
       toast.success("Career strategy generated!");
     } catch (err: any) {
-      console.error(err);
+      if (import.meta.env.DEV) console.warn(err);
       toast.error(err.message || "Failed to generate strategy");
     } finally {
       setLoading(false);

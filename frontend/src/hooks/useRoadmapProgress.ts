@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || "";
 
+// Declared outside the hook so it's a stable reference (never triggers re-renders)
+const MAX_RECONNECT_ATTEMPTS = 10;
+
 interface ProgressUpdate {
   type: "init" | "progress_update" | "error";
   user_id: string;
@@ -31,7 +34,7 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 10;
+  // enabledRef lets the reconnect closure read the latest value without being a dep
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
 
@@ -72,10 +75,10 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
             setCompletedSteps(data.completed_steps);
             setLastUpdate(data.updated_at);
           } else if (data.type === "error") {
-            console.warn("WS error:", data.message);
+            if (import.meta.env.DEV) console.warn("[WS] server error:", data.message);
           }
         } catch (e) {
-          console.error("Failed to parse WS message:", e);
+          if (import.meta.env.DEV) console.warn("[WS] failed to parse message:", e);
         }
       };
 
@@ -84,7 +87,7 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
         wsRef.current = null;
 
         // Auto-reconnect with exponential backoff
-        if (enabledRef.current && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        if (enabledRef.current && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
           reconnectAttemptsRef.current += 1;
           reconnectTimerRef.current = setTimeout(() => {
@@ -93,11 +96,12 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.onerror = () => {
+        // onerror is always followed by onclose, which handles reconnect
+        if (import.meta.env.DEV) console.warn("[WS] connection error");
       };
     } catch (e) {
-      console.error("Failed to create WebSocket:", e);
+      if (import.meta.env.DEV) console.warn("[WS] failed to create WebSocket:", e);
     }
   }, [getWsUrl]);
 
@@ -127,7 +131,7 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
    */
   const toggleStep = useCallback((stepId: string, completed: boolean) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.warn("WebSocket not connected, falling back to REST");
+      if (import.meta.env.DEV) console.warn("[WS] not connected, falling back to REST");
       // Fallback: use REST API
       if (!userId || !roadmapId) return;
       fetch(`${BACKEND_URL}/api/user-progress`, {
@@ -146,7 +150,9 @@ export function useRoadmapProgress({ roadmapId, userId, enabled = true }: UseRoa
             ? [...prev.filter((s) => s !== stepId), stepId]
             : prev.filter((s) => s !== stepId)
         );
-      }).catch(console.error);
+      }).catch(err => {
+        if (import.meta.env.DEV) console.warn("[WS] REST fallback failed:", err);
+      });
       return;
     }
 

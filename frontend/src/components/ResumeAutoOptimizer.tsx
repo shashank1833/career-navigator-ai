@@ -193,13 +193,16 @@ const ResumeAutoOptimizer = ({
 
       toast({ title: "Resume optimized!", description: `Optimized for ${data.job_title} at ${data.company_name}` });
     } catch (primaryErr) {
-      console.error("Primary optimization failed:", primaryErr);
+      if (import.meta.env.DEV) console.warn("[ResumeAutoOptimizer] optimization failed:", primaryErr);
       setError(primaryErr instanceof Error ? primaryErr.message : "Optimization failed. Please try again.");
       toast({ variant: "destructive", title: "Optimization failed", description: String(primaryErr) });
     } finally {
       setLoading(false);
     }
   }, [profile, job, customJobDesc, customJobTitle, customCompany, toast]);
+  // Note: BACKEND_URL is a module-level constant; buildTemplateFromResult is a
+  // pure module function; React setState setters are guaranteed-stable refs.
+  // None of these need to be listed as deps — the eslint warning is a false-positive.
 
   const handleTemplateChange = (updated: TemplateData) => {
     setTemplateData(updated);

@@ -62,7 +62,7 @@ const InterviewQuestions = ({ data, jobDescription, skills }: Props) => {
       setActiveCategory("technical");
       toast.success("Interview questions generated!");
     } catch (err) {
-      console.error(err);
+      if (import.meta.env.DEV) console.warn(err);
       toast.error("Failed to generate questions. Please try again.");
     } finally {
       setGenerating(false);

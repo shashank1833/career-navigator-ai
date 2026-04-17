@@ -182,8 +182,8 @@ const CreativePreview = ({ template }: { template: ResumeTemplate }) => {
         <p style={{ fontSize: 4, color: "#555" }}>{d.summary}</p>
 
         <p className="font-bold uppercase mt-1.5 mb-0.5" style={{ color: colors.primary, fontSize: 5 }}>Professional Experience</p>
-        {d.experience.map((exp, i) => (
-          <div key={i} className="mb-1">
+        {d.experience.map((exp) => (
+          <div key={`${exp.company}-${exp.title}`} className="mb-1">
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{exp.title}</p>
             <p style={{ fontSize: 3.5, color: "#777" }}>{exp.company} | {exp.duration}</p>
             {exp.bullets.slice(0, 2).map((b, j) => (
@@ -193,8 +193,8 @@ const CreativePreview = ({ template }: { template: ResumeTemplate }) => {
         ))}
 
         <p className="font-bold uppercase mt-1 mb-0.5" style={{ color: colors.primary, fontSize: 5 }}>Projects</p>
-        {d.projects.slice(0, 1).map((p, i) => (
-          <div key={i}>
+        {d.projects.slice(0, 1).map((p) => (
+          <div key={p.name}>
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{p.name}</p>
             <p style={{ fontSize: 3.5, color: "#888" }}>{p.tech}</p>
             {p.bullets.slice(0, 1).map((b, j) => (
@@ -266,8 +266,8 @@ const SingleColumnPreview = ({ template }: { template: ResumeTemplate }) => {
       {/* Professional Experience */}
       <div className="mb-1">
         <SectionTitle label="Professional Experience" {...sectionProps} />
-        {d.experience.map((exp, i) => (
-          <div key={i} className="mb-0.5">
+        {d.experience.map((exp) => (
+          <div key={`${exp.company}-${exp.title}`} className="mb-0.5">
             <div className="flex justify-between">
               <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{exp.title}</p>
               <p style={{ fontSize: 3.5, color: "#888" }}>{exp.duration}</p>
@@ -283,8 +283,8 @@ const SingleColumnPreview = ({ template }: { template: ResumeTemplate }) => {
       {/* Projects */}
       <div>
         <SectionTitle label="Academic Projects" {...sectionProps} />
-        {d.projects.map((p, i) => (
-          <div key={i} className="mb-0.5">
+        {d.projects.map((p) => (
+          <div key={p.name} className="mb-0.5">
             <p className="font-semibold" style={{ fontSize: 4.5, color: "#333" }}>{p.name} <span style={{ fontSize: 3.5, color: "#888", fontWeight: "normal" }}>— {p.tech}</span></p>
             {p.bullets.slice(0, 1).map((b, j) => (
               <p key={j} style={{ fontSize: 3.5, color: "#555" }}>{bulletChar} {b}</p>

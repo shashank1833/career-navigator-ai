@@ -72,7 +72,7 @@ const JobMatching = ({ profile, initialTab = "recommended" }: JobMatchingProps) 
       setSearched(true);
     } catch (e) {
       // Fallback to mock jobs if Adzuna fails
-      console.error("Real job search failed, falling back to AI-generated jobs:", e);
+      if (import.meta.env.DEV) console.warn("[JobMatching] real job search failed, using AI fallback:", e);
       toast({
         title: "Using AI-Generated Jobs",
         description: "Real job search unavailable, showing sample matches",

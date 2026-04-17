@@ -98,7 +98,7 @@ const MockInterviewSimulator = ({ question, category, difficulty }: Props) => {
       }, ...prev]);
       toast.success("Answer evaluated!");
     } catch (err: any) {
-      console.error(err);
+      if (import.meta.env.DEV) console.warn(err);
       toast.error(err.message || "Failed to evaluate. Please try again.");
     } finally {
       setEvaluating(false);

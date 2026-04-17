@@ -207,7 +207,7 @@ const Optimizer = () => {
       toast({ title: "Resume Optimized!", description: `Tailored for ${data.job_title} at ${data.company_name}` });
 
     } catch (error) {
-      console.error("Optimization failed:", error);
+      if (import.meta.env.DEV) console.warn("Optimization failed:", error);
       toast({ 
         title: "Optimization Failed", 
         description: error instanceof Error ? error.message : "Please try again.", 
@@ -251,7 +251,7 @@ const Optimizer = () => {
       
       toast({ title: "PDF Downloaded!", description: fileName });
     } catch (error) {
-      console.error("PDF generation failed:", error);
+      if (import.meta.env.DEV) console.warn("PDF generation failed:", error);
       toast({ title: "PDF Generation Failed", description: "Please try again", variant: "destructive" });
     }
   };
@@ -711,8 +711,8 @@ const Optimizer = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DashboardCard title="Strong Areas" icon={CheckCircle} accentColor="accent">
                   <ul className="space-y-2">
-                    {result.application_strength.strong_areas.map((area, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    {result.application_strength.strong_areas.map((area) => (
+                      <li key={area} className="flex items-start gap-2 text-sm text-foreground">
                         <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                         {area}
                       </li>
@@ -721,8 +721,8 @@ const Optimizer = () => {
                 </DashboardCard>
                 <DashboardCard title="Areas to Improve" icon={Target} accentColor="secondary">
                   <ul className="space-y-2">
-                    {result.application_strength.weak_areas.map((area, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    {result.application_strength.weak_areas.map((area) => (
+                      <li key={area} className="flex items-start gap-2 text-sm text-foreground">
                         <Target className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
                         {area}
                       </li>
@@ -734,8 +734,8 @@ const Optimizer = () => {
               {/* Suggestions */}
               <DashboardCard title="Suggestions" icon={Sparkles} accentColor="primary">
                 <ul className="space-y-2">
-                  {result.application_strength.suggestions.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                  {result.application_strength.suggestions.map((s) => (
+                    <li key={s} className="flex items-start gap-2 text-sm text-foreground">
                       <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                       {s}
                     </li>

@@ -63,7 +63,7 @@ const AuthCallback = () => {
         }, 100);
         
       } catch (err: any) {
-        console.error("Auth callback error:", err);
+        if (import.meta.env.DEV) console.warn("[AuthCallback] error:", err);
         setError(err.message || "Authentication failed");
         toast.error(err.message || "Authentication failed");
         setTimeout(() => navigate("/auth"), 3000);

@@ -419,10 +419,18 @@ _job_fetcher: Optional[JobFetcher] = None
 
 
 def get_job_fetcher() -> JobFetcher:
-    """Return (or create) the singleton JobFetcher, always non-None."""
+    """Return (or create) the singleton JobFetcher, always non-None.
+
+    Note on `is None` checks below and throughout server.py:
+    PEP 8 mandates using `is`/`is not` for None comparisons, never `==`.
+    The linter warnings about "identity comparison" are false-positives here.
+    """
     global _job_fetcher
     if _job_fetcher is None:
         _job_fetcher = JobFetcher(db)
+    # After the assignment above, _job_fetcher is guaranteed non-None.
+    # The explicit assert satisfies static type-checkers (mypy/pyright).
+    assert _job_fetcher is not None
     return _job_fetcher
 
 
@@ -473,93 +481,104 @@ class JobMatchRequest(BaseModel):
     user_id: str
 
 
+# ── match_jobs helpers ──────────────────────────────────────────────
+
+async def _collect_user_skills(user_id: str) -> list[str]:
+    """Return deduplicated skills from all completed roadmap steps."""
+    progress_docs = await db.user_progress.find(
+        {"user_id": user_id, "completed": True}, {"_id": 0}
+    ).to_list(1000)
+
+    roadmap_ids = list({p["roadmap_id"] for p in progress_docs})
+    skills: list[str] = []
+    for roadmap_id in roadmap_ids:
+        roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
+        if not roadmap:
+            continue
+        completed_ids = {p["step_id"] for p in progress_docs if p["roadmap_id"] == roadmap_id}
+        for step in roadmap.get("steps", []):
+            if step.get("id") in completed_ids:
+                skills.extend(step.get("skills", []))
+    return list(set(skills))
+
+
+def _score_jobs_locally(jobs: list, user_skills: list[str]) -> list:
+    """Simple keyword-overlap scoring when no LLM key is available."""
+    user_lower = {s.lower() for s in user_skills}
+    scored = []
+    for job in jobs[:20]:
+        job_skills = [s.lower() for s in job.get("skills_required", [])]
+        matched = [s for s in job_skills if s in user_lower]
+        gap = [s for s in job_skills if s not in user_lower]
+        score = int((len(matched) / max(len(job_skills), 1)) * 100)
+        scored.append({"job": job, "match_score": score, "gap_skills": gap[:5]})
+    scored.sort(key=lambda x: x["match_score"], reverse=True)
+    return scored
+
+
+async def _score_jobs_with_llm(jobs: list, user_skills: list[str]) -> list:
+    """Use Claude to rank and score jobs against the user's skill profile."""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+    chat = get_llm_chat(
+        "job-match-transient",
+        "You are a career matching expert. Analyze job fit and return valid JSON only.",
+    )
+    jobs_summary = [
+        {"title": j["title"], "company": j["company"],
+         "skills": j.get("skills_required", [])[:10], "id": j["id"]}
+        for j in jobs[:50]
+    ]
+    prompt = (
+        f"User skills: {user_skills[:30]}\n\n"
+        "Top 50 jobs to rank (id, title, company, skills):\n"
+        f"{json.dumps(jobs_summary, indent=2)}\n\n"
+        "Return a JSON array of the top 20 matches, each with:\n"
+        "- job_id\n- match_score (0-100)\n- gap_skills (top 5 missing)\n\n"
+        "Return ONLY a JSON array."
+    )
+    raw = await chat.send_message(UserMessage(text=prompt))
+    try:
+        cleaned = raw.strip()
+        if "```" in cleaned:
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        return json.loads(cleaned)
+    except Exception:
+        return []
+
+
+def _build_match_objects(matches_data: list, jobs_by_id: dict) -> list:
+    """Hydrate match data with full job documents."""
+    result = []
+    for m in matches_data[:20]:
+        job_id = m.get("job_id")
+        if job_id and job_id in jobs_by_id:
+            result.append({
+                "job": jobs_by_id[job_id],
+                "match_score": m.get("match_score", 0),
+                "gap_skills": m.get("gap_skills", []),
+            })
+    return result
+
+
 @api_router.post("/jobs/match")
 async def match_jobs(request: JobMatchRequest):
     """Match user's skills/progress against top cached jobs using Claude."""
     try:
-        # Get user progress
-        progress_docs = await db.user_progress.find(
-            {"user_id": request.user_id, "completed": True}, {"_id": 0}
-        ).to_list(1000)
-        
-        # Get roadmap step details to extract skills
-        roadmap_ids = list(set(p["roadmap_id"] for p in progress_docs))
-        user_skills = []
-        for roadmap_id in roadmap_ids:
-            roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
-            if roadmap and roadmap.get("steps"):
-                completed_step_ids = {p["step_id"] for p in progress_docs if p["roadmap_id"] == roadmap_id}
-                for step in roadmap.get("steps", []):
-                    if step.get("id") in completed_step_ids:
-                        user_skills.extend(step.get("skills", []))
-        
-        user_skills = list(set(user_skills))
-        
-        # Get top 50 cached jobs
+        user_skills = await _collect_user_skills(request.user_id)
         jobs = await db.jobs.find({}, {"_id": 0}).limit(50).to_list(50)
-        
+
         if not jobs:
             return {"matches": [], "user_skills": user_skills}
-        
+
         if not EMERGENT_LLM_KEY:
-            # Simple score without LLM
-            matches = []
-            for job in jobs[:20]:
-                job_skills = [s.lower() for s in job.get("skills_required", [])]
-                user_lower = [s.lower() for s in user_skills]
-                matched = [s for s in job_skills if s in user_lower]
-                gap = [s for s in job_skills if s not in user_lower]
-                score = int((len(matched) / max(len(job_skills), 1)) * 100)
-                matches.append({
-                    "job": job,
-                    "match_score": score,
-                    "gap_skills": gap[:5],
-                })
-            matches.sort(key=lambda x: x["match_score"], reverse=True)
-            return {"matches": matches[:20], "user_skills": user_skills}
-        
-        # Use Claude for smarter matching
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = get_llm_chat(f"job-match-{request.user_id}", "You are a career matching expert. Analyze job fit and return valid JSON only.")
-        
-        jobs_summary = [{"title": j["title"], "company": j["company"], "skills": j.get("skills_required", [])[:10], "id": j["id"]} for j in jobs[:50]]
-        
-        prompt = f"""User skills: {user_skills[:30]}
+            return {"matches": _score_jobs_locally(jobs, user_skills), "user_skills": user_skills}
 
-Top 50 jobs to rank (each has id, title, company, skills):
-{json.dumps(jobs_summary, indent=2)}
-
-Return a JSON array of the top 20 matches, each with:
-- job_id (from the list above)
-- match_score (0-100)
-- gap_skills (array of top 5 missing skills the user should learn)
-
-Return ONLY a JSON array, nothing else."""
-        
-        response = await chat.send_message(UserMessage(text=prompt))
-        try:
-            cleaned = response.strip()
-            if "```" in cleaned:
-                cleaned = cleaned.split("```")[1]
-                if cleaned.startswith("json"):
-                    cleaned = cleaned[4:]
-            matches_data = json.loads(cleaned)
-        except Exception:
-            matches_data = []
-        
-        # Build full match objects
+        matches_data = await _score_jobs_with_llm(jobs, user_skills)
         jobs_by_id = {j["id"]: j for j in jobs}
-        matches = []
-        for m in matches_data[:20]:
-            job_id = m.get("job_id")
-            if job_id and job_id in jobs_by_id:
-                matches.append({
-                    "job": jobs_by_id[job_id],
-                    "match_score": m.get("match_score", 0),
-                    "gap_skills": m.get("gap_skills", []),
-                })
-        
-        return {"matches": matches, "user_skills": user_skills}
+        return {"matches": _build_match_objects(matches_data, jobs_by_id), "user_skills": user_skills}
         
     except Exception as e:
         logger.error(f"Job match failed: {traceback.format_exc()}")
@@ -696,73 +715,89 @@ async def get_coach_session_history(session_id: str):
 
 # ─── Skill Gap Engine ────────────────────────────────────────────────
 
+# ── skill_gap helpers ───────────────────────────────────────────────
+
+async def _extract_skills_from_progress(user_id: str) -> set[str]:
+    """Collect all lowercase skills from the user's completed roadmap steps."""
+    progress = await db.user_progress.find(
+        {"user_id": user_id, "completed": True}, {"_id": 0}
+    ).to_list(1000)
+
+    skills: set[str] = set()
+    for roadmap_id in {p["roadmap_id"] for p in progress}:
+        roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
+        if not roadmap:
+            continue
+        done_ids = {p["step_id"] for p in progress if p["roadmap_id"] == roadmap_id}
+        for step in roadmap.get("steps", []):
+            if step.get("id") in done_ids:
+                skills.update(s.lower() for s in step.get("skills", []))
+    return skills
+
+
+async def _build_skill_demand(limit: int = 20) -> tuple[list, Dict[str, int]]:
+    """Return (jobs, skill_demand_map) from the jobs cache."""
+    jobs = await db.jobs.find(
+        {}, {"_id": 0, "skills_required": 1, "title": 1}
+    ).limit(limit).to_list(limit)
+
+    demand: Dict[str, int] = {}
+    for job in jobs:
+        for raw_skill in job.get("skills_required", []):
+            s = raw_skill.lower().strip()
+            if s:
+                demand[s] = demand.get(s, 0) + 1
+    return jobs, demand
+
+
+def _classify_skills(
+    demand: Dict[str, int], user_skills: set[str], total_jobs: int
+) -> tuple[list, list]:
+    """Split demand entries into covered / missing lists sorted by demand."""
+    covered, missing = [], []
+    for skill, count in sorted(demand.items(), key=lambda x: x[1], reverse=True):
+        entry = {
+            "skill": skill,
+            "demand_count": count,
+            "demand_percentage": round((count / total_jobs) * 100),
+        }
+        (covered if skill in user_skills else missing).append(entry)
+    return covered, missing
+
+
+async def _fetch_resources_for_skills(skill_names: list[str]) -> list:
+    """Retrieve up to 5 resources matching any of the given skill names."""
+    if not skill_names:
+        return []
+    return await db.resources.find(
+        {"$or": [
+            {"tags": {"$in": skill_names}},
+            {"title": {"$regex": "|".join(skill_names), "$options": "i"}},
+        ]},
+        {"_id": 0},
+    ).limit(5).to_list(5)
+
+
 @api_router.get("/skill-gap/{user_id}")
 async def get_skill_gap(user_id: str):
     """Get skill gap analysis comparing user progress vs top job requirements."""
     try:
-        # Get user's completed roadmap steps and extract skills
-        progress_docs = await db.user_progress.find(
-            {"user_id": user_id, "completed": True}, {"_id": 0}
-        ).to_list(1000)
-        
-        user_skills = set()
-        roadmap_ids = list(set(p["roadmap_id"] for p in progress_docs))
-        
-        for roadmap_id in roadmap_ids:
-            roadmap = await db.roadmaps.find_one({"id": roadmap_id}, {"_id": 0})
-            if roadmap:
-                completed_step_ids = {p["step_id"] for p in progress_docs if p["roadmap_id"] == roadmap_id}
-                for step in roadmap.get("steps", []):
-                    if step.get("id") in completed_step_ids:
-                        user_skills.update(s.lower() for s in step.get("skills", []))
-        
-        # Get top 20 jobs from cache
-        jobs = await db.jobs.find({}, {"_id": 0, "skills_required": 1, "title": 1}).limit(20).to_list(20)
-        
-        # Count skill demand across jobs
-        skill_demand: Dict[str, int] = {}
-        for job in jobs:
-            for skill in job.get("skills_required", []):
-                s = skill.lower().strip()
-                if s:
-                    skill_demand[s] = skill_demand.get(s, 0) + 1
-        
+        user_skills = await _extract_skills_from_progress(user_id)
+        jobs, demand = await _build_skill_demand(limit=20)
         total_jobs = max(len(jobs), 1)
-        
-        # Classify skills
-        covered_skills = []
-        missing_skills = []
-        
-        for skill, count in sorted(skill_demand.items(), key=lambda x: x[1], reverse=True):
-            entry = {
-                "skill": skill,
-                "demand_count": count,
-                "demand_percentage": round((count / total_jobs) * 100),
-            }
-            if skill in user_skills:
-                covered_skills.append(entry)
-            else:
-                missing_skills.append(entry)
-        
-        # Priority skills = top 5 missing with highest demand
-        priority_skills = missing_skills[:5]
-        
-        # Recommended resources from DB
-        resources = []
-        if priority_skills:
-            skill_names = [s["skill"] for s in priority_skills[:3]]
-            resource_docs = await db.resources.find(
-                {"$or": [{"tags": {"$in": skill_names}}, {"title": {"$regex": "|".join(skill_names), "$options": "i"}}]},
-                {"_id": 0}
-            ).limit(5).to_list(5)
-            resources = resource_docs
-        
+        covered, missing = _classify_skills(demand, user_skills, total_jobs)
+
+        priority = missing[:5]
+        resources = await _fetch_resources_for_skills([s["skill"] for s in priority[:3]])
+
         return {
-            "covered_skills": covered_skills[:20],
-            "missing_skills": missing_skills[:20],
-            "priority_skills": priority_skills,
+            "covered_skills": covered[:20],
+            "missing_skills": missing[:20],
+            "priority_skills": priority,
             "recommended_resources": resources,
-            "coverage_score": round((len(covered_skills) / max(len(covered_skills) + len(missing_skills), 1)) * 100),
+            "coverage_score": round(
+                len(covered) / max(len(covered) + len(missing), 1) * 100
+            ),
         }
         
     except Exception as e:

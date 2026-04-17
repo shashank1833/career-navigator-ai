@@ -59,7 +59,7 @@ export const useJobApplications = () => {
         setApplications(data);
       }
     } catch (e) {
-      console.error("Failed to fetch applications", e);
+      if (import.meta.env.DEV) console.warn("Failed to fetch applications", e);
     }
     setLoading(false);
   }, [user?.user_id]);
@@ -102,7 +102,7 @@ export const useJobApplications = () => {
         return data as JobApplication;
       }
     } catch (e) {
-      console.error("Failed to add application", e);
+      if (import.meta.env.DEV) console.warn("Failed to add application", e);
     }
     return null;
   };
@@ -125,7 +125,7 @@ export const useJobApplications = () => {
         );
       }
     } catch (e) {
-      console.error("Failed to update status", e);
+      if (import.meta.env.DEV) console.warn("Failed to update status", e);
     }
   };
 
@@ -143,7 +143,7 @@ export const useJobApplications = () => {
         );
       }
     } catch (e) {
-      console.error("Failed to update notes", e);
+      if (import.meta.env.DEV) console.warn("Failed to update notes", e);
     }
   };
 
@@ -157,7 +157,7 @@ export const useJobApplications = () => {
         setApplications((prev) => prev.filter((app) => app.id !== id));
       }
     } catch (e) {
-      console.error("Failed to remove application", e);
+      if (import.meta.env.DEV) console.warn("Failed to remove application", e);
     }
   };
 

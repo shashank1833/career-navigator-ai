@@ -1,9 +1,28 @@
+import { useMemo } from "react";
 import DashboardCard from "./DashboardCard";
 import { Map, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import type { AnalysisRoadmap } from "@/types/analysis";
 
+/** Returns true for real, openable resource URLs. */
+const isValidLink = (url: string): boolean => {
+  if (!url.startsWith("http")) return false;
+  if (url.includes("...") || url.includes("example.com") || url.includes("official-documentation-url")) return false;
+  if (/https?:\/\/[^/]+\/?$/.test(url) && url.includes("youtube.com")) return false;
+  return true;
+};
+
 const LearningRoadmap = ({ data }: { data: AnalysisRoadmap }) => {
+  // Pre-filter valid links per step so the filter doesn't run on every render
+  const stepsWithLinks = useMemo(
+    () =>
+      data.steps.map((step) => ({
+        ...step,
+        validLinks: (step.links ?? []).filter((l) => isValidLink(l.url || "")),
+      })),
+    [data.steps]
+  );
+
   return (
     <DashboardCard title="Learning Roadmap" icon={Map} delay={0.65} accentColor="accent" className="col-span-full lg:col-span-2">
       <div className="mb-4">
@@ -13,9 +32,9 @@ const LearningRoadmap = ({ data }: { data: AnalysisRoadmap }) => {
       <div className="relative">
         <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
         <div className="space-y-4">
-          {data.steps.map((step, i) => (
+          {stepsWithLinks.map((step, i) => (
             <motion.div
-              key={i}
+              key={step.title || `step-${i}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8 + i * 0.1 }}
@@ -31,20 +50,11 @@ const LearningRoadmap = ({ data }: { data: AnalysisRoadmap }) => {
               <div className="p-3 rounded-lg bg-muted/20 border border-border/50 flex-1">
                 <p className="text-sm font-medium text-foreground">Step {i + 1} — {step.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
-                {step.links && step.links.length > 0 && (
+                {step.validLinks.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {step.links
-                      .filter((link) => {
-                        // Filter out placeholder/fake URLs
-                        const url = link.url || "";
-                        if (!url.startsWith("http")) return false;
-                        if (url.includes("...") || url.includes("example.com") || url.includes("official-documentation-url")) return false;
-                        if (/https?:\/\/[^/]+\/?$/.test(url) && url.includes("youtube.com")) return false;
-                        return true;
-                      })
-                      .map((link, li) => (
+                    {step.validLinks.map((link) => (
                       <a
-                        key={li}
+                        key={link.url}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"

@@ -106,7 +106,7 @@ const CareerRoleAnalyzer = ({ profile }: { profile: AnalysisProfile }) => {
       };
       setResult(converted);
     } catch (e) {
-      console.error(e);
+      if (import.meta.env.DEV) console.warn(e);
       toast.error("Failed to analyze career role. Please try again.");
     } finally {
       setLoading(false);
