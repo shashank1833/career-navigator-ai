@@ -483,9 +483,8 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
-  - agent: "main"
-    message: |
-      Completed major CareerNav upgrade:
+  - agent: "testing"
+    message: "All 18 backend endpoints tested and passing. Auth register/login/me/logout working. Careers (12), roadmaps (5), skills (5) all correct. Job applications CRUD working. AI Coach (Claude) generating replies. Career trajectory simulator returns 4 milestones. Jobs/skill-gap/salary/heatmap empty (expected - no Apify cache yet). All systems operational."
       1. Backend: Added email/password auth, job applications CRUD, coach API, skill gap, salary insights, 
          market heatmap, trajectory simulator, public profiles, Apify job fetcher, APScheduler, TTL index.
       2. Frontend: Removed Supabase from ALL components. Added CoachPage, SimulatePage. 
